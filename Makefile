@@ -8,15 +8,15 @@ OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
 CXXFLAGS := -Iinclude -MMD -Wall -Wextra -Wpadded
 
-LDLIBS := -lsfml-window -lsfml-system
-ifndef RELEASE
-	LDLIBS := $(addsuffix -d,$(LDLIBS))
+ifeq ($(OS),Windows_NT)
+	LDFLAGS := -LC:\MinGW\bin
 endif
+LDLIBS := -lsfml-window -lsfml-system
 
 all: $(NAME)
 
 $(NAME): $(OBJDIR) $(OBJ)
-	$(CXX) $(LDLIBS) -o$@ $(wordlist 2,$(words $^),$^)
+	$(CXX) $(LDFLAGS) $(LDLIBS) -o$@ $(wordlist 2,$(words $^),$^)
 
 $(OBJDIR):
 	mkdir $@
