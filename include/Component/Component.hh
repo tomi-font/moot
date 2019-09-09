@@ -3,14 +3,14 @@
 
 #include "../Entity.hh"
 
+typedef unsigned	t_ComponentIndex;
+
 class	Component
 {
-public:
-
-protected:
-
-// ID of the entity this component belongs to
-	EntityId	m_eid;
+	enum	Type
+	{
+		Transform
+	};
 };
 
 #endif

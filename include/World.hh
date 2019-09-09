@@ -2,21 +2,20 @@
 #define WORLD_HH
 
 #include "Entity.hh"
+#include "Component/CTransform.hh"
 
 class	World
 {
 public:
 
-	World() : m_nextId(0) {}
-
-	EntityId	createEntity()
+	t_EntityId	createEntity()
 	{
 		return m_nextId++;
 	}
 
 private:
 
-	EntityId	m_nextId;
+	t_EntityId	m_nextId = 0;
 };
 
 #endif
