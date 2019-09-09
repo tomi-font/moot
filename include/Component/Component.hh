@@ -1,26 +1,15 @@
 #ifndef COMPONENT_HH
 #define COMPONENT_HH
 
+#include "../Entity.hh"
+
 class	Component
 {
 public:
 
-	virtual ~Component() {}
+protected:
 
-	enum Type
-	{
-	};
-
-	Type	getType() const
-	{
-		return m_type;
-	}
-
-private:
-
-	Component(Type);
-
-	Type	m_type;
+	EntityId	m_eid;
 };
 
 #endif
