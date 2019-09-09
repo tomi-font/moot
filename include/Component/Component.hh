@@ -9,6 +9,7 @@ public:
 
 protected:
 
+// ID of the entity this component belongs to
 	EntityId	m_eid;
 };
 

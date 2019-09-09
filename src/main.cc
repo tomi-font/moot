@@ -1,5 +1,6 @@
-#include <Component/Component.hh>
+#include <World.hh>
 
 int	main()
 {
+	World	world;
 }
