@@ -3,23 +3,20 @@ NAME := excquis
 SRCDIR := src
 OBJDIR := .obj
 
-SRC := $(shell find $(SRCDIR) -type f)
+SRC := $(shell find $(SRCDIR) -name *.cc)
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-CXXFLAGS := -Iinclude -MMD -Wall -Wextra -Wpadded
+CXXFLAGS := -std=c++1z -Iinclude -MMD -Wall -Wextra
 
 ifeq ($(OS),Windows_NT)
 	LDFLAGS := -LC:\MinGW\bin
 endif
-LDLIBS := -lsfml-window -lsfml-system
+LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
 
 all: $(NAME)
 
-$(NAME): $(OBJDIR) $(OBJ)
-	$(CXX) $(LDFLAGS) $(LDLIBS) -o$@ $(wordlist 2,$(words $^),$^)
-
-$(OBJDIR):
-	mkdir $@
+$(NAME): $(OBJ)
+	$(CXX) $(LDFLAGS) $(LDLIBS) -o$@ $^
 
 -include $(OBJ:.o=.d)
 
@@ -27,7 +24,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 	$(CXX) $(CXXFLAGS) -c -o$@ $<
 
 clean:
-	rm -rf $(OBJDIR)
+	rm -f $(OBJ)
 
 fclean: clean
 	rm -f $(NAME)
