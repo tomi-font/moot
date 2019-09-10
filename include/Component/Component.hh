@@ -2,7 +2,7 @@
 #define COMPONENT_HH
 
 // describes which components are present with each bit representing a different one
-typedef unsigned	t_Comp;
+using t_Comp = unsigned;
 // used to compose the bitmask by OR-ing with T being a Component::Type
 #define C(T) (1 << T)
 

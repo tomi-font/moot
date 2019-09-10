@@ -1,27 +1,30 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 
-#include "Entity.hh"
 #include "Archetype.hh"
+#include "System/SRender.hh"
+#include <array>
 
 class	World
 {
 public:
 
+	World();
+
+// let the world turn
+	bool	turn();
+
 // returns the archetype matching the components composition
 // passed in argument, creating it if it didn't exist
 	Archetype&	getArchetype(t_Comp);
 
-	t_EntityId	createEntity() noexcept
-	{
-		return m_nextId++;
-	}
-
 private:
 
-	t_EntityId	m_nextId = 0;
-
 	std::vector<Archetype>	m_archs;
+
+	std::array<System*, System::COUNT> m_systems;
+
+	SRender	m_srender;
 };
 
 #endif

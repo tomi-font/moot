@@ -5,6 +5,9 @@
 #include <vector>
 #include <experimental/any>
 
+// Archetypes store components of entities that are the same,
+// i.e. possess exactly the same components
+
 class Archetype
 {
 public:
