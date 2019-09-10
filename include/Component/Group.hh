@@ -10,13 +10,13 @@ struct	ComponentGroup
 {
 	ComponentGroup(t_Comp required, t_Comp forbidden = 0) : inc(required), exc(forbidden) {}
 
+// vector of archetypes matching the conditions
+	std::vector<Archetype*>	archs;
+
 // components whose presence is required
 	t_Comp	inc;
 // components whose presence is forbidden
 	t_Comp	exc;
-
-// vector of archetypes matching the conditions
-	std::vector<Archetype*>	archs;
 };
 
 #endif

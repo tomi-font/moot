@@ -1,11 +1,9 @@
-#include <World.hh>
-#include <Component/Component.hh>
-#include <System/SRender.hh>
+#include <Game.hh>
 
 int	main()
 {
-	World		world;
+	Game	game;
 
-	while (world.turn())
+	while (game.play())
 		;
 }

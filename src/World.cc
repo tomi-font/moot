@@ -1,13 +1,12 @@
 #include <World.hh>
 
-World::World()
-{
-// we know there is going to be many archetypes, better reserve some space
-	m_archs.reserve(10);
+#include <SFML/Window/Event.hpp>
 
+World::World(sf::RenderWindow& w) : m_window(w)
+{
 	m_systems[System::Render] = &m_srender;
 }
-#include <iostream>
+
 Archetype&	World::getArchetype(t_Comp comp)
 {
 	for (Archetype& a : m_archs)
@@ -31,7 +30,6 @@ Archetype&	World::getArchetype(t_Comp comp)
 		{
 			if ((comp & group.inc) == group.inc && !(comp & group.exc))
 			{
-				std::cout << "oui" << std::endl;
 				group.archs.push_back(&arch);
 			}
 		}
@@ -42,7 +40,13 @@ Archetype&	World::getArchetype(t_Comp comp)
 
 bool	World::turn()
 {
-	m_srender.update();
+	m_srender.render(m_window);
+
+	for (sf::Event e; m_window.pollEvent(e);)
+	{
+		if (e.type == sf::Event::Closed)
+			return false;
+	}
 
 	return true;
 }

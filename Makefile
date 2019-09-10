@@ -11,7 +11,7 @@ CXXFLAGS := -std=c++1z -Iinclude -MMD -Wall -Wextra
 ifeq ($(OS),Windows_NT)
 	LDFLAGS := -LC:\MinGW\bin
 endif
-LDLIBS := -lsfml-window -lsfml-system
+LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
 
 all: $(NAME)
 

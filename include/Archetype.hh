@@ -34,11 +34,11 @@ public:
 
 private:
 
-// components composition for this archetype
-	t_Comp	m_comp;
-
 // components of the same type are stored contiguously ; one vector for each component
 	std::vector<std::experimental::any>	m_cs;
+
+// components composition for this archetype
+	t_Comp	m_comp;
 };
 
 #endif

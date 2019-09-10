@@ -5,6 +5,10 @@
 
 class	CTransform
 {
+public:
+
+	CTransform(const sf::Vector2f& pos) : m_pos(pos) {}
+
 private:
 
 	sf::Vector2f	m_pos;

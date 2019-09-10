@@ -9,7 +9,7 @@ class	World
 {
 public:
 
-	World();
+	World(sf::RenderWindow&);
 
 // let the world turn
 	bool	turn();
@@ -22,7 +22,11 @@ private:
 
 	std::vector<Archetype>	m_archs;
 
+// we populate an array of System* to perform system-generic work in loops
 	std::array<System*, System::COUNT> m_systems;
+
+// reference to the window this world corresponds to
+	sf::RenderWindow&	m_window;
 
 	SRender	m_srender;
 };
