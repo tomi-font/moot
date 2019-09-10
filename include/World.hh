@@ -2,13 +2,17 @@
 #define WORLD_HH
 
 #include "Entity.hh"
-#include "Component/CTransform.hh"
+#include "Archetype.hh"
 
 class	World
 {
 public:
 
-	t_EntityId	createEntity()
+// returns the archetype matching the components composition
+// passed in argument, creating it if it didn't exist
+	Archetype&	getArchetype(t_Comp);
+
+	t_EntityId	createEntity() noexcept
 	{
 		return m_nextId++;
 	}
@@ -16,6 +20,8 @@ public:
 private:
 
 	t_EntityId	m_nextId = 0;
+
+	std::vector<Archetype>	m_archs;
 };
 
 #endif

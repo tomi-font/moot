@@ -1,10 +1,9 @@
 #ifndef CTRANSFORM_HH
 #define CTRANSFORM_HH
 
-#include "Component.hh"
 #include <SFML/System/Vector2.hpp>
 
-class	CTransform : public Component
+class	CTransform
 {
 private:
 

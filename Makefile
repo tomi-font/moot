@@ -6,7 +6,7 @@ OBJDIR := .obj
 SRC := $(shell find $(SRCDIR) -name *.cc)
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-CXXFLAGS := -Iinclude -MMD -Wall -Wextra
+CXXFLAGS := -std=c++1z -Iinclude -MMD -Wall -Wextra
 
 ifeq ($(OS),Windows_NT)
 	LDFLAGS := -LC:\MinGW\bin
