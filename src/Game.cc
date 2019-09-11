@@ -1,13 +1,19 @@
 #include <Game.hh>
-#include <Component/CTransform.hh>
+#include <Component/CPosition.hh>
 #include <Component/CRender.hh>
 
 static void	populateWorld(World& world)
 {
-	Archetype&	arch = world.getArchetype(C(Component::Transform) | C(Component::Render));
+	Archetype&	arch = world.getArchetype(C(Component::Position) | C(Component::Render));
 
-	arch.get<CTransform>().emplace_back(sf::Vector2f(0,0));
-	arch.get<CRender>().emplace_back();
+	sf::Vector2f pos(100.f, 100.f);
+	arch.get<CPosition>().emplace_back(pos);
+	arch.get<CRender>().emplace_back(pos, pos);
+
+	pos.x *= 3.f;
+
+	arch.get<CPosition>().emplace_back(pos);
+	arch.get<CRender>().emplace_back(pos, pos);
 }
 
 static void	createWindow(sf::RenderWindow& window)
