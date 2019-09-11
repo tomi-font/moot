@@ -9,6 +9,11 @@ static void	populateWorld(World& world)
 	sf::Vector2f pos(100.f, 100.f);
 	arch.get<CPosition>().emplace_back(pos);
 	arch.get<CRender>().emplace_back(pos, pos);
+
+	pos.x *= 3.f;
+
+	arch.get<CPosition>().emplace_back(pos);
+	arch.get<CRender>().emplace_back(pos, pos);
 }
 
 static void	createWindow(sf::RenderWindow& window)
