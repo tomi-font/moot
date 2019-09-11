@@ -8,7 +8,7 @@ OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
 CXXFLAGS := -std=c++1z -Iinclude -MMD -Wall -Wextra
 
-ifeq ($(OS),Windows_NT)
+ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
 endif
 LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
@@ -21,10 +21,11 @@ $(NAME): $(OBJ)
 -include $(OBJ:.o=.d)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c -o$@ $<
 
 clean:
-	rm -f $(OBJ)
+	rm -rf $(OBJDIR)
 
 fclean: clean
 	rm -f $(NAME)
