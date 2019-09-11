@@ -1,0 +1,7 @@
+- when adding an entity, process some kind of sorting depending on components values (i.e. for rendering: depth)
+	potential issues: components are constructed only when appended to the archetype, different sortings criterias might interfer and make it impossible
+
+- messaging an entity: a message would have a t_EntityComp to specify which components are of interest, then simply masking it to see if anything matches
+
+- find a faster way to Archetype::get<Component> based on m_comp value, knowing that the components are always in the same order (growing from first bit set)
+	idea: mask m_comp with the bits below the one representing the component we want, and count using a lookup table for each byte
