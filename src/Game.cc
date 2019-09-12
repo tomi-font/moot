@@ -12,7 +12,7 @@ static void	populateWorld(World& world)
 	arch->get<CPosition>().emplace_back(pos);
 	arch->get<CRender>().emplace_back(pos, pos);
 	arch->get<CMove>().emplace_back(1000);
-	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D}));
+	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::W, sf::Keyboard::A, sf::Keyboard::S, sf::Keyboard::D}));
 
 	arch = world.getArchetype(C(Component::Position) | C(Component::Render));
 	pos *= 4.f;
