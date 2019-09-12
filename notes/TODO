@@ -1,1 +1,4 @@
 - implement a more elegant way to create entities with all their components
+- populate the world in a more sexy manner than dumbly creating all components by hand
+
+- in World, store Archetypes in a way that allows them growing while never invalidating pointers

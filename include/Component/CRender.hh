@@ -10,7 +10,9 @@ public:
 
 	CRender(const sf::Vector2f& pos, const sf::Vector2f& size) noexcept;
 
-	const sf::Vertex&	getVertices() const noexcept { return m_vertices[0]; }
+	const sf::Vertex*	getVertices() const noexcept { return &m_vertices[0]; }
+
+	void	setPosition(const sf::Vector2f&) noexcept;
 
 private:
 
