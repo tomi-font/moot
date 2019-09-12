@@ -26,6 +26,8 @@ private:
 
 // reference to the window this world corresponds to
 	sf::RenderWindow&	m_window;
+// used to measure elapsed time between frames
+	sf::Clock			m_clock;
 
 // WARNING: all systems must be stored contiguously
 // so System-generic stuff can be done by iterating
