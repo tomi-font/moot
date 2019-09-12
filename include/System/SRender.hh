@@ -10,7 +10,7 @@ public:
 
 	SRender();
 
-	void	render(sf::RenderWindow& window);
+	void	render(sf::RenderWindow&);
 };
 
 #endif

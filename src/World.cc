@@ -2,13 +2,12 @@
 
 #include <SFML/Window/Event.hpp>
 
+#define SYSTEMS_COUNT 3
+
 World::World(sf::RenderWindow& w) : m_window(w)
 {
 // BEWARE: THE POINTERS TO ARCHETYPES SHALL ALWAYS REMAIN VALID
 	m_archs.reserve(20);
-
-	m_systems[System::Render] = &m_srender;
-	m_systems[System::Physics] = &m_sphysics;
 }
 
 Archetype*	World::getArchetype(t_Comp comp)
@@ -26,7 +25,8 @@ Archetype*	World::getArchetype(t_Comp comp)
 	Archetype*	arch = &m_archs.back();
 
 // then we must iterate through systems to see if they're interested
-	for (System* s : m_systems)
+	System* s = &m_sinput;
+	for (System* end = s + SYSTEMS_COUNT; s != end; ++s)
 	{
 	// each system may have several groups of interest
 		for (ComponentGroup& group : s->getGroups())
@@ -42,6 +42,7 @@ Archetype*	World::getArchetype(t_Comp comp)
 
 bool	World::turn()
 {
+	m_sinput.readInput(m_window);
 	m_sphysics.enforce();
 	m_srender.render(m_window);
 

@@ -14,7 +14,8 @@ public:
 	{
 		Position,
 		Render,
-		Move
+		Move,
+		Player
 	};
 };
 

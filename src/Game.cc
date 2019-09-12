@@ -28,6 +28,7 @@ static void	createWindow(sf::RenderWindow& window)
 	window.create(vm, "GAME");
 	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
 	window.setVerticalSyncEnabled(true);
+	window.setKeyRepeatEnabled(false);
 }
 
 Game::Game() : m_world(m_window)
