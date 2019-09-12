@@ -9,7 +9,7 @@ class	CMove
 {
 public:
 
-	CMove(const sf::Vector2f& velocity) noexcept : m_velocity(velocity), m_moving(false), m_moved(false) {}
+	CMove(unsigned short speed) noexcept : m_moving(false), m_moved(false), m_speed(speed) {}
 
 	const sf::Vector2f&	getVelocity() const noexcept { return m_velocity; }
 	void				setVelocity(const sf::Vector2f& velocity) noexcept { m_velocity = velocity; }
@@ -24,6 +24,8 @@ public:
 	bool	hasMoved() const noexcept { return m_moved; }
 	void	setMoved(bool moved) noexcept { m_moved = moved; }
 
+	unsigned short	getSpeed() const noexcept { return m_speed; }
+
 private:
 
 	sf::Vector2f	m_velocity;
@@ -34,6 +36,8 @@ private:
 
 // has the entity moved since last frame? (used by other systems)
 	bool			m_moved;
+
+	unsigned short	m_speed;
 };
 
 #endif
