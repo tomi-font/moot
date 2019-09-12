@@ -22,7 +22,7 @@ public:
 	}						// if setMoving(true) and some system calls hasMoved() before the physics system updates, the position won't have changed
 
 	bool	hasMoved() const noexcept { return m_moved; }
-	void	setMoved(bool moved) noexcept { m_moved = moved; }
+	bool	setMoved(bool moved) noexcept { m_moved = moved; return moved; }
 
 	unsigned short	getSpeed() const noexcept { return m_speed; }
 
