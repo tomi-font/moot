@@ -13,7 +13,8 @@ public:
 	enum	Type
 	{
 		Position,
-		Render
+		Render,
+		Move
 	};
 };
 

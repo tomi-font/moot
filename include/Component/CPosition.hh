@@ -3,15 +3,11 @@
 
 #include <SFML/System/Vector2.hpp>
 
-class	CPosition
+class	CPosition : public sf::Vector2f
 {
 public:
 
-	CPosition(const sf::Vector2f& pos) noexcept : m_pos(pos) {}
-
-private:
-
-	sf::Vector2f	m_pos;
+	CPosition(const sf::Vector2f& pos) noexcept : sf::Vector2f(pos) {}
 };
 
 #endif

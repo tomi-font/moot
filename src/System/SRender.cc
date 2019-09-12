@@ -14,10 +14,9 @@ void	SRender::render(sf::RenderWindow& window)
 
 	for (Archetype* arch : m_groups[0].archs)
 	{
-		std::vector<CRender>&	rend = arch->get<CRender>();
+		std::vector<CRender>&	crend = arch->get<CRender>();
 
-		window.draw(&rend[0].getVertices(), rend.size() * 4, sf::Quads);
-
+		window.draw(crend[0].getVertices(), crend.size() * 4, sf::Quads);
 	}
 
 	window.display();

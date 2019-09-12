@@ -3,6 +3,7 @@
 
 #include "Archetype.hh"
 #include "System/SRender.hh"
+#include "System/SPhysics.hh"
 #include <array>
 
 class	World
@@ -16,7 +17,7 @@ public:
 
 // returns the archetype matching the components composition
 // passed in argument, creating it if it didn't exist
-	Archetype&	getArchetype(t_Comp);
+	Archetype*	getArchetype(t_Comp);
 
 private:
 
@@ -28,7 +29,9 @@ private:
 // reference to the window this world corresponds to
 	sf::RenderWindow&	m_window;
 
-	SRender	m_srender;
+// all systems ; they perform the game logic
+	SRender		m_srender;
+	SPhysics	m_sphysics;
 };
 
 #endif

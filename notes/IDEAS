@@ -5,3 +5,7 @@
 
 - find a faster way to Archetype::get<Component> based on m_comp value, knowing that the components are always in the same order (growing from first bit set)
 	idea: mask m_comp with the bits below the one representing the component we want, and count using a lookup table for each byte
+
+- depth rendering: store all vertices at a same depth contiguously, call draw() with a sf::Transform to avoid moving all vertices all the time
+
+- arrays performance: avoiding reallocations as much as possible (currently, vectors are let to default behaviour)

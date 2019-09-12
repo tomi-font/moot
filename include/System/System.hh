@@ -4,8 +4,6 @@
 #include "../Component/Group.hh"
 #include <vector>
 
-#define SYSTEMS_COUNT 1
-
 class	System
 {
 public:
@@ -13,7 +11,8 @@ public:
 	enum
 	{
 		Render,
-		COUNT	// keep last
+		Physics,
+		COUNT	// keep it last
 	};
 
 	std::vector<ComponentGroup>& getGroups() noexcept
