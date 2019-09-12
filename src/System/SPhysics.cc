@@ -14,7 +14,7 @@ SPhysics::SPhysics()
 	m_groups.emplace_back(C(Component::Position) | C(Component::Move));
 }
 
-void	SPhysics::enforce()
+void	SPhysics::enforce(float elapsedTime)
 {
 	for (Archetype* arch : m_groups[G::Ghost].archs)
 	{
@@ -23,14 +23,10 @@ void	SPhysics::enforce()
 
 		for (unsigned i = 0; i != cpos.size(); ++i)
 		{
-			const sf::Vector2f&	move = cmov[i].getMove();
-			bool				moved = (move.x != 0.f || move.y != 0.f);
-
-			if (moved)
+			if (cmov[i].isMoving())
 			{
-				cpos[i] += move;
+				cpos[i] += cmov[i].getVelocity() * elapsedTime;
 			}
-			cmov[i].setMoved(moved);
 		}
 	}
 }

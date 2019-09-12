@@ -42,10 +42,11 @@ Archetype*	World::getArchetype(t_Comp comp)
 
 bool	World::turn()
 {
+	float	elapsedTime = m_clock.restart().asSeconds();
 	bool	turning;
 
 	turning = m_sinput.readInput(m_window);
-	m_sphysics.enforce();
+	m_sphysics.enforce(elapsedTime);
 	m_srender.render(m_window);
 
 	return turning;

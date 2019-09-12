@@ -11,11 +11,11 @@ static void	populateWorld(World& world)
 	sf::Vector2f pos(100.f, 100.f);
 	arch->get<CPosition>().emplace_back(pos);
 	arch->get<CRender>().emplace_back(pos, pos);
-	arch->get<CMove>().emplace_back();
+	arch->get<CMove>().emplace_back(sf::Vector2f(1000.f, 0.f));
 	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D}));
 
 	arch = world.getArchetype(C(Component::Position) | C(Component::Render));
-	pos.x *= 3.f;
+	pos *= 4.f;
 	arch->get<CPosition>().emplace_back(pos);
 	arch->get<CRender>().emplace_back(pos, pos);
 }

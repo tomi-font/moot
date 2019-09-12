@@ -9,7 +9,7 @@ public:
 
 	SPhysics();
 
-	void	enforce();
+	void	enforce(float elapsedTime);
 };
 
 #endif

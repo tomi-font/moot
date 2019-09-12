@@ -25,9 +25,13 @@ static void	playerControls(sf::Keyboard::Key keyCode, const std::vector<Archetyp
 		
 		if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
 		{
-			int	move = sf::Keyboard::isKeyPressed(controls[CPlayer::Right])
-				- sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
-			arch->get<CMove>()[0].setMove(sf::Vector2f(static_cast<float>(move), 0.f));
+			CMove*	move = &arch->get<CMove>()[0];
+			int		direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
+			bool	moving = (direction != 0);
+
+			if (moving)
+				move->setVelocity(sf::Vector2f(static_cast<float>(direction * abs(move->getVelocity().x)), 0.f));
+			move->setMoving(moving);
 		}
 	}
 }
