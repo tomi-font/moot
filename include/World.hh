@@ -4,6 +4,7 @@
 #include "Archetype.hh"
 #include "System/SRender.hh"
 #include "System/SPhysics.hh"
+#include "System/SInput.hh"
 #include <array>
 
 class	World
@@ -23,15 +24,15 @@ private:
 
 	std::vector<Archetype>	m_archs;
 
-// we populate an array of System* to perform system-generic work in loops
-	std::array<System*, System::COUNT> m_systems;
-
 // reference to the window this world corresponds to
 	sf::RenderWindow&	m_window;
 
-// all systems ; they perform the game logic
-	SRender		m_srender;
+// WARNING: all systems must be stored contiguously
+// so System-generic stuff can be done by iterating
+// and for this, m_sinput must remain the first
+	SInput		m_sinput;
 	SPhysics	m_sphysics;
+	SRender		m_srender;
 };
 
 #endif
