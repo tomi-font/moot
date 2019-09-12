@@ -42,15 +42,11 @@ Archetype*	World::getArchetype(t_Comp comp)
 
 bool	World::turn()
 {
-	m_sinput.readInput(m_window);
+	bool	turning;
+
+	turning = m_sinput.readInput(m_window);
 	m_sphysics.enforce();
 	m_srender.render(m_window);
 
-	for (sf::Event e; m_window.pollEvent(e);)
-	{
-		if (e.type == sf::Event::Closed)
-			return false;
-	}
-
-	return true;
+	return turning;
 }

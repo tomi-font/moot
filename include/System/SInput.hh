@@ -10,7 +10,8 @@ public:
 
 	SInput();
 
-	void	readInput(sf::RenderWindow&);
+// returns false if quitting was requested by the player
+	bool	readInput(sf::RenderWindow&);
 };
 
 #endif

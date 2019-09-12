@@ -7,9 +7,10 @@ class	CMove
 {
 public:
 
-	CMove(const sf::Vector2f& move) noexcept : m_move(move), m_moved(false) {}
+	CMove() noexcept : m_moved(false) {}
 
 	const sf::Vector2f&	getMove() const noexcept { return m_move; }
+	void	setMove(const sf::Vector2f& move) noexcept { m_move = move; }
 
 	bool	hasMoved() const noexcept { return m_moved; }
 	void	setMoved(bool moved) noexcept { m_moved = moved; }
