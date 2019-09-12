@@ -15,7 +15,8 @@ public:
 		Position,
 		Render,
 		Move,
-		Player
+		Player,
+		CollisionBox
 	};
 };
 
