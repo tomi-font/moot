@@ -1,7 +1,12 @@
 #include <System/SPhysics.hh>
 #include <Component/CPosition.hh>
 #include <Component/CMove.hh>
-#include <Component/CRender.hh>
+
+// indices for m_groups
+enum	G
+{
+	Ghost	// entities that only have a move component
+};
 
 SPhysics::SPhysics()
 {
@@ -11,7 +16,7 @@ SPhysics::SPhysics()
 
 void	SPhysics::enforce()
 {
-	for (Archetype* arch : m_groups[0].archs)
+	for (Archetype* arch : m_groups[G::Ghost].archs)
 	{
 		auto&	cpos = arch->get<CPosition>();	
 		auto&	cmov = arch->get<CMove>();
@@ -19,16 +24,13 @@ void	SPhysics::enforce()
 		for (unsigned i = 0; i != cpos.size(); ++i)
 		{
 			const sf::Vector2f&	move = cmov[i].getMove();
+			bool				moved = (move.x != 0.f || move.y != 0.f);
 
-			if (move.x != 0 || move.y != 0)
+			if (moved)
 			{
 				cpos[i] += move;
-				
-				if (arch->getComp() & C(Component::Render))
-				{
-					arch->get<CRender>()[i].setPosition(cpos[i]);
-				}
 			}
+			cmov[i].setMoved(moved);
 		}
 	}
 }
