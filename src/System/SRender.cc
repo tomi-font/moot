@@ -2,10 +2,12 @@
 #include <Component/CRender.hh>
 #include <Component/CPosition.hh>
 #include <Component/CMove.hh>
+#include <Component/CPlayer.hh>
 
 // indices for m_groups
 enum	G
 {
+	Player,		// player ; so that the view follows
 	Static,		// entities that won't move
 	Dynamic,	// entities that have a move component
 	COUNT
@@ -14,13 +16,18 @@ enum	G
 SRender::SRender()
 {
 	m_groups.reserve(G::COUNT);
+	m_groups.emplace_back(C(Component::Player) | C(Component::Position));
 	m_groups.emplace_back(C(Component::Render), C(Component::Move));
 	m_groups.emplace_back(C(Component::Render) | C(Component::Position) | C(Component::Move));
 }
 
 void	SRender::render(sf::RenderWindow& window)
 {
-	window.clear(sf::Color(0x80, 0x80,0x80));
+	window.clear(sf::Color(0x80, 0xb0, 0xe0));
+
+	sf::View	view = window.getView();
+	view.setCenter(m_groups[G::Player].archs[0]->get<CPosition>()[0]);
+	window.setView(view);
 
 	for (Archetype* arch : m_groups[G::Static].archs)
 	{
