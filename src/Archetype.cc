@@ -5,6 +5,7 @@
 #include <Component/CMove.hh>
 #include <Component/CPlayer.hh>
 #include <Component/CCollisionBox.hh>
+#include <Component/CRigidbody.hh>
 
 Archetype::Archetype(t_Comp c) : m_comp(c)
 {
@@ -21,4 +22,6 @@ Archetype::Archetype(t_Comp c) : m_comp(c)
 		m_cs.emplace_back(std::vector<CPlayer>());
 	if (c & C(Component::CollisionBox))
 		m_cs.emplace_back(std::vector<CCollisionBox>());
+	if (c & C(Component::Rigidbody))
+		m_cs.emplace_back(std::vector<CRigidbody>());
 }

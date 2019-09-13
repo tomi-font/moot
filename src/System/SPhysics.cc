@@ -8,7 +8,8 @@
 enum	G
 {
 	Ghost,	// entities that only have a move component
-	Bird,	// entities that move and can collide
+	Bird,	// entities that move and can collide, without rigidbody
+	Char,	// entities that move, collide, and have a rigidbody
 	Wall,	// entities that are collidable
 	COUNT
 };
@@ -16,8 +17,9 @@ enum	G
 SPhysics::SPhysics()
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(C(Component::Position) | C(Component::Move), C(Component::CollisionBox));
-	m_groups.emplace_back(C(Component::Position) | C(Component::Move) | C(Component::CollisionBox));
+	m_groups.emplace_back(C(Component::Position) | C(Component::Move), C(Component::CollisionBox) | C(Component::Rigidbody));
+	m_groups.emplace_back(C(Component::Position) | C(Component::Move) | C(Component::CollisionBox), C(Component::Rigidbody));
+	m_groups.emplace_back(C(Component::Position) | C(Component::Move) | C(Component::CollisionBox) | C(Component::Rigidbody));
 	m_groups.emplace_back(C(Component::CollisionBox));
 }
 
