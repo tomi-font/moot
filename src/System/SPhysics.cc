@@ -5,7 +5,7 @@
 #include <Component/CRigidbody.hh>
 #include <cmath>
 
-#define GRAVITY_ACCELERATION 400.f
+#define GRAVITY_ACCELERATION 2000.f
 // indices for m_groups
 enum	G
 {
@@ -25,7 +25,6 @@ SPhysics::SPhysics()
 	m_groups.emplace_back(C(Component::CollisionBox));
 }
 
-#include <iostream>
 static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::FloatRect& hitBox, CRigidbody* crig)
 {
 	sf::Vector2f	shift;

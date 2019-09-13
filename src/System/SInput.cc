@@ -1,6 +1,7 @@
 #include <System/SInput.hh>
 #include <Component/CPlayer.hh>
 #include <Component/CMove.hh>
+#include <Component/CRigidbody.hh>
 #include <SFML/Window/Event.hpp>
 
 // indices for m_groups
@@ -23,18 +24,24 @@ static void	playerControls(sf::Keyboard::Key keyCode, const std::vector<Archetyp
 		Archetype*	arch = archs[0];
 		const auto&	controls = arch->get<CPlayer>()[0].getControls();
 		
-		if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right]
-		|| keyCode == controls[CPlayer::Up] || keyCode == controls[CPlayer::Down])
+		if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
 		{
 			CMove*	move = &arch->get<CMove>()[0];
-			sf::Vector2i	direction(
-				sf::Keyboard::isKeyPressed(controls[CPlayer::Right]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]),
-				sf::Keyboard::isKeyPressed(controls[CPlayer::Down]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Up]));
-			bool	moving = (direction.x || direction.y);
+			int		direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
 
-			if (moving)
-				move->setVelocity(sf::Vector2f(direction * static_cast<int>(move->getSpeed())));
-			move->setMoving(moving);
+			if (direction)
+				move->setVelocity(sf::Vector2f(static_cast<float>(direction * move->getSpeed()), 0.f));
+			move->setMoving(direction);
+		}
+		else if (keyCode == controls[CPlayer::Jump])
+		{
+			CRigidbody*	rig = &arch->get<CRigidbody>()[0];
+
+			if (rig->isGrounded())
+			{
+				rig->setGrounded(false);
+				rig->setVelocity(-1000);
+			}
 		}
 	}
 }

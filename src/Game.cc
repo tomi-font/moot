@@ -14,7 +14,7 @@ static void	populateWorld(World& world)
 	arch->get<CPosition>().emplace_back(pos);
 	arch->get<CRender>().emplace_back(pos, size);
 	arch->get<CMove>().emplace_back(1000);
-	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::W, sf::Keyboard::A, sf::Keyboard::S, sf::Keyboard::D}));
+	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W}));
 	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
 	arch->get<CRigidbody>().emplace_back();
 
