@@ -26,29 +26,43 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 
 	if (move.x > 0)
 	{
+		shift.x = hitBox.left - (rect.left + rect.width);
 		if (move.y > 0)
 		{
-
+			shift.y = hitBox.top - (rect.top + rect.height);
+			if (shift.y * move.x > shift.x * move.y)
+				shift.x = 0;
+			else
+				shift.y = 0;
 		}
 		else if (move.y)
 		{
-
+			shift.y = hitBox.top + hitBox.height - rect.top;
+			if (shift.y * move.x < shift.x * move.y)
+				shift.x = 0;
+			else
+				shift.y = 0;
 		}
-		else
-			shift.x = hitBox.left - (rect.left + rect.width);
 	}
 	else if (move.x)
 	{
+		shift.x = hitBox.left + hitBox.width - rect.left;
 		if (move.y > 0)
 		{
-
+			shift.y = hitBox.top - (rect.top + rect.height);
+			if (shift.y * move.x < shift.x * move.y)
+				shift.x = 0;
+			else
+				shift.y = 0;
 		}
 		else if (move.y)
 		{
-
+			shift.y = hitBox.top + hitBox.height - rect.top;
+			if (shift.y * move.x > shift.x * move.y)
+				shift.x = 0;
+			else
+				shift.y = 0;
 		}
-		else
-			shift.x = hitBox.left + hitBox.width - rect.left;
 	}
 	else
 	{
