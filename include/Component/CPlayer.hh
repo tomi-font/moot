@@ -10,7 +10,9 @@ public:
 
 	enum	Control
 	{
+		Up,
 		Left,
+		Down,
 		Right,
 		COUNT
 	};
