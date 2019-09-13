@@ -8,6 +8,14 @@ class	System
 {
 public:
 
+	enum
+	{
+		Input,
+		Physics,
+		Render,
+		COUNT
+	};
+
 	std::vector<ComponentGroup>& getGroups() noexcept
 	{
 		return m_groups;

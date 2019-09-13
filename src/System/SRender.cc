@@ -19,6 +19,9 @@ SRender::SRender()
 	m_groups.emplace_back(C(Component::Player) | C(Component::Position));
 	m_groups.emplace_back(C(Component::Render), C(Component::Move));
 	m_groups.emplace_back(C(Component::Render) | C(Component::Position) | C(Component::Move));
+
+	m_texture.loadFromFile("data/texture.png");
+	m_texture.setRepeated(true);
 }
 
 void	SRender::render(sf::RenderWindow& window)
@@ -33,7 +36,7 @@ void	SRender::render(sf::RenderWindow& window)
 	{
 		const auto&	crend = arch->get<CRender>();
 
-		window.draw(crend[0].getVertices(), crend.size() * 4, sf::Quads);
+		window.draw(crend[0].getVertices(), crend.size() * 4, sf::Quads, &m_texture);
 	}
 
 	for (Archetype* arch : m_groups[G::Dynamic].archs)
@@ -49,7 +52,7 @@ void	SRender::render(sf::RenderWindow& window)
 				crend[i].setPosition(cpos[i]);
 		}
 
-		window.draw(crend[0].getVertices(), i * 4, sf::Quads);
+		window.draw(crend[0].getVertices(), i * 4, sf::Quads, &m_texture);
 	}
 
 	window.display();

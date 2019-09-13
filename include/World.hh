@@ -29,12 +29,12 @@ private:
 // used to measure elapsed time between frames
 	sf::Clock			m_clock;
 
-// WARNING: all systems must be stored contiguously
-// so System-generic stuff can be done by iterating
-// and for this, m_sinput must remain the first
 	SInput		m_sinput;
 	SPhysics	m_sphysics;
 	SRender		m_srender;
+
+// used to perform system-generic stuff in loops
+	std::array<System*, System::COUNT>	m_systems;
 };
 
 #endif
