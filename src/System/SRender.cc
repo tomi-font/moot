@@ -20,7 +20,7 @@ SRender::SRender()
 
 void	SRender::render(sf::RenderWindow& window)
 {
-	window.clear();
+	window.clear(sf::Color(0x80, 0x80,0x80));
 
 	for (Archetype* arch : m_groups[G::Static].archs)
 	{

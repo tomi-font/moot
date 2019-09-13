@@ -7,20 +7,21 @@
 
 static void	populateWorld(World& world)
 {
-	Archetype*	arch = world.getArchetype(C(Component::Position) | C(Component::Render) | C(Component::Move) | C(Component::Player) | C(Component::CollisionBox));
-
-	sf::Vector2f pos(100.f, 100.f);
+	Archetype*		arch = world.getArchetype(C(Component::Position) | C(Component::Render) | C(Component::Move) | C(Component::Player) | C(Component::CollisionBox));
+	sf::Vector2f	pos(100.f, 450.f);
+	sf::Vector2f	size(100.f, 100.f);
 	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, pos);
+	arch->get<CRender>().emplace_back(pos, size);
 	arch->get<CMove>().emplace_back(1000);
 	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::W, sf::Keyboard::A, sf::Keyboard::S, sf::Keyboard::D}));
-	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, pos));
+	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
 
 	arch = world.getArchetype(C(Component::Position) | C(Component::Render) | C(Component::CollisionBox));
-	pos *= 4.f;
+	pos.y = 800.f;
+	size.x = 1600.f;
 	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, pos);
-	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, pos));
+	arch->get<CRender>().emplace_back(pos, size);
+	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
 }
 
 static void	createWindow(sf::RenderWindow& window)
