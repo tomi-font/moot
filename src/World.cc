@@ -8,6 +8,10 @@ World::World(sf::RenderWindow& w) : m_window(w)
 {
 // BEWARE: THE POINTERS TO ARCHETYPES SHALL ALWAYS REMAIN VALID
 	m_archs.reserve(20);
+
+	m_systems[System::Input] = &m_sinput;
+	m_systems[System::Physics] = &m_sphysics;
+	m_systems[System::Render] = &m_srender;
 }
 
 Archetype*	World::getArchetype(t_Comp comp)
@@ -25,11 +29,10 @@ Archetype*	World::getArchetype(t_Comp comp)
 	Archetype*	arch = &m_archs.back();
 
 // then we must iterate through systems to see if they're interested
-	System* s = &m_sinput;
-	for (System* end = s + SYSTEMS_COUNT; s != end; ++s)
+	for (System* system : m_systems)
 	{
 	// each system may have several groups of interest
-		for (ComponentGroup& group : s->getGroups())
+		for (ComponentGroup& group : system->getGroups())
 		{
 			if ((comp & group.inc) == group.inc && !(comp & group.exc))
 			{

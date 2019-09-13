@@ -12,7 +12,7 @@ static void	populateWorld(World& world)
 	sf::Vector2f	pos(200.f, 450.f);
 	sf::Vector2f	size(100.f, 100.f);
 	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, size);
+	arch->get<CRender>().emplace_back(pos, size, sf::FloatRect(0,0,2,2));
 	arch->get<CMove>().emplace_back(1000);
 	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W}));
 	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
@@ -23,7 +23,7 @@ static void	populateWorld(World& world)
 	pos.y = 800.f;
 	size.x = 1600.f;
 	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, size);
+	arch->get<CRender>().emplace_back(pos, size, sf::FloatRect(0, 2, 32, 2));
 	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
 }
 
