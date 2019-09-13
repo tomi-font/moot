@@ -16,7 +16,8 @@ public:
 		Render,
 		Move,
 		Player,
-		CollisionBox
+		CollisionBox,
+		Rigidbody
 	};
 };
 

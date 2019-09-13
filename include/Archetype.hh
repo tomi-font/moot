@@ -13,6 +13,7 @@ class Archetype
 public:
 
 	Archetype(t_Comp);
+	Archetype(const Archetype&) {}
 
 	t_Comp	getComp() const noexcept
 	{
@@ -31,6 +32,7 @@ public:
 		}
 		#pragma GCC diagnostic ignored "-Wreturn-type"
 	}
+
 
 private:
 

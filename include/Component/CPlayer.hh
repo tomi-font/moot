@@ -10,10 +10,9 @@ public:
 
 	enum	Control
 	{
-		Up,
 		Left,
-		Down,
 		Right,
+		Jump,
 		COUNT
 	};
 
