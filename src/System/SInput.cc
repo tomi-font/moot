@@ -17,31 +17,27 @@ SInput::SInput()
 	m_groups.emplace_back(C(Component::Player) | C(Component::Move));
 }
 
-static void	playerControls(sf::Keyboard::Key keyCode, const std::vector<Archetype*>& archs)
+static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 {
-	if (!archs.empty())
+	const auto&	controls = arch->get<CPlayer>()[0].getControls();
+	
+	if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
 	{
-		Archetype*	arch = archs[0];
-		const auto&	controls = arch->get<CPlayer>()[0].getControls();
-		
-		if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
-		{
-			CMove*	move = &arch->get<CMove>()[0];
-			int		direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
+		CMove*	move = &arch->get<CMove>()[0];
+		int		direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right]) - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
 
-			if (direction)
-				move->setVelocity(sf::Vector2f(static_cast<float>(direction * move->getSpeed()), 0.f));
-			move->setMoving(direction);
-		}
-		else if (keyCode == controls[CPlayer::Jump])
-		{
-			CRigidbody*	rig = &arch->get<CRigidbody>()[0];
+		if (direction)
+			move->setVelocity(sf::Vector2f(static_cast<float>(direction * move->getSpeed()), 0.f));
+		move->setMoving(direction);
+	}
+	else if (keyCode == controls[CPlayer::Jump])
+	{
+		CRigidbody*	rig = &arch->get<CRigidbody>()[0];
 
-			if (rig->isGrounded())
-			{
-				rig->setGrounded(false);
-				rig->setVelocity(-1000);
-			}
+		if (rig->isGrounded())
+		{
+			rig->setGrounded(false);
+			rig->setVelocity(-1000);
 		}
 	}
 }
@@ -62,7 +58,7 @@ bool	SInput::readInput(sf::RenderWindow& window)
 			}
 			// else: calling playerControls() below
 		case sf::Event::KeyReleased:
-			playerControls(event.key.code, m_groups[G::Player].archs);
+			playerControls(event.key.code, m_groups[G::Player].archs[0]);
 			break;
 
 		case sf::Event::Closed:
