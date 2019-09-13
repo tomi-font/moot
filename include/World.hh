@@ -18,7 +18,7 @@ public:
 
 // returns the archetype matching the components composition
 // passed in argument, creating it if it didn't exist
-	Archetype*	getArchetype(t_Comp);
+	Archetype*	getArchetype(CsComp);
 
 private:
 

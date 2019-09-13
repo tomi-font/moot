@@ -14,7 +14,7 @@ World::World(sf::RenderWindow& w) : m_window(w)
 	m_systems[System::Render] = &m_srender;
 }
 
-Archetype*	World::getArchetype(t_Comp comp)
+Archetype*	World::getArchetype(CsComp comp)
 {
 	for (Archetype& a : m_archs)
 	{

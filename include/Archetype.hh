@@ -12,10 +12,10 @@ class Archetype
 {
 public:
 
-	Archetype(t_Comp);
+	Archetype(CsComp);
 	Archetype(const Archetype&) {}
 
-	t_Comp	getComp() const noexcept
+	CsComp	getComp() const noexcept
 	{
 		return m_comp;
 	}
@@ -40,7 +40,7 @@ private:
 	std::vector<std::experimental::any>	m_cs;
 
 // components composition for this archetype
-	t_Comp	m_comp;
+	CsComp	m_comp;
 };
 
 #endif

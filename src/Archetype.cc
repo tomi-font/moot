@@ -7,7 +7,7 @@
 #include <Component/CCollisionBox.hh>
 #include <Component/CRigidbody.hh>
 
-Archetype::Archetype(t_Comp c) : m_comp(c)
+Archetype::Archetype(CsComp c) : m_comp(c)
 {
 // prepares the archetype for storing all needed components
 
