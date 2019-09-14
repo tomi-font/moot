@@ -7,21 +7,20 @@
 #include <Component/CCollisionBox.hh>
 #include <Component/CRigidbody.hh>
 
-Archetype::Archetype(CsComp c) : m_comp(c)
+Archetype::Archetype(CsComp comp) : m_comp(comp)
 {
 // prepares the archetype for storing all needed components
 
-// we avoid using push_back because it would perform unnecessary copy
-	if (c & C(Component::Position))
-		m_cs.emplace_back(std::vector<CPosition>());
-	if (c & C(Component::Render))
-		m_cs.emplace_back(std::vector<CRender>());
-	if (c & C(Component::Move))
-		m_cs.emplace_back(std::vector<CMove>());
-	if (c & C(Component::Player))
-		m_cs.emplace_back(std::vector<CPlayer>());
-	if (c & C(Component::CollisionBox))
-		m_cs.emplace_back(std::vector<CCollisionBox>());
-	if (c & C(Component::Rigidbody))
-		m_cs.emplace_back(std::vector<CRigidbody>());
+// one bit set in comp means one component
+// thus, the number of set bits == number of vectors needed
+	m_cs = new std::vector<void*>[__builtin_popcount(comp)];
+
+// there should be some optimization here to avoid future reallocations
+// using reserve() on all vectors depending on the composition
+// __builtin_ctz() will be of use
+}
+
+Archetype::~Archetype()
+{
+	delete[] m_cs;
 }

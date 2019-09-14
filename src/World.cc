@@ -2,8 +2,6 @@
 
 #include <SFML/Window/Event.hpp>
 
-#define SYSTEMS_COUNT 3
-
 World::World(sf::RenderWindow& w) : m_window(w)
 {
 // BEWARE: THE POINTERS TO ARCHETYPES SHALL ALWAYS REMAIN VALID

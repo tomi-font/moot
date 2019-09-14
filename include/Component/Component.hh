@@ -18,7 +18,8 @@ public:
 		Move,
 		Player,
 		CollisionBox,
-		Rigidbody
+		Rigidbody,
+		COUNT
 	};
 };
 

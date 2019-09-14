@@ -9,6 +9,8 @@ class	CRender
 {
 public:
 
+	static constexpr auto Type = Component::Render;
+
 	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, const sf::FloatRect& texRect) noexcept;
 
 	const sf::Vertex*	getVertices() const noexcept { return &m_vertices[0]; }

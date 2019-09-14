@@ -1,3 +1,4 @@
+#include <Component/Component.hh>
 #include <Component/CRender.hh>
 
 CRender::CRender(const sf::Vector2f& pos, const sf::Vector2f& size, const sf::FloatRect& texRect) noexcept :
