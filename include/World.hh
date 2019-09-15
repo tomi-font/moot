@@ -5,6 +5,7 @@
 #include "System/SRender.hh"
 #include "System/SPhysics.hh"
 #include "System/SInput.hh"
+#include "Factory.hh"
 #include <array>
 
 class	World
@@ -35,6 +36,8 @@ private:
 
 // used to perform system-generic stuff in loops
 	std::array<System*, System::COUNT>	m_systems;
+
+	Factory	m_factory;
 };
 
 #endif

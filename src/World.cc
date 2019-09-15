@@ -10,6 +10,9 @@ World::World(sf::RenderWindow& w) : m_window(w)
 	m_systems[System::Input] = &m_sinput;
 	m_systems[System::Physics] = &m_sphysics;
 	m_systems[System::Render] = &m_srender;
+
+	m_factory.create("player", this);
+	m_factory.create("platform", this);
 }
 
 Archetype*	World::getArchetype(CsComp comp)
