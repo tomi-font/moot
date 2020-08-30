@@ -4,9 +4,6 @@
 
 World::World(sf::RenderWindow& w) : m_window(w)
 {
-// BEWARE: THE POINTERS TO ARCHETYPES SHALL ALWAYS REMAIN VALID
-	m_archs.reserve(20);
-
 	m_systems[System::Input] = &m_sinput;
 	m_systems[System::Physics] = &m_sphysics;
 	m_systems[System::Render] = &m_srender;
@@ -26,8 +23,7 @@ Archetype*	World::getArchetype(CsComp comp)
 // if we didn't find an archetype matching the composition,
 // it means it doesn't exist so we have to create it
 // we use emplace_back() so that no useless copy is made
-	m_archs.emplace_back(comp);
-	Archetype*	arch = &m_archs.back();
+	Archetype*	arch = &m_archs.emplace_back(comp);
 
 // then we must iterate through systems to see if they're interested
 	for (System* system : m_systems)

@@ -7,6 +7,7 @@
 #include "System/SInput.hh"
 #include "Factory.hh"
 #include <array>
+#include <deque>
 
 class	World
 {
@@ -23,7 +24,7 @@ public:
 
 private:
 
-	std::vector<Archetype>	m_archs;
+	std::deque<Archetype>	m_archs;
 
 // reference to the window this world corresponds to
 	sf::RenderWindow&	m_window;
