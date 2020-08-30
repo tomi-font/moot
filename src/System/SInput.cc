@@ -56,7 +56,7 @@ bool	SInput::readInput(sf::RenderWindow& window)
 				running = false;
 				break;
 			}
-			// else: calling playerControls() below
+			[[fallthrough]];
 		case sf::Event::KeyReleased:
 			playerControls(event.key.code, m_groups[G::Player].archs[0]);
 			break;
