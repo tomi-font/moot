@@ -6,3 +6,5 @@
 - depth rendering: store all vertices at a same depth contiguously, call draw() with a sf::Transform to avoid moving all vertices all the time
 
 - arrays performance: avoiding reallocations as much as possible (currently, vectors are let to default behaviour)
+
+- Entity IDs: Use part of the bits for the Archetype index, and the rest for the Components' index in the Archetype.
