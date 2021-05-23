@@ -2,7 +2,6 @@
 #define SRENDER_HH
 
 #include "System.hh"
-#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
 class	SRender : public System
@@ -11,7 +10,7 @@ public:
 
 	SRender();
 
-	void	render(sf::RenderWindow&);
+	bool	update(sf::RenderWindow& window, float elapsedTime) override;
 
 private:
 

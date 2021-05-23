@@ -9,7 +9,7 @@ public:
 
 	SPhysics();
 
-	void	enforce(float elapsedTime);
+	bool	update(sf::RenderWindow& window, float elapsedTime) override;
 };
 
 #endif

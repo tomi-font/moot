@@ -2,7 +2,6 @@
 #define SINPUT_HH
 
 #include "System.hh"
-#include <SFML/Graphics/RenderWindow.hpp>
 
 class	SInput : public System
 {
@@ -11,7 +10,7 @@ public:
 	SInput();
 
 // returns false if quitting was requested by the player
-	bool	readInput(sf::RenderWindow&);
+	bool	update(sf::RenderWindow& window, float elapsedTime) override;
 };
 
 #endif

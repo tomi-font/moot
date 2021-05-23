@@ -24,7 +24,7 @@ SRender::SRender()
 	m_texture.setRepeated(true);
 }
 
-void	SRender::render(sf::RenderWindow& window)
+bool	SRender::update(sf::RenderWindow& window, float)
 {
 	window.clear(sf::Color(0x80, 0xb0, 0xe0));
 
@@ -56,4 +56,5 @@ void	SRender::render(sf::RenderWindow& window)
 	}
 
 	window.display();
+	return true;
 }

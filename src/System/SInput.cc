@@ -42,7 +42,7 @@ static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 	}
 }
 
-bool	SInput::readInput(sf::RenderWindow& window)
+bool	SInput::update(sf::RenderWindow& window, float)
 {
 	bool	running = true;
 

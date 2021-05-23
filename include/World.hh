@@ -2,10 +2,7 @@
 #define WORLD_HH
 
 #include "Archetype.hh"
-#include "System/SRender.hh"
-#include "System/SPhysics.hh"
-#include "System/SInput.hh"
-#include <array>
+#include "System/System.hh"
 #include <deque>
 
 class	World
@@ -29,15 +26,12 @@ private:
 
 // Used to measure the time elapsed between updates.
 	sf::Clock	m_clock;
-// Whether it is still running or has stopped.
+
+// Whether it is running or has stopped.
 	bool 		m_running;
 
-	SInput		m_sinput;
-	SPhysics	m_sphysics;
-	SRender		m_srender;
-
-// used to perform system-generic stuff in loops
-	std::array<System*, System::COUNT>	m_systems;
+// All systems.
+	std::vector<std::unique_ptr<System>> m_systems;
 };
 
 #endif

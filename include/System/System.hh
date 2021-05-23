@@ -3,18 +3,22 @@
 
 #include "../Component/Group.hh"
 #include <vector>
+#include <SFML/Graphics/RenderWindow.hpp>
 
 class	System
 {
 public:
 
+// The various sytems, declared in update order.
 	enum
 	{
 		Input,
 		Physics,
 		Render,
-		COUNT
+		COUNT // Keep last.
 	};
+
+	virtual bool update(sf::RenderWindow& window, float elapsedTime) = 0;
 
 	std::vector<ComponentGroup>& getGroups() noexcept
 	{
