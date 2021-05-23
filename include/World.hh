@@ -12,23 +12,25 @@ class	World
 {
 public:
 
-	World(sf::RenderWindow&);
+	World();
 
-// let the world turn
-	bool	turn();
+	bool	isRunning() const { return m_running; }
 
-// returns the archetype matching the components composition
-// passed in argument, creating it if it didn't exist
+// Updates all the systems, using the passed window.
+	void	update(sf::RenderWindow&);
+
+// Returns the matching archetype, creating it if it didn't exist.
 	Archetype*	getArchetype(CsComp);
 
 private:
 
+// Existing archetypes, where all the entities' components are.
 	std::deque<Archetype>	m_archs;
 
-// reference to the window this world corresponds to
-	sf::RenderWindow&	m_window;
-// used to measure elapsed time between frames
-	sf::Clock			m_clock;
+// Used to measure the time elapsed between updates.
+	sf::Clock	m_clock;
+// Whether it is still running or has stopped.
+	bool 		m_running;
 
 	SInput		m_sinput;
 	SPhysics	m_sphysics;

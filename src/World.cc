@@ -2,7 +2,7 @@
 
 #include <SFML/Window/Event.hpp>
 
-World::World(sf::RenderWindow& w) : m_window(w)
+World::World() : m_running(true)
 {
 	m_systems[System::Input] = &m_sinput;
 	m_systems[System::Physics] = &m_sphysics;
@@ -37,14 +37,11 @@ Archetype*	World::getArchetype(CsComp comp)
 	return arch;
 }
 
-bool	World::turn()
+void	World::update(sf::RenderWindow& window)
 {
 	float	elapsedTime = m_clock.restart().asSeconds();
-	bool	turning;
 
-	turning = m_sinput.readInput(m_window);
+	m_running = m_sinput.readInput(window);
 	m_sphysics.enforce(elapsedTime);
-	m_srender.render(m_window);
-
-	return turning;
+	m_srender.render(window);
 }

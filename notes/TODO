@@ -1,7 +1,6 @@
 - implement a more elegant way to create entities with all their components
 - populate the world in a more sexy manner than dumbly creating all components by hand
 
-- Get rid of Game.
 - Comment everything that is not absurdly obvious, as proper sentences.
 - Static asserts on whatever is possible.
 - Format code.
