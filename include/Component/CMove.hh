@@ -9,6 +9,8 @@ class	CMove
 {
 public:
 
+	static constexpr auto Type = Component::Move;
+
 	CMove(unsigned short speed) noexcept : m_moving(false), m_moved(false), m_speed(speed) {}
 
 	const sf::Vector2f&	getVelocity() const noexcept { return m_velocity; }

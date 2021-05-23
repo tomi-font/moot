@@ -6,6 +6,7 @@
 #include "System/SPhysics.hh"
 #include "System/SInput.hh"
 #include <array>
+#include <deque>
 
 class	World
 {
@@ -18,11 +19,11 @@ public:
 
 // returns the archetype matching the components composition
 // passed in argument, creating it if it didn't exist
-	Archetype*	getArchetype(t_Comp);
+	Archetype*	getArchetype(CsComp);
 
 private:
 
-	std::vector<Archetype>	m_archs;
+	std::deque<Archetype>	m_archs;
 
 // reference to the window this world corresponds to
 	sf::RenderWindow&	m_window;

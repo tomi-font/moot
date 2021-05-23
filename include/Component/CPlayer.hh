@@ -8,6 +8,8 @@ class	CPlayer
 {
 public:
 
+	static constexpr auto Type = Component::Player;
+
 	enum	Control
 	{
 		Left,

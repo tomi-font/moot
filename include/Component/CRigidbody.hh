@@ -5,6 +5,8 @@ class	CRigidbody
 {
 public:
 
+	static constexpr auto Type = Component::Rigidbody;
+
 	float	getVelocity() const noexcept { return m_velocity; }
 	void	applyForce(float force) noexcept { m_velocity += force; };
 	void	setVelocity(float velocity) noexcept { m_velocity = velocity; }

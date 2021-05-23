@@ -1,9 +1,15 @@
 #ifndef ARCHETYPE_HH
 #define ARCHETYPE_HH
 
-#include "Component/Component.hh"
+#include <Component/Component.hh>
+#include <Component/CPosition.hh>
+#include <Component/CRender.hh>
+#include <Component/CMove.hh>
+#include <Component/CPlayer.hh>
+#include <Component/CCollisionBox.hh>
+#include <Component/CRigidbody.hh>
 #include <vector>
-#include <experimental/any>
+#include <variant>
 
 // Archetypes store components of entities that are the same,
 // i.e. possess exactly the same components
@@ -12,35 +18,39 @@ class Archetype
 {
 public:
 
-	Archetype(t_Comp);
-	Archetype(const Archetype&) {}
+	Archetype(CsComp);
 
-	t_Comp	getComp() const noexcept
+	CsComp	getComp() const noexcept
 	{
 		return m_comp;
 	}
 
 // returns the vector containing the component type requested
-// assumes the caller only asks for present components
+// behavior is undefined if the caller asks for some component that's not present
 	template<typename T>
 	std::vector<T>&	get() noexcept
 	{
-		for (auto& c : m_cs)
-		{
-			if (c.type() == typeid(std::vector<T>))
-				return std::experimental::any_cast<std::vector<T>&>(c);
-		}
-		#pragma GCC diagnostic ignored "-Wreturn-type"
+		// we calculate the index in m_components by finding out how many bits are set up to
+		// C(T::Type), as components will always be stored in the ComponentVariant order
+		return std::get<std::vector<T>>(m_components[__builtin_popcount(m_comp & (C(T::Type) - 1))]);
 	}
-
 
 private:
 
-// components of the same type are stored contiguously ; one vector for each component
-	std::vector<std::experimental::any>	m_cs;
-
 // components composition for this archetype
-	t_Comp	m_comp;
+	CsComp	m_comp;
+
+// components of the same type are stored contiguously ; one vector for each component
+// has to remain in the same order than Component::Type for being able to index from it
+	using ComponentVariant = std::variant<
+		std::vector<CPosition>,
+		std::vector<CRender>,
+		std::vector<CMove>,
+		std::vector<CPlayer>,
+		std::vector<CCollisionBox>,
+		std::vector<CRigidbody>>;
+
+	std::vector<ComponentVariant>	m_components;
 };
 
 #endif
