@@ -28,14 +28,7 @@ Archetype*	World::getArchetype(CsComp comp)
 // then we must iterate through systems to see if they're interested
 	for (const auto& system : m_systems)
 	{
-	// each system may have several groups of interest
-		for (ComponentGroup& group : system->getGroups())
-		{
-			if ((comp & group.inc) == group.inc && !(comp & group.exc))
-			{
-				group.archs.push_back(arch);
-			}
-		}
+		system->match(arch);
 	}
 	return arch;
 }
