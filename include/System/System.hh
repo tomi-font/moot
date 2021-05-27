@@ -9,6 +9,8 @@ class	System
 {
 public:
 
+	virtual ~System(){}
+
 // The various sytems, declared in update order.
 	enum
 	{
