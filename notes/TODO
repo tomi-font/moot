@@ -4,3 +4,8 @@
 - Comment everything that is not absurdly obvious, as proper sentences.
 - Static asserts on whatever is possible.
 - Format code.
+- Decide on noexcept.
+- float -> double (sf chrono to std)
+- header guards naming
+- includes quotes/brackets in headers
+- spacing between function type and name (tab/space) in headers and source files
