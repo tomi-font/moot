@@ -11,7 +11,7 @@ enum	G
 	COUNT
 };
 
-SInput::SInput()
+SInput::SInput(EventManager& em) : EventListener(em)
 {
 	m_groups.reserve(G::COUNT);
 	m_groups.emplace_back(C(Component::Player) | C(Component::Move));
@@ -42,10 +42,8 @@ static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 	}
 }
 
-bool	SInput::update(sf::RenderWindow& window, float)
+void	SInput::update(sf::RenderWindow& window, float)
 {
-	bool	running = true;
-
 	for (sf::Event event; window.pollEvent(event);)
 	{
 		switch (event.type)
@@ -53,7 +51,8 @@ bool	SInput::update(sf::RenderWindow& window, float)
 		case sf::Event::KeyPressed:
 			if (event.key.code == sf::Keyboard::Q || event.key.code == sf::Keyboard::Escape)
 			{
-				running = false;
+		case sf::Event::Closed:
+				trigger(Event::PlayerQuit);
 				break;
 			}
 			[[fallthrough]];
@@ -61,11 +60,6 @@ bool	SInput::update(sf::RenderWindow& window, float)
 			playerControls(event.key.code, m_groups[G::Player].archs[0]);
 			break;
 
-		case sf::Event::Closed:
-			running = false;
-			break;
 		}
 	}
-
-	return running;
 }

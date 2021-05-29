@@ -9,7 +9,7 @@ class	System
 {
 public:
 
-	virtual ~System(){}
+	virtual ~System() {}
 
 // The various sytems, declared in update order.
 	enum
@@ -20,7 +20,7 @@ public:
 		COUNT // Keep last.
 	};
 
-	virtual bool update(sf::RenderWindow& window, float elapsedTime) = 0;
+	virtual void update(sf::RenderWindow& window, float elapsedTime) = 0;
 
 // Appends the archetype to matching component groups.
 	void match(Archetype*);

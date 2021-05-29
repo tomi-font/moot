@@ -3,9 +3,10 @@
 
 #include "Archetype.hh"
 #include "System/System.hh"
+#include "Event/Listener.hh"
 #include <deque>
 
-class	World
+class	World : EventListener
 {
 public:
 
@@ -32,6 +33,10 @@ private:
 
 // All systems.
 	std::vector<std::unique_ptr<System>> m_systems;
+
+	EventManager m_eventManager;
+
+	void triggered(const Event&) override;
 };
 
 #endif

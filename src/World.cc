@@ -5,11 +5,13 @@
 
 #include <SFML/Window/Event.hpp>
 
-World::World() : m_running(true), m_systems(System::COUNT)
+World::World() : EventListener(m_eventManager), m_running(true), m_systems(System::COUNT)
 {
-	m_systems[System::Input] = std::make_unique<SInput>();
+	m_systems[System::Input] = std::make_unique<SInput>(m_eventManager);
 	m_systems[System::Physics] = std::make_unique<SPhysics>();
 	m_systems[System::Render] = std::make_unique<SRender>();
+
+	listen(Event::PlayerQuit);
 }
 
 Archetype*	World::getArchetype(CsComp comp)
@@ -41,6 +43,11 @@ void	World::update(sf::RenderWindow& window)
 	{
 		if (!m_running)
 			break;
-		m_running = system->update(window, elapsedTime);
+		system->update(window, elapsedTime);
 	}
+}
+
+void	World::triggered(const Event&)
+{
+	m_running = false;
 }

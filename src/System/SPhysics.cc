@@ -79,7 +79,7 @@ static bool	processCollidable(const std::vector<Archetype*>& archs, CPosition* c
 	return false;
 }
 
-bool	SPhysics::update(sf::RenderWindow&, float elapsedTime)
+void	SPhysics::update(sf::RenderWindow&, float elapsedTime)
 {
 // first moving entities that won't collide
 	for (Archetype* arch : m_groups[G::Ghost].archs)
@@ -157,5 +157,4 @@ bool	SPhysics::update(sf::RenderWindow&, float elapsedTime)
 			}
 		}
 	}
-	return true;
 }
