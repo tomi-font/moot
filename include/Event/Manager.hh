@@ -1,5 +1,4 @@
-#ifndef EVENT_MANAGER_HH
-#define EVENT_MANAGER_HH
+#pragma once
 
 #include "Event.hh"
 #include <unordered_map>
@@ -21,5 +20,3 @@ private:
 
 	std::unordered_map<Event::Type, std::vector<EventListener*>> m_listeners;
 };
-
-#endif

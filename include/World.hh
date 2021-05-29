@@ -1,5 +1,4 @@
-#ifndef WORLD_HH
-#define WORLD_HH
+#pragma once
 
 #include "Archetype.hh"
 #include "System/System.hh"
@@ -38,5 +37,3 @@ private:
 
 	void triggered(const Event&) override;
 };
-
-#endif

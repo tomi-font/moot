@@ -1,5 +1,4 @@
-#ifndef SPHYSICS_HH
-#define SPHYSICS_HH
+#pragma once
 
 #include "System.hh"
 
@@ -11,5 +10,3 @@ public:
 
 	void	update(sf::RenderWindow& window, float elapsedTime) override;
 };
-
-#endif

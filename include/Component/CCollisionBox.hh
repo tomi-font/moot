@@ -1,5 +1,4 @@
-#ifndef CCOLLISIONBOX_HH
-#define CCOLLISIONBOX_HH
+#pragma once
 
 #include <SFML/Graphics/Rect.hpp>
 
@@ -11,5 +10,3 @@ public:
 
 	CCollisionBox(const sf::FloatRect& rect) noexcept : sf::FloatRect(rect) {}
 };
-
-#endif

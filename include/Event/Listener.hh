@@ -1,5 +1,4 @@
-#ifndef EVENT_LISTENER_HH
-#define EVENT_LISTENER_HH
+#pragma once
 
 #include "Manager.hh"
 
@@ -21,5 +20,3 @@ private:
 
 	EventManager& m_eventManager;
 };
-
-#endif

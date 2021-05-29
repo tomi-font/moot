@@ -1,5 +1,4 @@
-#ifndef COMPONENT_GROUP_HH
-#define COMPONENT_GROUP_HH
+#pragma once
 
 #include "Component.hh"
 #include "../Archetype.hh"
@@ -26,5 +25,3 @@ private:
 // Components whose presence is forbidden.
 	CsComp	exc;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef CPLAYER_HH
-#define CPLAYER_HH
+#pragma once
 
 #include <SFML/Window/Keyboard.hpp>
 
@@ -29,5 +28,3 @@ private:
 	
 	const Controls	m_controls;
 };
-
-#endif

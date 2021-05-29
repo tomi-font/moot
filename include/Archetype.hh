@@ -1,5 +1,4 @@
-#ifndef ARCHETYPE_HH
-#define ARCHETYPE_HH
+#pragma once
 
 #include <Component/Component.hh>
 #include <Component/CPosition.hh>
@@ -55,5 +54,3 @@ private:
 
 	std::vector<ComponentVariant>	m_components;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef COMPONENT_HH
-#define COMPONENT_HH
+#pragma once
 
 // describes which components are present with each bit representing a different one
 // Components Composition
@@ -22,5 +21,3 @@ public:
 		COUNT // Keep last.
 	};
 };
-
-#endif

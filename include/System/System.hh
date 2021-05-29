@@ -1,5 +1,4 @@
-#ifndef SYSTEM_HH
-#define SYSTEM_HH
+#pragma once
 
 #include "../Component/Group.hh"
 #include <vector>
@@ -30,5 +29,3 @@ protected:
 // Component groups of interest.
 	std::vector<ComponentGroup>	m_groups;
 };
-
-#endif

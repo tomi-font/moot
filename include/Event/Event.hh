@@ -1,5 +1,4 @@
-#ifndef EVENT_EVENT_HH
-#define EVENT_EVENT_HH
+#pragma once
 
 class Event
 {
@@ -20,5 +19,3 @@ private:
 
 	Type m_type;
 };
-
-#endif

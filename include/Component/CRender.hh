@@ -1,5 +1,4 @@
-#ifndef CRENDER_HH
-#define CRENDER_HH
+#pragma once
 
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/Graphics/Rect.hpp>
@@ -21,5 +20,3 @@ private:
 
 	std::array<sf::Vertex, 4>	m_vertices;
 };
-
-#endif

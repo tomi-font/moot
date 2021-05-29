@@ -1,5 +1,4 @@
-#ifndef CMOVE_HH
-#define CMOVE_HH
+#pragma once
 
 #include <SFML/System/Vector2.hpp>
 
@@ -41,5 +40,3 @@ private:
 
 	unsigned short	m_speed;
 };
-
-#endif

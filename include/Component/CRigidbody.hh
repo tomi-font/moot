@@ -1,5 +1,4 @@
-#ifndef CRIGIDBODY_HH
-#define CRIGIDBODY_HH
+#pragma once
 
 class	CRigidbody
 {
@@ -20,5 +19,3 @@ private:
 	float	m_velocity = 0.f;
 	bool	m_grounded = false;
 };
-
-#endif
