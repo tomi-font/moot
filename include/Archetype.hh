@@ -20,6 +20,9 @@ public:
 
 	Archetype(CsComp);
 
+	Archetype(const Archetype&) = delete;
+	void operator=(const Archetype&) = delete;
+
 	CsComp	getComp() const noexcept
 	{
 		return m_comp;

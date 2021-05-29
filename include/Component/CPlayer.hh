@@ -15,7 +15,7 @@ public:
 		Left,
 		Right,
 		Jump,
-		COUNT
+		COUNT // Keep last.
 	};
 
 	using Controls = std::array<sf::Keyboard::Key, Control::COUNT>;

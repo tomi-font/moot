@@ -2,16 +2,15 @@
 #define SINPUT_HH
 
 #include "System.hh"
-#include <SFML/Graphics/RenderWindow.hpp>
+#include "../Event/Listener.hh"
 
-class	SInput : public System
+class	SInput : public System, EventListener
 {
 public:
 
-	SInput();
+	SInput(EventManager&);
 
-// returns false if quitting was requested by the player
-	bool	readInput(sf::RenderWindow&);
+	void	update(sf::RenderWindow& window, float elapsedTime) override;
 };
 
 #endif
