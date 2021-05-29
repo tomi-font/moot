@@ -19,7 +19,7 @@ public:
 		Player,
 		CollisionBox,
 		Rigidbody,
-		COUNT
+		COUNT // Keep last.
 	};
 };
 
