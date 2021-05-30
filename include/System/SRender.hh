@@ -3,7 +3,7 @@
 #include <System/System.hh>
 #include <SFML/Graphics/Texture.hpp>
 
-class	SRender : public System
+class SRender : public System
 {
 public:
 

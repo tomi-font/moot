@@ -6,17 +6,17 @@ class EventListener
 {
 public:
 
-	virtual void triggered(const Event&) {}
+	virtual void	triggered(const Event&) {}
 
 protected:
 
 	EventListener(EventManager& em) : m_eventManager(em) {}
 
-	void listen(Event::Type et) { m_eventManager.addListener(et, this); }
+	void	listen(Event::Type et) { m_eventManager.addListener(et, this); }
 
-	void trigger(const Event& e) { m_eventManager.trigger(e); }
+	void	trigger(const Event& e) { m_eventManager.trigger(e); }
 
 private:
 
-	EventManager& m_eventManager;
+	EventManager&	m_eventManager;
 };

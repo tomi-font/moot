@@ -8,7 +8,7 @@
 
 int	main()
 {
-	World world;
+	World	world;
 
 	// Manual creation of a player.
 	Archetype*		arch = world.getArchetype(C(Component::Position) | C(Component::Render) | C(Component::Move) | C(Component::Player) | C(Component::CollisionBox) | C(Component::Rigidbody));
@@ -31,10 +31,10 @@ int	main()
 	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
 
 	// Manual creation of the window.
-	auto vm = sf::VideoMode::getDesktopMode();
+	auto	vm = sf::VideoMode::getDesktopMode();
 	vm.width /= 2;
 	vm.height /= 2;
-	sf::RenderWindow window(vm, "GAME");
+	sf::RenderWindow	window(vm, "GAME");
 	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
 	window.setVerticalSyncEnabled(true);
 	window.setKeyRepeatEnabled(false);

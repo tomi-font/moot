@@ -5,7 +5,7 @@
 #include <Component/CPlayer.hh>
 
 // indices for m_groups
-enum	G
+enum G
 {
 	Player,		// player ; so that the view follows
 	Static,		// entities that won't move
@@ -45,14 +45,13 @@ void	SRender::update(sf::RenderWindow& window, float)
 		const auto&	cpos = arch->get<CPosition>();
 		auto&		crend = arch->get<CRender>();
 
-		unsigned	i;
-		for (i = 0; i != cmov.size(); ++i)
+		for (unsigned i = 0; i != cmov.size(); ++i)
 		{
 			if (cmov[i].hasMoved())
 				crend[i].setPosition(cpos[i]);
 		}
 
-		window.draw(crend[0].getVertices(), i * 4, sf::Quads, &m_texture);
+		window.draw(crend[0].getVertices(), cmov.size() * 4, sf::Quads, &m_texture);
 	}
 
 	window.display();

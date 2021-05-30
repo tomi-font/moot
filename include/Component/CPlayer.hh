@@ -3,13 +3,13 @@
 #include <SFML/Window/Keyboard.hpp>
 
 
-class	CPlayer
+class CPlayer
 {
 public:
 
-	static constexpr auto Type = Component::Player;
+	static constexpr auto	Type = Component::Player;
 
-	enum	Control
+	enum Control
 	{
 		Left,
 		Right,

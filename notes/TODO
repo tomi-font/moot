@@ -5,5 +5,3 @@
 - Static asserts on whatever is possible.
 - Format code.
 - Decide on noexcept.
-- float -> double (sf chrono to std)
-- spacing between function type and name (tab/space) in headers and source files

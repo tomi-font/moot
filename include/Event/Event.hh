@@ -13,9 +13,9 @@ public:
 
 	Event(Type t) : m_type(t) {}
 
-	Type type() const { return m_type; }
+	Type	type() const { return m_type; }
 
 private:
 
-	Type m_type;
+	Type	m_type;
 };

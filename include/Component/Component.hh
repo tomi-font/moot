@@ -6,11 +6,11 @@ using CsComp = unsigned;
 // used to compose the bitmask by OR-ing with T being a Component::Type
 #define C(T) (1 << T)
 
-class	Component
+class Component
 {
 public:
 
-	enum	Type
+	enum Type
 	{
 		Position,
 		Render,

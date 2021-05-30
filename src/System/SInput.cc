@@ -5,7 +5,7 @@
 #include <SFML/Window/Event.hpp>
 
 // indices for m_groups
-enum	G
+enum G
 {
 	Player,
 	COUNT

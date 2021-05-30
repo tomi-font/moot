@@ -2,11 +2,11 @@
 
 #include <SFML/System/Vector2.hpp>
 
-class	CPosition : public sf::Vector2f
+struct CPosition : sf::Vector2f
 {
 public:
 
-	static constexpr auto Type = Component::Position;
+	static constexpr auto	Type = Component::Position;
 
 	CPosition(const sf::Vector2f& pos) noexcept : sf::Vector2f(pos) {}
 };

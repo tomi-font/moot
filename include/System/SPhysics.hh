@@ -2,7 +2,7 @@
 
 #include <System/System.hh>
 
-class	SPhysics : public System
+class SPhysics : public System
 {
 public:
 

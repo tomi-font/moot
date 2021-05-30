@@ -7,7 +7,7 @@
 
 #define GRAVITY_ACCELERATION 2000.f
 // indices for m_groups
-enum	G
+enum G
 {
 	Ghost,	// entities that only have a move component
 	Bird,	// entities that move and can collide, without rigidbody
