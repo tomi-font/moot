@@ -5,7 +5,8 @@
 #include <Component/CRigidbody.hh>
 #include <cmath>
 
-#define GRAVITY_ACCELERATION 2000.f
+constexpr float	c_gravityAcceleration = 2000.f;
+
 // indices for m_groups
 enum G
 {
@@ -146,7 +147,7 @@ void	SPhysics::update(sf::RenderWindow&, float elapsedTime)
 				}
 				crig->setGrounded(false);
 			}
-			crig->applyForce(GRAVITY_ACCELERATION * elapsedTime);
+			crig->applyForce(c_gravityAcceleration * elapsedTime);
 			move.y += crig->getVelocity();
 
 			grounded:
