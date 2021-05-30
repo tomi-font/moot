@@ -1,6 +1,6 @@
 #pragma once
 
-#include "System.hh"
+#include <System/System.hh>
 
 class	SPhysics : public System
 {

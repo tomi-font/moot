@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Archetype.hh"
-#include "System/System.hh"
-#include "Event/Listener.hh"
+#include <Archetype.hh>
+#include <System/System.hh>
+#include <Event/Listener.hh>
 #include <deque>
 
 class	World : EventListener

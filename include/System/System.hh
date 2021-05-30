@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Component/Group.hh"
+#include <Component/Group.hh>
 #include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 

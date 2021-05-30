@@ -1,6 +1,6 @@
 #pragma once
 
-#include "System.hh"
+#include <System/System.hh>
 #include <SFML/Graphics/Texture.hpp>
 
 class	SRender : public System

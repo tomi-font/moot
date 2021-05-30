@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.hh"
+#include <Event/Event.hh>
 #include <unordered_map>
 #include <vector>
 

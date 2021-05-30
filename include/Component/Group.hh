@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Component.hh"
-#include "../Archetype.hh"
+#include <Component/Component.hh>
+#include <Archetype.hh>
 
 // Groups are the way systems express their interest towards different component compositions.
 
