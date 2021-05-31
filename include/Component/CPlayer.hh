@@ -1,16 +1,15 @@
-#ifndef CPLAYER_HH
-#define CPLAYER_HH
+#pragma once
 
 #include <SFML/Window/Keyboard.hpp>
 
 
-class	CPlayer
+class CPlayer
 {
 public:
 
-	static constexpr auto Type = Component::Player;
+	static constexpr auto	Type = Component::Player;
 
-	enum	Control
+	enum Control
 	{
 		Left,
 		Right,
@@ -29,5 +28,3 @@ private:
 	
 	const Controls	m_controls;
 };
-
-#endif

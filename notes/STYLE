@@ -1,0 +1,9 @@
+struct:
+- To be used instead of class if at least one member variable is public.
+- No m_ prefix.
+
+Member functions declarations and definitions in the same order.
+
+Only tabs between type and name declaration (class members, functions and variables).
+
+One space between enum and its name.

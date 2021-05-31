@@ -1,7 +1,6 @@
-#ifndef EVENT_MANAGER_HH
-#define EVENT_MANAGER_HH
+#pragma once
 
-#include "Event.hh"
+#include <Event/Event.hh>
 #include <unordered_map>
 #include <vector>
 
@@ -13,13 +12,11 @@ public:
 
 	EventManager();
 
-	void addListener(Event::Type, EventListener*);
+	void	addListener(Event::Type, EventListener*);
 
-	void trigger(const Event&) const;
+	void	trigger(const Event&) const;
 
 private:
 
-	std::unordered_map<Event::Type, std::vector<EventListener*>> m_listeners;
+	std::unordered_map<Event::Type, std::vector<EventListener*>>	m_listeners;
 };
-
-#endif

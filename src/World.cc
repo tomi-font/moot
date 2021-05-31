@@ -12,13 +12,16 @@ World::World() : EventListener(m_eventManager), m_running(true), m_systems(Syste
 	m_systems[System::Render] = std::make_unique<SRender>();
 
 	listen(Event::PlayerQuit);
+
+// Restart the clock to not count the setup time.
+	m_clock.restart();
 }
 
 Archetype*	World::getArchetype(CsComp comp)
 {
 	for (Archetype& a : m_archs)
 	{
-		if (a.getComp() == comp)
+		if (a.comp() == comp)
 			return &a;
 	}
 

@@ -1,10 +1,9 @@
-#ifndef SRENDER_HH
-#define SRENDER_HH
+#pragma once
 
-#include "System.hh"
+#include <System/System.hh>
 #include <SFML/Graphics/Texture.hpp>
 
-class	SRender : public System
+class SRender : public System
 {
 public:
 
@@ -16,5 +15,3 @@ private:
 
 	sf::Texture	m_texture;
 };
-
-#endif

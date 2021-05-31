@@ -1,20 +1,19 @@
-#ifndef COMPONENT_GROUP_HH
-#define COMPONENT_GROUP_HH
+#pragma once
 
-#include "Component.hh"
-#include "../Archetype.hh"
+#include <Component/Component.hh>
+#include <Archetype.hh>
 
 // Groups are the way systems express their interest towards different component compositions.
 
 struct ComponentGroup
 {
-	ComponentGroup(CsComp required, CsComp forbidden = 0) : inc(required), exc(forbidden) {}
+	ComponentGroup(CsComp required, CsComp forbidden = CsComp()) : inc(required), exc(forbidden) {}
 	
-// The composition is matched if all of the included and none of the excluded components are present.
-	bool matches(CsComp comp) { return (comp & inc) == inc && !(comp & exc); }
+// The composition matches if all of the included and none of the excluded components are present.
+	bool	matches(CsComp comp) { return (comp & inc) == inc && !(comp & exc).bits(); }
 
 // Appends the archetype upon match.
-	void match(Archetype*);
+	void	match(Archetype*);
 
 // Matching archetypes.
 	std::vector<Archetype*>	archs;
@@ -26,5 +25,3 @@ private:
 // Components whose presence is forbidden.
 	CsComp	exc;
 };
-
-#endif

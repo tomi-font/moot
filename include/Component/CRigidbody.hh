@@ -1,11 +1,10 @@
-#ifndef CRIGIDBODY_HH
-#define CRIGIDBODY_HH
+#pragma once
 
-class	CRigidbody
+class CRigidbody
 {
 public:
 
-	static constexpr auto Type = Component::Rigidbody;
+	static constexpr auto	Type = Component::Rigidbody;
 
 	float	getVelocity() const noexcept { return m_velocity; }
 	void	applyForce(float force) noexcept { m_velocity += force; };
@@ -20,5 +19,3 @@ private:
 	float	m_velocity = 0.f;
 	bool	m_grounded = false;
 };
-
-#endif

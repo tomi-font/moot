@@ -1,9 +1,8 @@
-#ifndef SPHYSICS_HH
-#define SPHYSICS_HH
+#pragma once
 
-#include "System.hh"
+#include <System/System.hh>
 
-class	SPhysics : public System
+class SPhysics : public System
 {
 public:
 
@@ -11,5 +10,3 @@ public:
 
 	void	update(sf::RenderWindow& window, float elapsedTime) override;
 };
-
-#endif

@@ -1,15 +1,14 @@
-#ifndef CMOVE_HH
-#define CMOVE_HH
+#pragma once
 
 #include <SFML/System/Vector2.hpp>
 
 // this component represents voluntary moving only
 // external forces are handled by the rigidbody component
-class	CMove
+class CMove
 {
 public:
 
-	static constexpr auto Type = Component::Move;
+	static constexpr auto	Type = Component::Move;
 
 	CMove(unsigned short speed) noexcept : m_moving(false), m_moved(false), m_speed(speed) {}
 
@@ -41,5 +40,3 @@ private:
 
 	unsigned short	m_speed;
 };
-
-#endif

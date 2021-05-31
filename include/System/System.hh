@@ -1,11 +1,10 @@
-#ifndef SYSTEM_HH
-#define SYSTEM_HH
+#pragma once
 
-#include "../Component/Group.hh"
+#include <Component/Group.hh>
 #include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-class	System
+class System
 {
 public:
 
@@ -20,15 +19,13 @@ public:
 		COUNT // Keep last.
 	};
 
-	virtual void update(sf::RenderWindow& window, float elapsedTime) = 0;
+	virtual void	update(sf::RenderWindow& window, float elapsedTime) = 0;
 
 // Appends the archetype to matching component groups.
-	void match(Archetype*);
+	void	match(Archetype*);
 
 protected:
 
 // Component groups of interest.
 	std::vector<ComponentGroup>	m_groups;
 };
-
-#endif

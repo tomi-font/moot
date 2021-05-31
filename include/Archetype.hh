@@ -1,5 +1,4 @@
-#ifndef ARCHETYPE_HH
-#define ARCHETYPE_HH
+#pragma once
 
 #include <Component/Component.hh>
 #include <Component/CPosition.hh>
@@ -21,12 +20,9 @@ public:
 	Archetype(CsComp);
 
 	Archetype(const Archetype&) = delete;
-	void operator=(const Archetype&) = delete;
+	void	operator=(const Archetype&) = delete;
 
-	CsComp	getComp() const noexcept
-	{
-		return m_comp;
-	}
+	CsComp	comp() const noexcept { return m_comp; }
 
 // returns the vector containing the component type requested
 // behavior is undefined if the caller asks for some component that's not present
@@ -35,7 +31,7 @@ public:
 	{
 		// we calculate the index in m_components by finding out how many bits are set up to
 		// C(T::Type), as components will always be stored in the ComponentVariant order
-		return std::get<std::vector<T>>(m_components[__builtin_popcount(m_comp & (C(T::Type) - 1))]);
+		return std::get<std::vector<T>>(m_components[__builtin_popcount(m_comp.bits() & (CsComp(T::Type).bits() - 1))]);
 	}
 
 private:
@@ -55,5 +51,3 @@ private:
 
 	std::vector<ComponentVariant>	m_components;
 };
-
-#endif

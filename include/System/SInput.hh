@@ -1,10 +1,9 @@
-#ifndef SINPUT_HH
-#define SINPUT_HH
+#pragma once
 
-#include "System.hh"
-#include "../Event/Listener.hh"
+#include <System/System.hh>
+#include <Event/Listener.hh>
 
-class	SInput : public System, EventListener
+class SInput : public System, EventListener
 {
 public:
 
@@ -12,5 +11,3 @@ public:
 
 	void	update(sf::RenderWindow& window, float elapsedTime) override;
 };
-
-#endif

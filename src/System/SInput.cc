@@ -5,7 +5,7 @@
 #include <SFML/Window/Event.hpp>
 
 // indices for m_groups
-enum	G
+enum G
 {
 	Player,
 	COUNT
@@ -14,7 +14,7 @@ enum	G
 SInput::SInput(EventManager& em) : EventListener(em)
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(C(Component::Player) | C(Component::Move));
+	m_groups.emplace_back(Component::Player | Component::Move);
 }
 
 static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)

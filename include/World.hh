@@ -1,12 +1,11 @@
-#ifndef WORLD_HH
-#define WORLD_HH
+#pragma once
 
-#include "Archetype.hh"
-#include "System/System.hh"
-#include "Event/Listener.hh"
+#include <Archetype.hh>
+#include <System/System.hh>
+#include <Event/Listener.hh>
 #include <deque>
 
-class	World : EventListener
+class World : EventListener
 {
 public:
 
@@ -29,14 +28,12 @@ private:
 	sf::Clock	m_clock;
 
 // Whether it is running or has stopped.
-	bool 		m_running;
+	bool	m_running;
 
 // All systems.
-	std::vector<std::unique_ptr<System>> m_systems;
+	std::vector<std::unique_ptr<System>>	m_systems;
 
-	EventManager m_eventManager;
+	EventManager	m_eventManager;
 
-	void triggered(const Event&) override;
+	void	triggered(const Event&) override;
 };
-
-#endif
