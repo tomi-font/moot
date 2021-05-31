@@ -21,7 +21,7 @@ Archetype*	World::getArchetype(CsComp comp)
 {
 	for (Archetype& a : m_archs)
 	{
-		if (a.getComp() == comp)
+		if (a.comp() == comp)
 			return &a;
 	}
 

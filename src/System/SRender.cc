@@ -16,9 +16,9 @@ enum G
 SRender::SRender()
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(C(Component::Player) | C(Component::Position));
-	m_groups.emplace_back(C(Component::Render), C(Component::Move));
-	m_groups.emplace_back(C(Component::Render) | C(Component::Position) | C(Component::Move));
+	m_groups.emplace_back(Component::Player | Component::Position);
+	m_groups.emplace_back(Component::Render, Component::Move);
+	m_groups.emplace_back(Component::Render | Component::Position | Component::Move);
 
 	m_texture.loadFromFile("data/texture.png");
 	m_texture.setRepeated(true);

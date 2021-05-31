@@ -1,7 +1,10 @@
 - implement a more elegant way to create entities with all their components
 - populate the world in a more sexy manner than dumbly creating all components by hand
+- Fool-proof the collisions when the move is bigger than the object.
 
 - Comment everything that is not absurdly obvious, as proper sentences.
 - Static asserts on whatever is possible.
-- Format code.
+- Format code:
+	- Loop brackets?
 - Decide on noexcept.
+- Provide move constructor for Archetype.

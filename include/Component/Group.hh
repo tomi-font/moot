@@ -7,10 +7,10 @@
 
 struct ComponentGroup
 {
-	ComponentGroup(CsComp required, CsComp forbidden = 0) : inc(required), exc(forbidden) {}
+	ComponentGroup(CsComp required, CsComp forbidden = CsComp()) : inc(required), exc(forbidden) {}
 	
 // The composition matches if all of the included and none of the excluded components are present.
-	bool	matches(CsComp comp) { return (comp & inc) == inc && !(comp & exc); }
+	bool	matches(CsComp comp) { return (comp & inc) == inc && !(comp & exc).bits(); }
 
 // Appends the archetype upon match.
 	void	match(Archetype*);
