@@ -3,6 +3,7 @@
 #include <Archetype.hh>
 #include <System/System.hh>
 #include <Event/Listener.hh>
+#include <Factory.hh>
 #include <deque>
 
 class World : EventListener
@@ -36,4 +37,6 @@ private:
 	EventManager	m_eventManager;
 
 	void	triggered(const Event&) override;
+
+	Factory	m_factory;
 };

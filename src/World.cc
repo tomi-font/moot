@@ -13,6 +13,9 @@ World::World() : EventListener(m_eventManager), m_running(true), m_systems(Syste
 
 	listen(Event::PlayerQuit);
 
+	m_factory.create("player", this);
+	m_factory.create("platform", this);
+
 // Restart the clock to not count the setup time.
 	m_clock.restart();
 }
