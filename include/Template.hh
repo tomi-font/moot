@@ -1,7 +1,6 @@
-#ifndef TEMPLATE_HH
-#define TEMPLATE_HH
+#pragma once
 
-#include "Component/Component.hh"
+#include <Component/Component.hh>
 
 // Entity Template
 class	Template
@@ -17,5 +16,3 @@ private:
 	CsComp	m_comp;
 	void*	m_components;
 };
-
-#endif

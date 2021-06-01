@@ -8,3 +8,4 @@
 	- Loop brackets?
 - Decide on noexcept.
 - Provide move constructor for Archetype.
+- Debug logging with various verbosity levels/topics.

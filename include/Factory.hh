@@ -1,7 +1,6 @@
-#ifndef FACTORY_HH
-#define FACTORY_HH
+#pragma once
 
-#include "Template.hh"
+#include <Template.hh>
 #include <unordered_map>
 
 class	World;
@@ -20,5 +19,3 @@ private:
 
 	bool	loadTemplate(const std::string&, TemplateMap::iterator*);
 };
-
-#endif
