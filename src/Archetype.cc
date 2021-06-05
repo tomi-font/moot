@@ -9,7 +9,7 @@ static constexpr T	variant_from_index(size_t index)
 			[](auto I){ return T(std::in_place_index<I>); });
 }
 
-Archetype::Archetype(ComponentComposition comp) : m_comp(comp)
+Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
 {
 // prepares the archetype for storing all needed components
 

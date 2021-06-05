@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Component/Component.hh>
+#include <Component/Composable.hh>
 #include <Component/Types.hh>
 #include <vector>
 #include <variant>
 
 // Archetypes store components of entities that are the same, i.e. have exactly the same components.
-class Archetype
+class Archetype : public ComponentComposable
 {
 public:
 
@@ -14,8 +14,6 @@ public:
 
 	Archetype(const Archetype&) = delete;
 	void	operator=(const Archetype&) = delete;
-
-	ComponentComposition	comp() const noexcept { return m_comp; }
 
 // returns the vector containing the component type requested
 // behavior is undefined if the caller asks for some component that's not present
@@ -28,9 +26,6 @@ public:
 	}
 
 private:
-
-// Components composing this archetype.
-	ComponentComposition	m_comp;
 
 // Helper struct to convert a tuple into a variant of vectors.
 	template<typename Tuple> struct VectorVariantGetter;
