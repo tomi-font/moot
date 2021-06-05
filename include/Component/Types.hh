@@ -17,4 +17,4 @@ using Components = std::tuple<
 	CRigidbody>;
 
 // Gets a component's id by using its class as the template.
-template<typename T> inline constexpr ComponentComposition CId = static_cast<Component::Type>(TupleIndex<T, Components>::value);
+template<typename T> inline constexpr ComponentComposition CId = static_cast<ComponentIndex>(TupleIndex<T, Components>::value);
