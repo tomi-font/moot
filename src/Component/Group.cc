@@ -1,5 +1,5 @@
 #include <Component/Group.hh>
-#include <Component/Types.hh>
+#include <Archetype.hh>
 
 static_assert(sizeof(ComponentComposition::Bits) * 8 >= std::tuple_size_v<Components>);
 

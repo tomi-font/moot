@@ -1,8 +1,5 @@
 #include <System/SRender.hh>
-#include <Component/CRender.hh>
-#include <Component/CPosition.hh>
-#include <Component/CMove.hh>
-#include <Component/CPlayer.hh>
+#include <Archetype.hh>
 
 // indices for m_groups
 enum G

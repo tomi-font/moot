@@ -1,6 +1,9 @@
 #pragma once
 
-#include <Archetype.hh>
+#include <Component/Component.hh>
+#include <vector>
+
+class Archetype;
 
 // Groups are the way systems express their interest towards different component compositions.
 struct ComponentGroup

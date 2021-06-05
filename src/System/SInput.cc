@@ -1,7 +1,5 @@
 #include <System/SInput.hh>
-#include <Component/CPlayer.hh>
-#include <Component/CMove.hh>
-#include <Component/CRigidbody.hh>
+#include <Archetype.hh>
 #include <SFML/Window/Event.hpp>
 
 // indices for m_groups

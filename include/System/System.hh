@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Component/Group.hh>
-#include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 class System
@@ -9,15 +8,6 @@ class System
 public:
 
 	virtual ~System() {}
-
-// The various sytems, declared in update order.
-	enum
-	{
-		Input,
-		Physics,
-		Render,
-		COUNT // Keep last.
-	};
 
 	virtual void	update(sf::RenderWindow& window, float elapsedTime) = 0;
 

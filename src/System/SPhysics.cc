@@ -1,8 +1,5 @@
 #include <System/SPhysics.hh>
-#include <Component/CPosition.hh>
-#include <Component/CMove.hh>
-#include <Component/CCollisionBox.hh>
-#include <Component/CRigidbody.hh>
+#include <Archetype.hh>
 #include <cmath>
 
 constexpr float	c_gravityAcceleration = 2000.f;

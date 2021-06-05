@@ -1,15 +1,12 @@
 #include <World.hh>
-#include <System/SInput.hh>
-#include <System/SPhysics.hh>
-#include <System/SRender.hh>
-
+#include <System/Types.hh>
 #include <SFML/Window/Event.hpp>
 
-World::World() : EventListener(m_eventManager), m_running(true), m_systems(System::COUNT)
+World::World() : EventListener(m_eventManager), m_running(true), m_systems(std::tuple_size_v<Systems>)
 {
-	m_systems[System::Input] = std::make_unique<SInput>(m_eventManager);
-	m_systems[System::Physics] = std::make_unique<SPhysics>();
-	m_systems[System::Render] = std::make_unique<SRender>();
+	m_systems[SId<SInput>] = std::make_unique<SInput>(m_eventManager);
+	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();
+	m_systems[SId<SRender>] = std::make_unique<SRender>();
 
 	listen(Event::PlayerQuit);
 
