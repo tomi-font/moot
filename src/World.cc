@@ -17,7 +17,7 @@ World::World() : EventListener(m_eventManager), m_running(true), m_systems(Syste
 	m_clock.restart();
 }
 
-Archetype*	World::getArchetype(CsComp comp)
+Archetype*	World::getArchetype(ComponentComposition comp)
 {
 	for (Archetype& a : m_archs)
 	{

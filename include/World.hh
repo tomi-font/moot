@@ -17,7 +17,7 @@ public:
 	void	update(sf::RenderWindow&);
 
 // Returns the matching archetype, creating it if it didn't exist.
-	Archetype*	getArchetype(CsComp);
+	Archetype*	getArchetype(ComponentComposition);
 
 private:
 

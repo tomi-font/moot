@@ -1,18 +1,19 @@
 #pragma once
 
 #include <Component/Component.hh>
+#include <vector>
+#include <memory>
 
-// Entity Template
 class	Template
 {
 public:
 
-	Template(CsComp comp) noexcept;
+	Template(ComponentComposition comp) noexcept;
 
-	CsComp	getComp() const noexcept { return m_comp; }
+	ComponentComposition	comp() const noexcept { return m_comp; }
 
 private:
 
-	CsComp	m_comp;
-	void*	m_components;
+	ComponentComposition	m_comp;
+	std::vector<std::unique_ptr<Component>>	m_components;
 };

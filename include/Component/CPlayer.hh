@@ -1,13 +1,11 @@
 #pragma once
 
+#include <array>
 #include <SFML/Window/Keyboard.hpp>
-
 
 class CPlayer
 {
 public:
-
-	static constexpr auto	Type = Component::Player;
 
 	enum Control
 	{

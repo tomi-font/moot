@@ -20,10 +20,10 @@ enum G
 SPhysics::SPhysics()
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(Component::Position | Component::Move, Component::CollisionBox | Component::Rigidbody);
-	m_groups.emplace_back(Component::Position | Component::Move | Component::CollisionBox, Component::Rigidbody);
-	m_groups.emplace_back(Component::Position | Component::Move | Component::CollisionBox | Component::Rigidbody);
-	m_groups.emplace_back(Component::CollisionBox);
+	m_groups.emplace_back(CId<CPosition> | CId<CMove>, CId<CCollisionBox> | CId<CRigidbody>);
+	m_groups.emplace_back(CId<CPosition> | CId<CMove> | CId<CCollisionBox>, CId<CRigidbody>);
+	m_groups.emplace_back(CId<CPosition> | CId<CMove> | CId<CCollisionBox> | CId<CRigidbody>);
+	m_groups.emplace_back(CId<CCollisionBox>);
 }
 
 static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::FloatRect& hitBox, CRigidbody* crig)

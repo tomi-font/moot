@@ -14,7 +14,7 @@ enum G
 SInput::SInput(EventManager& em) : EventListener(em)
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(Component::Player | Component::Move);
+	m_groups.emplace_back(CId<CPlayer> | CId<CMove>);
 }
 
 static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)

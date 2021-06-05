@@ -31,5 +31,5 @@ void	Factory::create(const std::string& name, World* world)
 			return;
 	}
 	temp = &tempIter->second;
-	arch = world->getArchetype(temp->getComp());
+	arch = world->getArchetype(temp->comp());
 }

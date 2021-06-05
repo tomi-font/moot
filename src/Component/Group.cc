@@ -1,6 +1,7 @@
 #include <Component/Group.hh>
+#include <Component/Types.hh>
 
-static_assert(sizeof(CsComp::Bits) * 8 >= Component::COUNT);
+static_assert(sizeof(ComponentComposition::Bits) * 8 >= std::tuple_size_v<Components>);
 
 void	ComponentGroup::match(Archetype* arch)
 {
