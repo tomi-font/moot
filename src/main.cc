@@ -1,28 +1,24 @@
 #include <World.hh>
-#include <Component/CPosition.hh>
-#include <Component/CRender.hh>
-#include <Component/CMove.hh>
-#include <Component/CPlayer.hh>
-#include <Component/CCollisionBox.hh>
-#include <Component/CRigidbody.hh>
+#include <Template.hh>
 
 int	main()
 {
 	World	world;
 
 	// Manual creation of a player.
-	Archetype*		arch = world.getArchetype(Component::Position | Component::Render | Component::Move | Component::Player | Component::CollisionBox | Component::Rigidbody);
-	sf::Vector2f	pos(200.f, 450.f);
+	sf::Vector2f	pos(200.f, 650.f);
 	sf::Vector2f	size(100.f, 100.f);
-	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, size, sf::FloatRect(0,0,2,2));
-	arch->get<CMove>().emplace_back(1000);
-	arch->get<CPlayer>().emplace_back(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W}));
-	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
-	arch->get<CRigidbody>().emplace_back();
+	Template	temp;
+	temp.add(CPosition(pos));
+	temp.add(CRender(pos, size, sf::FloatRect(0, 0, 2, 2)));
+	temp.add(CMove(1000));
+	temp.add(CPlayer(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W})));
+	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
+	temp.add(CRigidbody());
+	world.getArchetype(temp.comp())->instantiate(temp);
 
 	// Manual creation of a platform.
-	arch = world.getArchetype(Component::Position | Component::Render | Component::CollisionBox);
+	Archetype* arch = world.getArchetype(CId<CPosition> | CId<CRender> | CId<CCollisionBox>);
 	pos.x = 100.f;
 	pos.y = 800.f;
 	size.x = 1600.f;

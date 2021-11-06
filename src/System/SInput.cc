@@ -1,7 +1,5 @@
 #include <System/SInput.hh>
-#include <Component/CPlayer.hh>
-#include <Component/CMove.hh>
-#include <Component/CRigidbody.hh>
+#include <Archetype.hh>
 #include <SFML/Window/Event.hpp>
 
 // indices for m_groups
@@ -14,7 +12,7 @@ enum G
 SInput::SInput(EventManager& em) : EventListener(em)
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(Component::Player | Component::Move);
+	m_groups.emplace_back(CId<CPlayer> | CId<CMove>);
 }
 
 static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)

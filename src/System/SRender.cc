@@ -1,8 +1,5 @@
 #include <System/SRender.hh>
-#include <Component/CRender.hh>
-#include <Component/CPosition.hh>
-#include <Component/CMove.hh>
-#include <Component/CPlayer.hh>
+#include <Archetype.hh>
 
 // indices for m_groups
 enum G
@@ -16,9 +13,9 @@ enum G
 SRender::SRender()
 {
 	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(Component::Player | Component::Position);
-	m_groups.emplace_back(Component::Render, Component::Move);
-	m_groups.emplace_back(Component::Render | Component::Position | Component::Move);
+	m_groups.emplace_back(CId<CPlayer> | CId<CPosition>);
+	m_groups.emplace_back(CId<CRender>, CId<CMove>);
+	m_groups.emplace_back(CId<CRender> | CId<CPosition> | CId<CMove>);
 
 	m_texture.loadFromFile("data/texture.png");
 	m_texture.setRepeated(true);

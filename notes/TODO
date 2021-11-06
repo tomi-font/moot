@@ -6,5 +6,6 @@
 - Static asserts on whatever is possible.
 - Format code:
 	- Loop brackets?
-- Decide on noexcept.
+- Decide on noexcept/constexpr.
 - Provide move constructor for Archetype.
+- Debug logging with various verbosity levels/topics.

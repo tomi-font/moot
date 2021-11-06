@@ -16,7 +16,7 @@ LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CXX) $(LDFLAGS) $(LDLIBS) -o$@ $^
+	$(CXX) -o$@ $^ $(LDFLAGS) $(LDLIBS)
 
 -include $(OBJ:.o=.d)
 
