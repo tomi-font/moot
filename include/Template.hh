@@ -10,15 +10,18 @@ class Template : public ComponentComposable
 // Helper struct to convert a tuple into a variant.
 	template<typename Tuple> struct VariantGetter;
 	template<typename... Ts> struct VariantGetter<std::tuple<Ts...>> { using type = std::variant<Ts...>; };
-// Variant containing every component.
-	using ComponentVariant = typename VariantGetter<Components>::type;
 
 public:
+
+// Variant containing every component.
+	using ComponentVariant = VariantGetter<Components>::type;
 
 	class DuplicateComponentException{};
 
 // Adds a component. May throw DuplicateComponentException if trying to add a component that's already present.
-	void add(const ComponentVariant&);
+	void	add(const ComponentVariant&);
+
+	auto&	components() const { return m_components; }
 
 private:
 

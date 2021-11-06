@@ -1,12 +1,13 @@
 #include <Archetype.hh>
+#include <Template.hh>
 #include <iostream>
 #include <boost/mp11.hpp>
 
-template <typename T>
-static constexpr T	variant_from_index(size_t index)
+// Calls f with a variant run-time index turned into a compile-time one.
+template <typename T, typename F>
+static constexpr void	variantConstIndex(std::size_t index, F&& f)
 {
-	return boost::mp11::mp_with_index<std::variant_size_v<T>>(index,
-			[](auto I){ return T(std::in_place_index<I>); });
+	boost::mp11::mp_with_index<std::variant_size_v<T>>(index, f);
 }
 
 Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
@@ -15,16 +16,18 @@ Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
 
 	ComponentComposition::Bits bits = comp.bits();
 
-// one bit set in comp means one component
-// thus, the number of set bits == number of vectors needed
-	m_components.reserve(__builtin_popcount(bits));
+// One bit set in comp means one component.
+	m_entities.reserve(__builtin_popcount(bits));
 
-// iterate through all bits set in comp, in increasing order
-// emplacing the corresponding component vector
+// Iterate through all bits set in comp from low to high, creating the corresponding component vector.
 	while (bits)
 	{
 		auto	variantIndex = __builtin_ctz(bits);
-		m_components.emplace_back(variant_from_index<ComponentVectorVariant>(variantIndex));
+		variantConstIndex<ComponentVectorVariant>(variantIndex,
+			[this](auto I)
+			{
+				m_entities.emplace_back(std::in_place_index<I>);
+			});
 		bits ^= 1 << variantIndex;
 	}
 
@@ -32,7 +35,28 @@ Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
 // using reserve() on all vectors depending on the composition
 // __builtin_ctz() will be of use
 
-	std::cout << "Archetype of size " << m_components.size() << std::endl;
-	if (__builtin_popcount(m_comp.bits()) != m_components.size())
+	std::cout << "Archetype of size " << m_entities.size() << std::endl;
+	if (__builtin_popcount(m_comp.bits()) != m_entities.size())
 		asm("int $3");
+}
+
+void	Archetype::instantiate(const Template& temp)
+{
+	if (!(temp.comp() == m_comp))
+		asm("int $3");
+
+	// Instantiate a new entity by appending all of the template's components.
+	unsigned i = 0;
+ 	for (const Template::ComponentVariant& component : temp.components())
+	{
+		variantConstIndex<Template::ComponentVariant>(component.index(),
+			[&](auto I)
+			{
+				using ComponentType = std::variant_alternative_t<I, Template::ComponentVariant>;
+				auto&	vec = std::get<std::vector<ComponentType>>(m_entities[i]);
+				auto&	comp = std::get<ComponentType>(component);
+				vec.push_back(comp);
+			});
+		++i;
+	}
 }
