@@ -4,6 +4,7 @@
 #include <System/System.hh>
 #include <Event/Listener.hh>
 #include <deque>
+#include <memory>
 
 class World : EventListener
 {
