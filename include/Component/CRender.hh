@@ -8,13 +8,13 @@ class CRender
 {
 public:
 
-	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, const sf::FloatRect& texRect) noexcept;
+	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, const sf::FloatRect& texRect);
 
-	const sf::Vertex*	getVertices() const noexcept { return &m_vertices[0]; }
+	auto& vertices() const { return m_vertices; }
 
-	void	setPosition(const sf::Vector2f&) noexcept;
+	void updatePosition(const sf::Vector2f&);
 
 private:
 
-	std::array<sf::Vertex, 4>	m_vertices;
+	std::array<sf::Vertex, 4> m_vertices;
 };

@@ -10,3 +10,11 @@
 - Entity IDs: Use part of the bits for the Archetype index, and the rest for the Components' index in the Archetype.
 
 - Separate the event listeners and triggers.
+
+- Systems' storing
+	- Fixed indices may be too restrictive e.g. when system dependencies get more complex.
+
+- Duplication of entity parameters (e.g. position, size) among its components
+
+- event system
+	- Having every listener store a reference to the manager may not be the most elegant.

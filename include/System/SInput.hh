@@ -9,5 +9,5 @@ public:
 
 	SInput(EventManager&);
 
-	void	update(sf::RenderWindow& window, float elapsedTime) override;
+	void update(sf::RenderWindow& window, float elapsedTime) override;
 };

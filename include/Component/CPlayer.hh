@@ -12,17 +12,16 @@ public:
 		Left,
 		Right,
 		Jump,
-		COUNT // Keep last.
+		COUNT
 	};
 
 	using Controls = std::array<sf::Keyboard::Key, Control::COUNT>;
 
-	CPlayer(const Controls& controls) noexcept : m_controls(controls) {}
+	CPlayer(const Controls& controls) : m_controls(controls) {}
 
-	const Controls&	getControls() const noexcept { return m_controls; }
-
+	auto& controls() const { return m_controls; }
 
 private:
-	
-	const Controls	m_controls;
+
+	const Controls m_controls;
 };

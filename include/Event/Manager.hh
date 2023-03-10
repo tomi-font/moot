@@ -12,11 +12,14 @@ public:
 
 	EventManager();
 
-	void	addListener(Event::Type, EventListener*);
+	// Subscribes a listener to an event type.
+	void addListener(Event::Type, EventListener*);
 
-	void	trigger(const Event&) const;
+	// Broadcasts an event to the subscribed listeners.
+	void trigger(const Event&) const;
 
 private:
 
-	std::unordered_map<Event::Type, std::vector<EventListener*>>	m_listeners;
+	// Maps the event types to their subscribed listeners.
+	std::unordered_map<Event::Type, std::vector<EventListener*>> m_listeners;
 };

@@ -2,30 +2,32 @@
 #include <Archetype.hh>
 #include <cmath>
 
-constexpr float	c_gravityAcceleration = 2000.f;
-
-// indices for m_groups
+// Indices for this system's groups.
 enum G
 {
-	Ghost,	// entities that only have a move component
-	Bird,	// entities that move and can collide, without rigidbody
-	Char,	// entities that move, collide, and have a rigidbody
-	Wall,	// entities that are collidable
+	Ghost, // Entities that only have a move component.
+	Bird, // Entities that move and collide, without rigidbody.
+	Char, // Entities that move and collide, with rigidbody.
+	Collidable,	// All entities that are collidable.
 	COUNT
 };
 
+constexpr float	c_gravityAcceleration = 2000.f;
+
 SPhysics::SPhysics()
 {
-	m_groups.reserve(G::COUNT);
-	m_groups.emplace_back(CId<CPosition> | CId<CMove>, CId<CCollisionBox> | CId<CRigidbody>);
-	m_groups.emplace_back(CId<CPosition> | CId<CMove> | CId<CCollisionBox>, CId<CRigidbody>);
-	m_groups.emplace_back(CId<CPosition> | CId<CMove> | CId<CCollisionBox> | CId<CRigidbody>);
-	m_groups.emplace_back(CId<CCollisionBox>);
+	m_groups.resize(G::COUNT);
+	m_groups[G::Ghost] = { CId<CPosition> | CId<CMove>, CId<CCollisionBox> | CId<CRigidbody> };
+	m_groups[G::Bird] = { CId<CPosition> | CId<CMove> | CId<CCollisionBox>, CId<CRigidbody> };
+	m_groups[G::Char] = { CId<CPosition> | CId<CMove> | CId<CCollisionBox> | CId<CRigidbody> };
+	m_groups[G::Collidable] = { CId<CCollisionBox> };
 }
+
+// TODO: Revise this whole thing,
 
 static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::FloatRect& hitBox, CRigidbody* crig)
 {
-	sf::Vector2f	shift;
+	sf::Vector2f shift;
 
 	if (move.x)
 		shift.x = hitBox.left + (move.x > 0.f ? -(rect.left + rect.width) : hitBox.width - rect.left);
@@ -50,14 +52,14 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 
 	if (crig && shift.y && rect.top + rect.height == hitBox.top)
 	{
-		crig->setGrounded(true);
-		crig->resetVelocity();
+		crig->grounded = true;
+		crig->velocity = 0.f;
 	}
 }
 
-static bool	processCollidable(const std::vector<Archetype*>& archs, CPosition* cpos, CCollisionBox* cbox, sf::Vector2f& move, CRigidbody* crig)
+static bool	processCollidable(const std::span<Archetype*>& archs, CPosition* cpos, CCollisionBox* cbox, sf::Vector2f& move, CRigidbody* crig)
 {
-	sf::FloatRect	rect(cbox->left + move.x, cbox->top + move.y, cbox->width, cbox->height);
+	sf::FloatRect rect(cbox->left + move.x, cbox->top + move.y, cbox->width, cbox->height);
 
 	for (Archetype* arch : archs)
 	{
@@ -77,62 +79,62 @@ static bool	processCollidable(const std::vector<Archetype*>& archs, CPosition* c
 	return false;
 }
 
-void	SPhysics::update(sf::RenderWindow&, float elapsedTime)
+void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 {
-// first moving entities that won't collide
-	for (Archetype* arch : m_groups[G::Ghost].archs)
+	// First the moving entities that won't collide.
+	for (Archetype* arch : m_groups[G::Ghost].archs())
 	{
-		auto&	vcpos = arch->get<CPosition>();	
-		auto&	vcmov = arch->get<CMove>();
+		const auto vcpos = arch->get<CPosition>();
+		const auto vcmov = arch->get<CMove>();
 
 		for (unsigned i = 0; i != vcmov.size(); ++i)
 		{
-			if (vcmov[i].isMoving())
+			if (vcmov[i].moving)
 			{
-				vcpos[i] += vcmov[i].getVelocity() * elapsedTime;
+				vcpos[i] += vcmov[i].velocity * elapsedTime;
 			}
 		}
 	}
 
-// then processing potential collisions, without gravity
-	for (Archetype* arch : m_groups[G::Bird].archs)
+	// Then the moving, collidable entities, without gravity.
+	for (Archetype* arch : m_groups[G::Bird].archs())
 	{
-		auto&	vcpos = arch->get<CPosition>();
-		auto&	vcbox = arch->get<CCollisionBox>();
-		auto&	vcmov = arch->get<CMove>();
+		const auto vcpos = arch->get<CPosition>();
+		const auto vcbox = arch->get<CCollisionBox>();
+		const auto vcmov = arch->get<CMove>();
 
 		for (unsigned i = 0; i != vcmov.size(); ++i)
 		{
 			CMove*	cmov = &vcmov[i];
 
-			if (cmov->isMoving())
+			if (cmov->moving)
 			{
-				sf::Vector2f	move(cmov->getVelocity() * elapsedTime);
-				cmov->setMoved(processCollidable(m_groups[G::Wall].archs, &vcpos[i], &vcbox[i], move, nullptr));
+				sf::Vector2f move(cmov->velocity * elapsedTime);
+				cmov->movedSinceLastUpdate = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], &vcbox[i], move, nullptr);
 			}
 		}
 	}
 
-// then processing potential collisions, with gravity
-	for (Archetype* arch : m_groups[G::Char].archs)
+	// Then the moving, collidable entities, with gravity.
+	for (Archetype* arch : m_groups[G::Char].archs())
 	{
-		auto&	vcpos = arch->get<CPosition>();
-		auto&	vcbox = arch->get<CCollisionBox>();
-		auto&	vcmov = arch->get<CMove>();
-		auto&	vcrig = arch->get<CRigidbody>();
+		const auto vcpos = arch->get<CPosition>();
+		const auto vcbox = arch->get<CCollisionBox>();
+		const auto vcmov = arch->get<CMove>();
+		const auto vcrig = arch->get<CRigidbody>();
 
 		for (unsigned i = 0; i != vcrig.size(); ++i)
 		{
-			CRigidbody*		crig = &vcrig[i];
-			CMove*			cmov = &vcmov[i];
-			CCollisionBox*	cbox = &vcbox[i];
-			sf::Vector2f	move;
+			CRigidbody*    crig = &vcrig[i];
+			CMove*         cmov = &vcmov[i];
+			CCollisionBox* cbox = &vcbox[i];
+			sf::Vector2f   move;
 
-			if (cmov->isMoving())
-				move = cmov->getVelocity();
-			if (crig->isGrounded())
+			if (cmov->moving)
+				move = cmov->velocity;
+			if (crig->grounded)
 			{
-				for (Archetype* archWall : m_groups[G::Wall].archs)
+				for (Archetype* archWall : m_groups[G::Collidable].archs())
 				{
 					for (const auto& boxWall : archWall->get<CCollisionBox>())
 						if (cbox->top + cbox->height == boxWall.top
@@ -142,16 +144,16 @@ void	SPhysics::update(sf::RenderWindow&, float elapsedTime)
 							goto grounded;
 						}
 				}
-				crig->setGrounded(false);
+				crig->grounded = false;
 			}
 			crig->applyForce(c_gravityAcceleration * elapsedTime);
-			move.y += crig->getVelocity();
+			move.y += crig->velocity;
 
 			grounded:
 			if (move.x || move.y)
 			{
 				move *= elapsedTime;
-				cmov->setMoved(processCollidable(m_groups[G::Wall].archs, &vcpos[i], cbox, move, crig));
+				cmov->movedSinceLastUpdate = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], cbox, move, crig);
 			}
 		}
 	}

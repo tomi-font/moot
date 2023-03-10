@@ -2,6 +2,9 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
+#include <utility/tuple/toVectorVariant.hh>
+#include <cassert>
+#include <span>
 #include <vector>
 #include <variant>
 
@@ -14,29 +17,31 @@ public:
 
 	Archetype(ComponentComposition);
 
+	// Currently Archetypes shall not be copied/moved to prevent pointer invalidation.
 	Archetype(const Archetype&) = delete;
-	void	operator=(const Archetype&) = delete;
+	void operator=(const Archetype&) = delete;
 
-// returns the vector containing the component type requested
-// behavior is undefined if the caller asks for some component that's not present
+	// Returns the vector containing the component type requested.
 	template<typename T>
-	std::vector<T>&	get() noexcept
+	const std::span<T> get() noexcept
 	{
-		// we calculate the index in m_entities by finding out how many bits are set up to
-		// C(T::Type), as components will always be stored in the ComponentVectorVariant order
-		return std::get<std::vector<T>>(m_entities[__builtin_popcount(m_comp.bits() & (CId<T>.bits() - 1))]);
+		// Sanity check that the requested component type is present.
+		assert((m_comp & CId<T>).bits());
+
+		// Components will always be stored in the ComponentVectorVariant order.
+		// The index is how many bits are set before this component type's bit.
+		const unsigned index = __builtin_popcount(m_comp.bits() & (CId<T>.bits() - 1));
+
+		return std::get<std::vector<T>>(m_entities[index]);
 	}
 
-	void	instantiate(const Template&);
+	void instantiate(const Template&);
 
 private:
 
-// Helper struct to convert a tuple into a variant of vectors.
-	template<typename Tuple> struct VectorVariantGetter;
-	template<typename... Ts> struct VectorVariantGetter<std::tuple<Ts...>> { using type = std::variant<std::vector<Ts>...>; };
-// Variant containing vectors of every component.
-	using ComponentVectorVariant = VectorVariantGetter<Components>::type;
+	// Variant containing vectors of every component.
+	using ComponentVectorVariant = tupleToVectorVariant<Components>::type;
 
-// Components of the same type are stored contiguously; one vector for each component.
+	// Components of the same type are stored contiguously; one vector for each.
 	std::vector<ComponentVectorVariant>	m_entities;
 };

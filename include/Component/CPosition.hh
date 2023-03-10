@@ -4,8 +4,5 @@
 
 struct CPosition : sf::Vector2f
 {
-public:
-
-	CPosition(const sf::Vector2f& pos) noexcept : sf::Vector2f(pos) {}
+	CPosition(const sf::Vector2f& pos) : sf::Vector2f(pos) {}
 };
-

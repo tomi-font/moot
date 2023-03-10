@@ -1,30 +1,30 @@
 #pragma once
 
-// Interface type for construction of component ids to prevent implicit conversions.
-enum ComponentIndex{};
+// Interface type for construction of component IDs to prevent implicit conversions.
+enum ComponentIndex {};
 
-// Describes a composition of components.
+// Describes a composition of components, i.e. which components are present.
 class ComponentComposition
 {
 public:
 
-// Bitmask of all the composing components' ids.
+	// Bitmask of all the composing components' IDs.
 	using Bits = unsigned;
 
 	constexpr ComponentComposition() : m_bits(0) {}
-	constexpr ComponentComposition(ComponentIndex ct) : m_bits(1 << ct) {}
+	constexpr ComponentComposition(ComponentIndex ci) : m_bits(1 << ci) {}
 
-	constexpr ComponentComposition	operator|(ComponentComposition r) const { return m_bits | r.m_bits; }
-	constexpr ComponentComposition	operator&(ComponentComposition r) const { return m_bits & r.m_bits; }
-	constexpr bool	operator==(ComponentComposition r) const { return m_bits == r.m_bits; }
+	constexpr ComponentComposition operator|(ComponentComposition r) const { return m_bits | r.bits(); }
+	constexpr ComponentComposition operator&(ComponentComposition r) const { return m_bits & r.bits(); }
+	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
 
-	constexpr void	operator|=(ComponentComposition r) { m_bits |= r.m_bits; }
+	constexpr void operator|=(ComponentComposition r) { m_bits |= r.bits(); }
 
-	constexpr Bits	bits() const { return m_bits; }
+	constexpr Bits bits() const { return m_bits; }
 
 private:
 
 	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
-	Bits	m_bits;
+	Bits m_bits;
 };

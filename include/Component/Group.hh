@@ -1,28 +1,33 @@
 #pragma once
 
 #include <Component/Component.hh>
+#include <span>
 #include <vector>
 
 class Archetype;
 
 // Groups are the way systems express their interest towards different component compositions.
-struct ComponentGroup
+class ComponentGroup
 {
-	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition()) : inc(required), exc(forbidden) {}
-	
-// The composition matches if all of the included and none of the excluded components are present.
-	bool	matches(ComponentComposition comp) { return (comp & inc) == inc && !(comp & exc).bits(); }
+public:
 
-// Appends the archetype upon match.
-	void	match(Archetype*);
+	ComponentGroup() {}
+	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition()) : m_required(required), m_forbidden(forbidden) {}
 
-// Matching archetypes.
-	std::vector<Archetype*>	archs;
+	// Appends the given Archetype upon match.
+	void match(Archetype*);
+
+	std::span<Archetype*> archs() { return m_archs; }
 
 private:
 
-// Components whose presence is required.
-	ComponentComposition	inc;
-// Components whose presence is forbidden.
-	ComponentComposition	exc;
+	bool matches(ComponentComposition comp) const;
+
+	// Matching archetypes.
+	std::vector<Archetype*> m_archs;
+
+	// Components whose presence is required.
+	ComponentComposition m_required;
+	// Components whose presence is forbidden.
+	ComponentComposition m_forbidden;
 };

@@ -1,36 +1,35 @@
 #include <World.hh>
-#include <Template.hh>
 
 int	main()
 {
-	World	world;
+	World world;
 
 	// Manual creation of a player.
-	sf::Vector2f	pos(200.f, 650.f);
-	sf::Vector2f	size(100.f, 100.f);
-	Template	temp;
+	sf::Vector2f pos(200.f, 650.f);
+	sf::Vector2f size(100.f, 100.f);
+	Template temp;
 	temp.add(CPosition(pos));
 	temp.add(CRender(pos, size, sf::FloatRect(0, 0, 2, 2)));
 	temp.add(CMove(1000));
 	temp.add(CPlayer(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W})));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	temp.add(CRigidbody());
-	world.getArchetype(temp.comp())->instantiate(temp);
+	world.instantiate(temp);
 
 	// Manual creation of a platform.
-	Archetype* arch = world.getArchetype(CId<CPosition> | CId<CRender> | CId<CCollisionBox>);
-	pos.x = 100.f;
-	pos.y = 800.f;
+	pos = {100, 800};
 	size.x = 1600.f;
-	arch->get<CPosition>().emplace_back(pos);
-	arch->get<CRender>().emplace_back(pos, size, sf::FloatRect(0, 2, 32, 2));
-	arch->get<CCollisionBox>().emplace_back(sf::FloatRect(pos, size));
+	temp = {};
+	temp.add(CPosition(pos));
+	temp.add(CRender(pos, size, sf::FloatRect(0, 2, 32, 2)));
+	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
+	world.instantiate(temp);
 
 	// Manual creation of the window.
-	auto	vm = sf::VideoMode::getDesktopMode();
+	auto vm = sf::VideoMode::getDesktopMode();
 	vm.width /= 2;
 	vm.height /= 2;
-	sf::RenderWindow	window(vm, "GAME");
+	sf::RenderWindow window(vm, "GAME");
 	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
 	window.setVerticalSyncEnabled(true);
 	window.setKeyRepeatEnabled(false);

@@ -2,31 +2,29 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
+#include <utility/tuple/toVariant.hh>
 #include <variant>
 #include <set>
 
 class Template : public ComponentComposable
 {
-// Helper struct to convert a tuple into a variant.
-	template<typename Tuple> struct VariantGetter;
-	template<typename... Ts> struct VariantGetter<std::tuple<Ts...>> { using type = std::variant<Ts...>; };
-
 public:
 
-// Variant containing every component.
-	using ComponentVariant = VariantGetter<Components>::type;
+	// Variant containing every component.
+	using ComponentVariant = tupleToVariant<Components>::type;
 
-	class DuplicateComponentException{};
+	struct DuplicateComponentException{};
 
-// Adds a component. May throw DuplicateComponentException if trying to add a component that's already present.
-	void	add(const ComponentVariant&);
+	// Adds a component. Throws DuplicateComponentException if trying to add a component that's already present.
+	void add(ComponentVariant&&);
 
-	auto&	components() const { return m_components; }
+	auto& components() const { return m_components; }
 
 private:
 
-// Custom Compare for the components' container. Components are unique so all we need to compare is their type (variant index).
-	struct CVCompare { constexpr bool	operator()(const ComponentVariant& l, const ComponentVariant& r) const { return l.index() < r.index(); } };
+	// Custom compare for the component container to sort components by their index in ascending order.
+	struct CVCompare { constexpr bool operator()(const ComponentVariant& l, const ComponentVariant& r) const { return l.index() < r.index(); } };
 
-	std::set<ComponentVariant, CVCompare>	m_components;
+	// A set allows easily inserting components in their sorting order without knowing in advance the final composition.
+	std::set<ComponentVariant, CVCompare> m_components;
 };

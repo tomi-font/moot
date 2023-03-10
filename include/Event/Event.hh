@@ -6,16 +6,16 @@ public:
 
 	enum Type
 	{
-		// Don't assign the enum values, so that they're iterable.
+		// Keep the enum's values unassigned, so that it can be iterated.
 		PlayerQuit,
-		COUNT // Keep last.
+		COUNT
 	};
 
 	Event(Type t) : m_type(t) {}
 
-	Type	type() const { return m_type; }
+	Type type() const { return m_type; }
 
 private:
 
-	Type	m_type;
+	Type m_type;
 };

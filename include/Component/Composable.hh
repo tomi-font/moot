@@ -9,9 +9,9 @@ public:
 	ComponentComposable(ComponentComposition comp = ComponentComposition()) : m_comp(comp) {}
 	virtual ~ComponentComposable() {}
 
-	ComponentComposition	comp() const { return m_comp; }
+	ComponentComposition comp() const { return m_comp; }
 
 protected:
 
-	ComponentComposition	m_comp;
+	ComponentComposition m_comp;
 };

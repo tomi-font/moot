@@ -6,6 +6,11 @@
 - Static asserts on whatever is possible.
 - Format code:
 	- Loop brackets?
-- Decide on noexcept/constexpr.
-- Provide move constructor for Archetype.
+
+- Archetype storing/referencing
+	- Move away from the rigidity of raw pointer referencing (invalidation issue).
+	  Reference them using UIDs, being able to ask for them?
+	  Not binding systems so badly to the world/entities, rather at update time?
+
 - Debug logging with various verbosity levels/topics.
+- Replace manual bitfields with std::bitset.

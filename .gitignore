@@ -1,4 +1,5 @@
-/excquis
-/.obj
-*.swp
+/demo
+/.obj/
 /doc/
+/compile_commands.json
+/.cache/

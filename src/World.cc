@@ -2,7 +2,10 @@
 #include <System/Types.hh>
 #include <SFML/Window/Event.hpp>
 
-World::World() : EventListener(m_eventManager), m_running(true), m_systems(std::tuple_size_v<Systems>)
+World::World() :
+	EventListener(m_eventManager),
+	m_running(true),
+	m_systems(std::tuple_size_v<Systems>)
 {
 	m_systems[SId<SInput>] = std::make_unique<SInput>(m_eventManager);
 	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();
@@ -10,34 +13,13 @@ World::World() : EventListener(m_eventManager), m_running(true), m_systems(std::
 
 	listen(Event::PlayerQuit);
 
-// Restart the clock to not count the setup time.
+	// Restart the clock to not count the setup time.
 	m_clock.restart();
 }
 
-Archetype*	World::getArchetype(ComponentComposition comp)
+void World::update(sf::RenderWindow& window)
 {
-	for (Archetype& a : m_archs)
-	{
-		if (a.comp() == comp)
-			return &a;
-	}
-
-// if we didn't find an archetype matching the composition,
-// it means it doesn't exist so we have to create it
-// we use emplace_back() so that no useless copy is made
-	Archetype*	arch = &m_archs.emplace_back(comp);
-
-// then we must iterate through systems to see if they're interested
-	for (const auto& system : m_systems)
-	{
-		system->match(arch);
-	}
-	return arch;
-}
-
-void	World::update(sf::RenderWindow& window)
-{
-	float	elapsedTime = m_clock.restart().asSeconds();
+	const float elapsedTime = m_clock.restart().asSeconds();
 
 	for (const auto& system : m_systems)
 	{
@@ -47,7 +29,33 @@ void	World::update(sf::RenderWindow& window)
 	}
 }
 
-void	World::triggered(const Event&)
+void World::instantiate(const Template& temp)
 {
+	getArchetype(temp.comp())->instantiate(temp);
+}
+
+Archetype* World::getArchetype(ComponentComposition comp)
+{
+	for (Archetype& a : m_archs)
+	{
+		if (a.comp() == comp)
+			return &a;
+	}
+
+	// If we didn't find an archetype matching the composition,
+	// it means it doesn't exist so we have to create it.
+	Archetype* arch = &m_archs.emplace_back(comp);
+
+	// Then we must iterate the systems to see whether they're interested.
+	for (const auto& system : m_systems)
+	{
+		system->match(arch);
+	}
+	return arch;
+}
+
+void World::triggered(const Event& event)
+{
+	assert(event.type() == Event::PlayerQuit);
 	m_running = false;
 }

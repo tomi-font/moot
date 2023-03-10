@@ -1,4 +1,4 @@
-NAME := excquis
+NAME := demo
 
 SRCDIR := src
 OBJDIR := .obj
@@ -6,7 +6,7 @@ OBJDIR := .obj
 SRC := $(shell find $(SRCDIR) -name *.cc)
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-CXXFLAGS := -std=c++23 -Iinclude -MMD -Wall -Wextra -Wno-switch
+CXXFLAGS := -std=gnu++2b -Iinclude -MMD -Wall -Wextra -Wno-switch
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
