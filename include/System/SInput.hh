@@ -1,13 +1,12 @@
 #pragma once
 
 #include <System/System.hh>
-#include <Event/Listener.hh>
 
-class SInput : public System, EventListener
+class SInput : public System
 {
 public:
 
-	SInput(EventManager&);
+	SInput();
 
 	void update(sf::RenderWindow& window, float elapsedTime) override;
 };

@@ -3,14 +3,19 @@
 #include <SFML/Window/Event.hpp>
 
 World::World() :
-	EventListener(m_eventManager),
+	EventUser(&m_eventManager),
 	m_running(true),
 	m_systems(std::tuple_size_v<Systems>)
 {
-	m_systems[SId<SInput>] = std::make_unique<SInput>(m_eventManager);
+	m_systems[SId<SInput>] = std::make_unique<SInput>();
 	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();
 	m_systems[SId<SRender>] = std::make_unique<SRender>();
 
+	for (const auto& system: m_systems)
+	{
+		system->setEventManager(&m_eventManager);
+		system->listenToEvents();
+	}
 	listen(Event::PlayerQuit);
 
 	// Restart the clock to not count the setup time.
@@ -56,6 +61,6 @@ Archetype* World::getArchetype(ComponentComposition comp)
 
 void World::triggered(const Event& event)
 {
-	assert(event.type() == Event::PlayerQuit);
+	assert(event.type == Event::PlayerQuit);
 	m_running = false;
 }

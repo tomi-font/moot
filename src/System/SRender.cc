@@ -1,5 +1,6 @@
 #include <System/SRender.hh>
 #include <Archetype.hh>
+#include <SFML/Graphics/RenderWindow.hpp>
 
 // Indices for this system's groups.
 enum G

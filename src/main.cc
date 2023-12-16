@@ -1,4 +1,6 @@
 #include <World.hh>
+#include <SFML/Window/VideoMode.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 
 int	main()
 {

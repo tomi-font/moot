@@ -1,4 +1,5 @@
-#include <Event/Listener.hh>
+#include <Event/Manager.hh>
+#include <Event/User.hh>
 
 EventManager::EventManager() : m_listeners(Event::COUNT)
 {
@@ -9,14 +10,14 @@ EventManager::EventManager() : m_listeners(Event::COUNT)
 	}
 }
 
-void EventManager::addListener(Event::Type type, EventListener* listener)
+void EventManager::addListener(Event::Type type, EventUser* listener)
 {
 	m_listeners.at(type).push_back(listener);
 }
 
-void EventManager::trigger(const Event& event) const
+void EventManager::broadcast(const Event& event) const
 {
-	for (EventListener* listener : m_listeners.at(event.type()))
+	for (EventUser* listener : m_listeners.at(event.type))
 	{
 		listener->triggered(event);
 	}

@@ -1,24 +1,31 @@
 #pragma once
 
-#include <Event/Manager.hh>
+#include <Event/Event.hh>
 
-class EventListener
+class EventManager;
+
+class EventUser
 {
 public:
+
+	EventUser() {}
+	EventUser(EventManager*);
+
+	void setEventManager(EventManager*);
+
+	virtual void listenToEvents() {}
 
 	// Callback for when an event whose type was subscribed to is triggered.
 	virtual void triggered(const Event&) {}
 
 protected:
 
-	EventListener(EventManager& em) : m_eventManager(em) {}
-
 	// Start listening to the given type of event.
-	void listen(Event::Type et) { m_eventManager.addListener(et, this); }
+	void listen(Event::Type);
 
-	void trigger(const Event& e) { m_eventManager.trigger(e); }
+	void broadcast(const Event&);
 
 private:
 
-	EventManager& m_eventManager;
+	EventManager* m_eventManager = nullptr;
 };

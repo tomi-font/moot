@@ -1,9 +1,11 @@
 #pragma once
 
 #include <Component/Group.hh>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <Event/User.hh>
 
-class System
+namespace sf { class RenderWindow; }
+
+class System : public EventUser
 {
 public:
 

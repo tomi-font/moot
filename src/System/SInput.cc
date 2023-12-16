@@ -1,5 +1,6 @@
 #include <System/SInput.hh>
 #include <Archetype.hh>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
 // Indices for this system's groups.
@@ -9,7 +10,7 @@ enum G
 	COUNT
 };
 
-SInput::SInput(EventManager& em) : EventListener(em)
+SInput::SInput()
 {
 	m_groups.resize(G::COUNT);
 	m_groups[G::Player] = { CId<CPlayer> | CId<CMove> | CId<CRigidbody> };
@@ -53,7 +54,7 @@ void SInput::update(sf::RenderWindow& window, float)
 			if (event.key.code == sf::Keyboard::Q || event.key.code == sf::Keyboard::Escape)
 			{
 		case sf::Event::Closed:
-				trigger(Event::PlayerQuit);
+				broadcast(Event::PlayerQuit);
 				break;
 			}
 			[[fallthrough]];

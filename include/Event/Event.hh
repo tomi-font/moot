@@ -11,11 +11,7 @@ public:
 		COUNT
 	};
 
-	Event(Type t) : m_type(t) {}
+	Event(Type t) : type(t) {}
 
-	Type type() const { return m_type; }
-
-private:
-
-	Type m_type;
+	const Type type;
 };

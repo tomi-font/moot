@@ -1,13 +1,15 @@
 #pragma once
 
 #include <Archetype.hh>
-#include <Event/Listener.hh>
+#include <Event/Manager.hh>
+#include <Event/User.hh>
 #include <System/System.hh>
 #include <Template.hh>
 #include <deque>
 #include <memory>
+#include <SFML/System/Clock.hpp>
 
-class World : EventListener
+class World : EventUser
 {
 public:
 
