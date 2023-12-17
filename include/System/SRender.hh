@@ -9,9 +9,5 @@ public:
 
 	SRender();
 
-	void	update(sf::RenderWindow& window, float elapsedTime) override;
-
-private:
-
-	sf::Texture	m_texture;
+	void update(sf::RenderWindow& window, float elapsedTime) override;
 };

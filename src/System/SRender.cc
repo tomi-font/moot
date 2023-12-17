@@ -17,12 +17,9 @@ SRender::SRender()
 	m_groups[G::Player] = { CId<CPlayer> | CId<CPosition> };
 	m_groups[G::Static] = { CId<CRender>, CId<CMove> };
 	m_groups[G::Dynamic] = { CId<CRender> | CId<CPosition> | CId<CMove> };
-
-	m_texture.loadFromFile("data/texture.png");
-	m_texture.setRepeated(true);
 }
 
-void	SRender::update(sf::RenderWindow& window, float)
+void SRender::update(sf::RenderWindow& window, float)
 {
 	window.clear(sf::Color(0x80, 0xb0, 0xe0));
 
@@ -49,7 +46,7 @@ void	SRender::update(sf::RenderWindow& window, float)
 			}
 
 			const auto& vertices = crend[0].vertices();
-			window.draw(vertices.data(), vertices.size() * crend.size(), sf::Quads, &m_texture);
+			window.draw(vertices.data(), vertices.size() * crend.size(), sf::Quads);
 		}
 	}
 

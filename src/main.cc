@@ -11,7 +11,7 @@ int	main()
 	sf::Vector2f size(100.f, 100.f);
 	Template temp;
 	temp.add(CPosition(pos));
-	temp.add(CRender(pos, size, sf::FloatRect(0, 0, 2, 2)));
+	temp.add(CRender(pos, size, sf::Color::White));
 	temp.add(CMove(1000));
 	temp.add(CPlayer(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W})));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
@@ -23,7 +23,7 @@ int	main()
 	size.x = 1600.f;
 	temp = {};
 	temp.add(CPosition(pos));
-	temp.add(CRender(pos, size, sf::FloatRect(0, 2, 32, 2)));
+	temp.add(CRender(pos, size, sf::Color::Black));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	world.instantiate(temp);
 

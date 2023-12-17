@@ -8,7 +8,7 @@ class CRender
 {
 public:
 
-	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, const sf::FloatRect& texRect);
+	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color);
 
 	auto& vertices() const { return m_vertices; }
 
