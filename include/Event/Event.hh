@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Entity/Id.hh>
+
 class Event
 {
 public:
@@ -11,7 +13,9 @@ public:
 		COUNT
 	};
 
-	Event(Type t) : type(t) {}
+	Event(Type t, EntityId eid = {}) : type(t), entityId(eid) {}
 
 	const Type type;
+	// The ID of the entity relevant to this event, if applicable.
+	const EntityId entityId;
 };

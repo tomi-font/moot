@@ -13,6 +13,7 @@ public:
 
 	constexpr ComponentComposition() : m_bits(0) {}
 	constexpr ComponentComposition(ComponentIndex ci) : m_bits(1 << ci) {}
+	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
 	constexpr ComponentComposition operator|(ComponentComposition r) const { return m_bits | r.bits(); }
 	constexpr ComponentComposition operator&(ComponentComposition r) const { return m_bits & r.bits(); }
@@ -23,8 +24,6 @@ public:
 	constexpr Bits bits() const { return m_bits; }
 
 private:
-
-	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
 	Bits m_bits;
 };

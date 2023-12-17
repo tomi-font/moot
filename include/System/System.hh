@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Component/Group.hh>
+#include <Entity/Id.hh>
 #include <Event/User.hh>
 
+class Archetype;
 namespace sf { class RenderWindow; }
 
 class System : public EventUser
@@ -17,6 +19,8 @@ public:
 	void match(Archetype*);
 
 protected:
+
+	Archetype* getEntitysArchetype(EntityId);
 
 	// Component groups of interest.
 	std::vector<ComponentGroup>	m_groups;
