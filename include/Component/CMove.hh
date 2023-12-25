@@ -5,14 +5,16 @@
 // This component handles voluntary moving only.
 struct CMove
 {
-	CMove(unsigned short speed) : speed(speed) {}
+	CMove(unsigned short speed) : m_speed(speed) {}
 
-	const unsigned short speed;
+	bool isMoving() const { return m_velocity != sf::Vector2f(); }
+	const auto& velocity() const { return m_velocity; }
 
-	sf::Vector2f velocity;
+	void setMotion(int direction) { m_velocity.x = m_speed * direction; }
 
-	// When true, a non-zero velocity is assumed.
-	bool moving = false;
+private:
 
-	bool movedSinceLastUpdate = false;
+	const unsigned short m_speed;
+
+	sf::Vector2f m_velocity;
 };

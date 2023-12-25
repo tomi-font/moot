@@ -81,6 +81,11 @@ static bool	processCollidable(const std::span<Archetype*>& archs, CPosition* cpo
 
 void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 {
+	auto entityMoved = [this](Archetype* arch, unsigned i)
+	{
+		broadcast({ Event::EntityMoved, EntityId(arch->comp(), i) });
+	};
+
 	// First the moving entities that won't collide.
 	for (Archetype* arch : m_groups[G::Ghost].archs())
 	{
@@ -89,9 +94,10 @@ void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 
 		for (unsigned i = 0; i != vcmov.size(); ++i)
 		{
-			if (vcmov[i].moving)
+			if (vcmov[i].isMoving())
 			{
-				vcpos[i] += vcmov[i].velocity * elapsedTime;
+				vcpos[i] += vcmov[i].velocity() * elapsedTime;
+				entityMoved(arch, i);
 			}
 		}
 	}
@@ -107,10 +113,12 @@ void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 		{
 			CMove*	cmov = &vcmov[i];
 
-			if (cmov->moving)
+			if (cmov->isMoving())
 			{
-				sf::Vector2f move(cmov->velocity * elapsedTime);
-				cmov->movedSinceLastUpdate = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], &vcbox[i], move, nullptr);
+				sf::Vector2f move(cmov->velocity() * elapsedTime);
+				const bool moved = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], &vcbox[i], move, nullptr);
+				if (moved)
+					entityMoved(arch, i);
 			}
 		}
 	}
@@ -128,10 +136,8 @@ void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 			CRigidbody*    crig = &vcrig[i];
 			CMove*         cmov = &vcmov[i];
 			CCollisionBox* cbox = &vcbox[i];
-			sf::Vector2f   move;
+			sf::Vector2f   move = cmov->velocity();
 
-			if (cmov->moving)
-				move = cmov->velocity;
 			if (crig->grounded)
 			{
 				for (Archetype* archWall : m_groups[G::Collidable].archs())
@@ -153,7 +159,9 @@ void SPhysics::update(sf::RenderWindow&, float elapsedTime)
 			if (move.x || move.y)
 			{
 				move *= elapsedTime;
-				cmov->movedSinceLastUpdate = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], cbox, move, crig);
+				const bool moved = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], cbox, move, crig);
+				if (moved)
+					entityMoved(arch, i);
 			}
 		}
 	}

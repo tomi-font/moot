@@ -22,14 +22,10 @@ static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 
 	if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
 	{
-		CMove* move = &arch->get<CMove>()[0];
+		CMove* cmov = &arch->get<CMove>()[0];
 		const int direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right])
 		                      - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
-		const bool moving = direction;
-		// TODO: Decouple from CMove's internal logic. Possibly by making an interface to it.
-		if (moving)
-			move->velocity.x = static_cast<float>(direction * move->speed);
-		move->moving = moving;
+		cmov->setMotion(direction);
 	}
 	else if (keyCode == controls[CPlayer::Jump])
 	{
