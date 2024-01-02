@@ -7,6 +7,7 @@
 #include <Component/CPosition.hh>
 #include <Component/CRender.hh>
 #include <Component/CRigidbody.hh>
+#include <Component/CView.hh>
 #include <utility/tuple/index.hh>
 
 using Components = std::tuple<
@@ -15,7 +16,8 @@ using Components = std::tuple<
 	CMove,
 	CPlayer,
 	CCollisionBox,
-	CRigidbody>;
+	CRigidbody,
+	CView>;
 
 // Gets a component's ID by using its class as the template.
 template<typename T> inline constexpr ComponentComposition CId = static_cast<ComponentIndex>(tupleIndex<T, Components>::value);

@@ -19,6 +19,8 @@ public:
 	constexpr ComponentComposition operator&(ComponentComposition r) const { return m_bits & r.bits(); }
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
 
+	constexpr bool has(ComponentComposition r) const { return m_bits & r.bits(); }
+
 	constexpr void operator|=(ComponentComposition r) { m_bits |= r.bits(); }
 
 	constexpr Bits bits() const { return m_bits; }

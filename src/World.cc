@@ -2,7 +2,7 @@
 #include <System/Types.hh>
 #include <SFML/Window/Event.hpp>
 
-World::World() :
+World::World(sf::RenderWindow* window) :
 	EventUser(&m_eventManager),
 	m_running(true),
 	m_systems(std::tuple_size_v<Systems>)
@@ -15,6 +15,7 @@ World::World() :
 	{
 		system->setEventManager(&m_eventManager);
 		system->listenToEvents();
+		system->setWindow(window);
 	}
 	listen(Event::PlayerQuit);
 
@@ -22,7 +23,7 @@ World::World() :
 	m_clock.restart();
 }
 
-void World::update(sf::RenderWindow& window)
+void World::update()
 {
 	const float elapsedTime = m_clock.restart().asSeconds();
 
@@ -30,7 +31,7 @@ void World::update(sf::RenderWindow& window)
 	{
 		if (!m_running)
 			break;
-		system->update(window, elapsedTime);
+		system->update(elapsedTime);
 	}
 }
 

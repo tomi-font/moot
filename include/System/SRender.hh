@@ -12,5 +12,5 @@ public:
 	void listenToEvents() override;
 	void triggered(const Event&) override;
 
-	void update(sf::RenderWindow& window, float elapsedTime) override;
+	void update(float elapsedTime) override;
 };

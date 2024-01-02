@@ -3,6 +3,7 @@
 #include <Archetype.hh>
 #include <Event/Manager.hh>
 #include <Event/User.hh>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <System/System.hh>
 #include <Template.hh>
 #include <deque>
@@ -13,12 +14,12 @@ class World : EventUser
 {
 public:
 
-	World();
+	World(sf::RenderWindow*);
 
 	bool isRunning() const { return m_running; }
 
-	// Updates all the systems using the passed window.
-	void update(sf::RenderWindow&);
+	// Updates all the systems.
+	void update();
 
 	void instantiate(const Template&);
 

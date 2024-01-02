@@ -79,7 +79,7 @@ static bool	processCollidable(const std::span<Archetype*>& archs, CPosition* cpo
 	return false;
 }
 
-void SPhysics::update(sf::RenderWindow&, float elapsedTime)
+void SPhysics::update(float elapsedTime)
 {
 	auto entityMoved = [this](Archetype* arch, unsigned i)
 	{

@@ -1,13 +1,26 @@
 #include <World.hh>
+#include <limits>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
+constexpr float c_maxCoord = std::numeric_limits<float>::max() / 2;
+
 int	main()
 {
-	World world;
+	// Manual creation of the window.
+	auto vm = sf::VideoMode::getDesktopMode();
+	vm.width /= 2;
+	vm.height /= 2;
+	sf::RenderWindow window(vm, "demo");
+	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
+	window.setVerticalSyncEnabled(true);
+	window.setKeyRepeatEnabled(false);
+
+	World world(&window);
 
 	// Manual creation of a player.
-	sf::Vector2f pos(200.f, 650.f);
+	const sf::Vector2f viewSize(vm.width, vm.height);
+	sf::Vector2f pos(0, -viewSize.y);
 	sf::Vector2f size(100.f, 100.f);
 	Template temp;
 	temp.add(CPosition(pos));
@@ -16,28 +29,20 @@ int	main()
 	temp.add(CPlayer(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W})));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	temp.add(CRigidbody());
+	temp.add(CView(sf::FloatRect(-viewSize.x * .5f, -c_maxCoord, viewSize.x, c_maxCoord)));
 	world.instantiate(temp);
 
 	// Manual creation of a platform.
-	pos = {100, 800};
-	size.x = 1600.f;
+	size.x = std::numeric_limits<float>::max();
+	size.y = std::numeric_limits<float>::min();
+	pos = { -(size.x / 2), 0 };
 	temp = {};
 	temp.add(CPosition(pos));
-	temp.add(CRender(pos, size, sf::Color::Black));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	world.instantiate(temp);
 
-	// Manual creation of the window.
-	auto vm = sf::VideoMode::getDesktopMode();
-	vm.width /= 2;
-	vm.height /= 2;
-	sf::RenderWindow window(vm, "GAME");
-	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
-	window.setVerticalSyncEnabled(true);
-	window.setKeyRepeatEnabled(false);
-
 	while (world.isRunning())
 	{
-		world.update(window);
+		world.update();
 	}
 }

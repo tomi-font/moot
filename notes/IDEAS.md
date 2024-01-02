@@ -18,3 +18,5 @@
 
 - event system
 	- Having every listener store a reference to the manager may not be the most elegant.
+
+- Have a size component that other components make use of.

@@ -40,9 +40,9 @@ static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 	}
 }
 
-void SInput::update(sf::RenderWindow& window, float)
+void SInput::update(float)
 {
-	for (sf::Event event; window.pollEvent(event);)
+	for (sf::Event event; m_window->pollEvent(event);)
 	{
 		switch (event.type)
 		{
