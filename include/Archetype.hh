@@ -6,7 +6,6 @@
 #include <cassert>
 #include <span>
 #include <vector>
-#include <variant>
 
 class Template;
 

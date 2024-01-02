@@ -1,4 +1,4 @@
-#include "Component/Component.hh"
+#include "Component/Composition.hh"
 #include <Component/Group.hh>
 #include <Archetype.hh>
 

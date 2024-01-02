@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Component/Component.hh>
+#include <Component/Composition.hh>
 #include <span>
 #include <vector>
 

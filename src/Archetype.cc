@@ -1,8 +1,7 @@
-#include "Component/Composable.hh"
+#include <Component/Composable.hh>
 #include <Archetype.hh>
 #include <Template.hh>
 #include <utility/variant/indexToCompileTime.hh>
-#include <iostream>
 
 Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
 {

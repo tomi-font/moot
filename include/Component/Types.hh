@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Component/Component.hh>
+#include <Component/Composition.hh>
 #include <Component/CCollisionBox.hh>
 #include <Component/CMove.hh>
 #include <Component/CPlayer.hh>
