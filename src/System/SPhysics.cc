@@ -1,5 +1,4 @@
 #include <System/SPhysics.hh>
-#include <Archetype.hh>
 #include <cmath>
 
 // Indices for this system's groups.
@@ -57,15 +56,15 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 	}
 }
 
-static bool	processCollidable(const std::span<Archetype*>& archs, CPosition* cpos, CCollisionBox* cbox, sf::Vector2f& move, CRigidbody* crig)
+static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos, CCollisionBox* cbox, sf::Vector2f& move, CRigidbody* crig)
 {
 	sf::FloatRect rect(cbox->left + move.x, cbox->top + move.y, cbox->width, cbox->height);
 
-	for (Archetype* arch : archs)
+	for (EntityHandle entity : collidables)
 	{
-		for (const auto& cboxWall : arch->get<CCollisionBox>())
-			if (rect.intersects(cboxWall) && cbox != &cboxWall)
-				computeCollision(move, rect, cboxWall, crig);
+		CCollisionBox& cboxWall = entity.get<CCollisionBox>();
+		if (rect.intersects(cboxWall) && cbox != &cboxWall)
+			computeCollision(move, rect, cboxWall, crig);
 	}
 
 	if (move.x || move.y)
@@ -79,90 +78,69 @@ static bool	processCollidable(const std::span<Archetype*>& archs, CPosition* cpo
 	return false;
 }
 
-void SPhysics::update(float elapsedTime)
+void SPhysics::update(float elapsedTime) const
 {
-	auto entityMoved = [this](Archetype* arch, unsigned i)
+	auto entityMoved = [this](const EntityHandle& entity)
 	{
-		broadcast({ Event::EntityMoved, EntityId(arch->comp(), i) });
+		broadcast({ Event::EntityMoved, entity.id() });
 	};
 
 	// First the moving entities that won't collide.
-	for (Archetype* arch : m_groups[G::Ghost].archs())
+	for (EntityHandle entity : m_groups[G::Ghost])
 	{
-		const auto vcpos = arch->get<CPosition>();
-		const auto vcmov = arch->get<CMove>();
-
-		for (unsigned i = 0; i != vcmov.size(); ++i)
+		CMove& cmove = entity.get<CMove>();
+		if (cmove.isMoving())
 		{
-			if (vcmov[i].isMoving())
-			{
-				vcpos[i] += vcmov[i].velocity() * elapsedTime;
-				entityMoved(arch, i);
-			}
+			entity.get<CPosition>() += cmove.velocity() * elapsedTime;
+			entityMoved(entity);
 		}
 	}
 
 	// Then the moving, collidable entities, without gravity.
-	for (Archetype* arch : m_groups[G::Bird].archs())
+	for (EntityHandle entity : m_groups[G::Bird])
 	{
-		const auto vcpos = arch->get<CPosition>();
-		const auto vcbox = arch->get<CCollisionBox>();
-		const auto vcmov = arch->get<CMove>();
+		CMove& cmove = entity.get<CMove>();
 
-		for (unsigned i = 0; i != vcmov.size(); ++i)
+		if (cmove.isMoving())
 		{
-			CMove*	cmov = &vcmov[i];
-
-			if (cmov->isMoving())
-			{
-				sf::Vector2f move(cmov->velocity() * elapsedTime);
-				const bool moved = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], &vcbox[i], move, nullptr);
-				if (moved)
-					entityMoved(arch, i);
-			}
+			sf::Vector2f move(cmove.velocity() * elapsedTime);
+			const bool moved = processCollidable(m_groups[G::Collidable], &entity.get<CPosition>(), &entity.get<CCollisionBox>(), move, nullptr);
+			if (moved)
+				entityMoved(entity);
 		}
 	}
 
 	// Then the moving, collidable entities, with gravity.
-	for (Archetype* arch : m_groups[G::Char].archs())
+	for (EntityHandle entity : m_groups[G::Char])
 	{
-		const auto vcpos = arch->get<CPosition>();
-		const auto vcbox = arch->get<CCollisionBox>();
-		const auto vcmov = arch->get<CMove>();
-		const auto vcrig = arch->get<CRigidbody>();
+		CRigidbody*    crig = &entity.get<CRigidbody>();
+		CMove*         cmov = &entity.get<CMove>();
+		CCollisionBox* cbox = &entity.get<CCollisionBox>();
+		sf::Vector2f   move = cmov->velocity();
 
-		for (unsigned i = 0; i != vcrig.size(); ++i)
+		if (crig->grounded)
 		{
-			CRigidbody*    crig = &vcrig[i];
-			CMove*         cmov = &vcmov[i];
-			CCollisionBox* cbox = &vcbox[i];
-			sf::Vector2f   move = cmov->velocity();
-
-			if (crig->grounded)
+			for (const CCollisionBox& boxWall : m_groups[G::Collidable].getAll<CCollisionBox>())
 			{
-				for (Archetype* archWall : m_groups[G::Collidable].archs())
+				if (cbox->top + cbox->height == boxWall.top
+				&& cbox->left + cbox->width > boxWall.left
+				&& cbox->left < boxWall.left + boxWall.width)
 				{
-					for (const auto& boxWall : archWall->get<CCollisionBox>())
-						if (cbox->top + cbox->height == boxWall.top
-						&& cbox->left + cbox->width > boxWall.left
-						&& cbox->left < boxWall.left + boxWall.width)
-						{
-							goto grounded;
-						}
+					goto grounded;
 				}
-				crig->grounded = false;
 			}
-			crig->applyForce(c_gravityAcceleration * elapsedTime);
-			move.y += crig->velocity;
+			crig->grounded = false;
+		}
+		crig->applyForce(c_gravityAcceleration * elapsedTime);
+		move.y += crig->velocity;
 
-			grounded:
-			if (move.x || move.y)
-			{
-				move *= elapsedTime;
-				const bool moved = processCollidable(m_groups[G::Collidable].archs(), &vcpos[i], cbox, move, crig);
-				if (moved)
-					entityMoved(arch, i);
-			}
+		grounded:
+		if (move.x || move.y)
+		{
+			move *= elapsedTime;
+			const bool moved = processCollidable(m_groups[G::Collidable], &entity.get<CPosition>(), cbox, move, crig);
+			if (moved)
+				entityMoved(entity);
 		}
 	}
 }

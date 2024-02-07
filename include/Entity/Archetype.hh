@@ -20,12 +20,18 @@ public:
 	Archetype(const Archetype&) = delete;
 	void operator=(const Archetype&) = delete;
 
+	auto entityCount() const
+	{
+		assert(m_entityCount == computeEntityCount());
+		return m_entityCount;
+	}
+
 	// Returns the vector containing the component type requested.
 	template<typename T>
-	const std::span<T> get() noexcept
+	std::span<T> getAll() noexcept
 	{
 		// Sanity check that the requested component type is present.
-		assert((m_comp & CId<T>).bits());
+		assert(m_comp.has(CId<T>));
 
 		// Components will always be stored in the ComponentVectorVariant order.
 		// The index is how many bits are set before this component type's bit.
@@ -38,9 +44,13 @@ public:
 
 private:
 
+	unsigned computeEntityCount() const;
+
 	// Variant containing vectors of every component.
 	using ComponentVectorVariant = tupleToVectorVariant<Components>::type;
 
 	// Components of the same type are stored contiguously; one vector for each.
 	std::vector<ComponentVectorVariant>	m_entities;
+
+	unsigned m_entityCount;
 };

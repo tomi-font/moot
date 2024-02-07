@@ -8,5 +8,5 @@ public:
 
 	SPhysics();
 
-	void update(float elapsedTime) override;
+	void update(float elapsedTime) const override;
 };

@@ -13,7 +13,7 @@ public:
 
 	virtual ~System() {}
 
-	virtual void update(float elapsedTime) = 0;
+	virtual void update(float elapsedTime) const = 0;
 
 	void setWindow(sf::RenderWindow*);
 
@@ -22,10 +22,14 @@ public:
 
 protected:
 
-	Archetype* getEntitysArchetype(EntityId);
+	EntityHandle getEntity(EntityId) const;
 
 	// Component groups of interest.
 	std::vector<ComponentGroup>	m_groups;
 
 	sf::RenderWindow* m_window = nullptr;
+
+private:
+
+	Archetype* getArchetype(ComponentComposition) const;	
 };

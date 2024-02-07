@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Archetype.hh>
+#include <Entity/Archetype.hh>
+#include <Entity/Template.hh>
 #include <Event/Manager.hh>
 #include <Event/User.hh>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include <System/System.hh>
-#include <Template.hh>
 #include <deque>
 #include <memory>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 
 class World : EventUser

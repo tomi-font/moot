@@ -20,3 +20,5 @@
 	- Having every listener store a reference to the manager may not be the most elegant.
 
 - Have a size component that other components make use of.
+
+- Extend ComponentGroup::getAll() to allow specifying component types and be able to iterate over ~tuples (allowing with or without one element being EntityHandle?). (See structured bindings.) Not sure of the feasability.

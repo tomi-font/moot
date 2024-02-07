@@ -1,5 +1,5 @@
 #include <System/SRender.hh>
-#include <Archetype.hh>
+#include <Entity/Archetype.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 // Indices for this system's groups.
@@ -26,25 +26,23 @@ void SRender::triggered(const Event& event)
 {
 	assert(event.type == Event::EntityMoved);
 
-	Archetype* arch = getEntitysArchetype(event.entityId);
-	if (!arch)
+	const EntityHandle entity = getEntity(event.entityId);
+	if (!entity)
 		return;
 
-	const unsigned i = event.entityId.index();
+	if (entity.has<CRender>())
+		entity.get<CRender>().updatePosition(entity.get<CPosition>());
 
-	if (arch->comp().has(CId<CRender>))
-		arch->get<CRender>()[i].updatePosition(arch->get<CPosition>()[i]);
-
-	if (arch->comp().has(CId<CView>))
+	if (entity.has<CView>())
 	{
 			// TODO: Set the view when the entity is created, before any EntityMoved event.
 			assert(m_window);
 
 			sf::View view = m_window->getView();
 			const sf::Vector2f& viewSize = view.getSize();
-			const sf::Vector2f& viewCenter = arch->get<CPosition>()[i];
+			const sf::Vector2f& viewCenter = entity.get<CPosition>();
 			sf::FloatRect viewRect(viewCenter - viewSize / 2.f, viewSize);
-			const sf::FloatRect& viewLimits = arch->get<CView>()[i].limits;
+			const sf::FloatRect& viewLimits = entity.get<CView>().limits;
 
 			assert(viewLimits.width >= viewRect.width && viewLimits.height >= viewRect.height);
 
@@ -59,19 +57,16 @@ void SRender::triggered(const Event& event)
 	}
 }
 
-void SRender::update(float)
+void SRender::update(float) const
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 
-	for (ComponentGroup& group : m_groups)
+	for (Archetype* arch : m_groups[G::Rendered].archetypes())
 	{
-		for (Archetype* arch : group.archs())
-		{
-			const auto& crend = arch->get<CRender>();
+		const auto& crend = arch->getAll<CRender>();
+		const auto& vertices = crend[0].vertices();
 
-			const auto& vertices = crend[0].vertices();
-			m_window->draw(vertices.data(), vertices.size() * crend.size(), sf::Quads);
-		}
+		m_window->draw(vertices.data(), vertices.size() * crend.size(), sf::Quads);
 	}
 
 	m_window->display();

@@ -1,5 +1,4 @@
 #include <System/SInput.hh>
-#include <Archetype.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
@@ -16,20 +15,19 @@ SInput::SInput()
 	m_groups[G::Player] = { CId<CPlayer> | CId<CMove> | CId<CRigidbody> };
 }
 
-static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
+static void	playerControls(sf::Keyboard::Key keyCode, EntityHandle player)
 {
-	const auto&	controls = arch->get<CPlayer>()[0].controls();
+	const auto&	controls = player.get<CPlayer>().controls();
 
 	if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
 	{
-		CMove* cmov = &arch->get<CMove>()[0];
 		const int direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right])
 		                      - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
-		cmov->setMotion(direction);
+		player.get<CMove>().setMotion(direction);
 	}
 	else if (keyCode == controls[CPlayer::Jump])
 	{
-		CRigidbody*	rig = &arch->get<CRigidbody>()[0];
+		CRigidbody*	rig = &player.get<CRigidbody>();
 
 		// TODO: Decouple from CRigidbody's internal logic. Possibly by making an interface to it.
 		if (rig->grounded)
@@ -40,7 +38,7 @@ static void	playerControls(sf::Keyboard::Key keyCode, Archetype* arch)
 	}
 }
 
-void SInput::update(float)
+void SInput::update(float) const
 {
 	for (sf::Event event; m_window->pollEvent(event);)
 	{
@@ -55,7 +53,7 @@ void SInput::update(float)
 			}
 			[[fallthrough]];
 		case sf::Event::KeyReleased:
-			playerControls(event.key.code, m_groups[G::Player].archs()[0]);
+			playerControls(event.key.code, *m_groups[G::Player].begin());
 			break;
 		}
 	}

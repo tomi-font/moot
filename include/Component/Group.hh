@@ -1,10 +1,9 @@
 #pragma once
 
 #include <Component/Composition.hh>
+#include <Entity/Archetype/iteration.hh>
 #include <span>
 #include <vector>
-
-class Archetype;
 
 // Groups are the way systems express their interest towards different component compositions.
 class ComponentGroup
@@ -12,16 +11,24 @@ class ComponentGroup
 public:
 
 	ComponentGroup() {}
-	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition()) : m_required(required), m_forbidden(forbidden) {}
+	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition());
 
 	// Appends the given Archetype upon match.
 	void match(Archetype*);
 
-	std::span<Archetype*> archs() { return m_archs; }
+	bool matches(ComponentComposition comp) const;
+
+	std::span<Archetype* const> archetypes() const { return m_archs; }
+
+	Archetype* getArchetype(ComponentComposition comp) const;
+
+	ArchetypeIterator<EntityHandle> begin() const { return { m_archs.begin() }; }
+	ArchetypeIterator<EntityHandle> end() const { return { m_archs.end() }; }
+
+	// Allows iterating over all the components (of the given type) matched by this group.
+	template<typename C> ArchetypeIterable<C> getAll() const { return { m_archs }; }
 
 private:
-
-	bool matches(ComponentComposition comp) const;
 
 	// Matching archetypes.
 	std::vector<Archetype*> m_archs;

@@ -1,13 +1,16 @@
 #include <Component/Composable.hh>
-#include <Archetype.hh>
-#include <Template.hh>
+#include <Entity/Archetype.hh>
+#include <Entity/Template.hh>
 #include <utility/variant/indexToCompileTime.hh>
 
-Archetype::Archetype(ComponentComposition comp) : ComponentComposable(comp)
+Archetype::Archetype(ComponentComposition comp) :
+	ComponentComposable(comp),
+	m_entityCount(0)
 {
 // prepares the archetype for storing all needed components
 
 	ComponentComposition::Bits bits = comp.bits();
+	assert(bits);
 
 	// One bit set in comp means one component type.
 	m_entities.reserve(__builtin_popcount(bits));
@@ -50,4 +53,16 @@ void Archetype::instantiate(const Template& temp)
 			});
 		++i;
 	}
+	++m_entityCount;
+}
+
+unsigned Archetype::computeEntityCount() const
+{
+	const unsigned firstVariantIndex = __builtin_ctz(m_comp.bits());
+
+	return variantIndexToCompileTime<ComponentVectorVariant>(firstVariantIndex,
+		[this](auto I)
+		{
+			return std::get<I>(m_entities[0]).size();
+		});
 }

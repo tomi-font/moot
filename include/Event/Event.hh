@@ -18,5 +18,5 @@ public:
 
 	const Type type;
 	// The ID of the entity relevant to this event, if applicable.
-	const EntityId entityId;
+	const EntityId entityId; // TODO: Use EntityHandle instead?
 };

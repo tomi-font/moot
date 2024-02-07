@@ -1,4 +1,4 @@
-#include <Template.hh>
+#include <Entity/Template.hh>
 
 void Template::add(ComponentVariant&& cv)
 {

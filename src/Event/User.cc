@@ -19,7 +19,7 @@ void EventUser::listen(Event::Type et)
 	m_eventManager->addListener(et, this);
 }
 
-void EventUser::broadcast(const Event& e)
+void EventUser::broadcast(const Event& e) const
 {
 	assert(m_eventManager);
 	m_eventManager->broadcast(e);

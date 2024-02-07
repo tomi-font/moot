@@ -1,5 +1,4 @@
 #include <System/System.hh>
-#include <Archetype.hh>
 #include <cassert>
 
 void System::setWindow(sf::RenderWindow* window)
@@ -14,17 +13,17 @@ void System::match(Archetype* arch)
 		group.match(arch);
 }
 
-Archetype* System::getEntitysArchetype(EntityId eid)
+EntityHandle System::getEntity(EntityId eid) const
 {
-	const ComponentComposition comp = eid.comp();
+	return { getArchetype(eid.comp), eid.index };
+}
 
-	for (ComponentGroup& group : m_groups)
+Archetype* System::getArchetype(ComponentComposition comp) const
+{
+	for (const ComponentGroup& group : m_groups)
 	{
-		for (Archetype* arch : group.archs())
-		{
-			if (arch->comp() == comp)
-				return arch;
-		}
+		if (group.matches(comp))
+			return group.getArchetype(comp);
 	}
 	return nullptr;
 }

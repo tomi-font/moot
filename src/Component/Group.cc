@@ -1,8 +1,13 @@
-#include "Component/Composition.hh"
 #include <Component/Group.hh>
-#include <Archetype.hh>
 
 static_assert(sizeof(ComponentComposition::Bits) * 8 >= std::tuple_size_v<Components>);
+
+ComponentGroup::ComponentGroup(ComponentComposition required, ComponentComposition forbidden) :
+	m_required(required),
+	m_forbidden(forbidden)
+{
+	assert(required.hasNoneOf(forbidden));
+}
 
 void ComponentGroup::match(Archetype* arch)
 {
@@ -12,6 +17,15 @@ void ComponentGroup::match(Archetype* arch)
 
 bool ComponentGroup::matches(ComponentComposition comp) const
 {
-	// The composition matches if all of the included and none of the excluded components are present.
-	return (comp & m_required) == m_required && (comp & m_forbidden) == ComponentComposition();
+	return comp.hasAllOf(m_required) && comp.hasNoneOf(m_forbidden);
+}
+
+Archetype* ComponentGroup::getArchetype(ComponentComposition comp) const
+{
+	for (Archetype* arch : m_archs)
+	{
+		if (arch->comp() == comp)
+			return arch;
+	}
+	assert(false);
 }

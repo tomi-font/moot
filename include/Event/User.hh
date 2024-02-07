@@ -23,7 +23,7 @@ protected:
 	// Start listening to the given type of event.
 	void listen(Event::Type);
 
-	void broadcast(const Event&);
+	void broadcast(const Event&) const;
 
 private:
 
