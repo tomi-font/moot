@@ -3,7 +3,6 @@
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
 #include <utility/tuple/toVariant.hh>
-#include <variant>
 #include <set>
 
 class Template : public ComponentComposable
