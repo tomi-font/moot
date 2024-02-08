@@ -26,7 +26,26 @@ int	main()
 	temp.add(CPosition(pos));
 	temp.add(CRender(pos, size, sf::Color::White));
 	temp.add(CMove(1000));
-	temp.add(CPlayer(CPlayer::Controls({sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W})));
+	temp.add(CInput({ {sf::Keyboard::A, "left"}, {sf::Keyboard::D, "right"}, {sf::Keyboard::W, "jump"} },
+		[](EntityHandle player, const std::string& key)
+		{
+			if (key == "jump")
+			{
+				CRigidbody*	rig = &player.get<CRigidbody>();
+
+				// TODO: Decouple from CRigidbody's internal logic. Possibly by making an interface to it.
+				if (rig->grounded)
+				{
+					rig->grounded = false;
+					rig->velocity = -1000;
+				}
+			}
+			else
+			{
+				const CInput& cInput = player.get<CInput>();
+				player.get<CMove>().setMotion(cInput.isKeyPressed("right") - cInput.isKeyPressed("left"));
+			}
+		}));
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	temp.add(CRigidbody());
 	temp.add(CView(sf::FloatRect(-viewSize.x * .5f, -c_maxCoord, viewSize.x, c_maxCoord)));

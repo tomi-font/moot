@@ -5,37 +5,14 @@
 // Indices for this system's groups.
 enum G
 {
-	Player,
+	Input,
 	COUNT
 };
 
 SInput::SInput()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::Player] = { CId<CPlayer> | CId<CMove> | CId<CRigidbody> };
-}
-
-static void	playerControls(sf::Keyboard::Key keyCode, EntityHandle player)
-{
-	const auto&	controls = player.get<CPlayer>().controls();
-
-	if (keyCode == controls[CPlayer::Left] || keyCode == controls[CPlayer::Right])
-	{
-		const int direction = sf::Keyboard::isKeyPressed(controls[CPlayer::Right])
-		                      - sf::Keyboard::isKeyPressed(controls[CPlayer::Left]);
-		player.get<CMove>().setMotion(direction);
-	}
-	else if (keyCode == controls[CPlayer::Jump])
-	{
-		CRigidbody*	rig = &player.get<CRigidbody>();
-
-		// TODO: Decouple from CRigidbody's internal logic. Possibly by making an interface to it.
-		if (rig->grounded)
-		{
-			rig->grounded = false;
-			rig->velocity = -1000;
-		}
-	}
+	m_groups[G::Input] = { CId<CInput> };
 }
 
 void SInput::update(float) const
@@ -53,7 +30,13 @@ void SInput::update(float) const
 			}
 			[[fallthrough]];
 		case sf::Event::KeyReleased:
-			playerControls(event.key.code, *m_groups[G::Player].begin());
+			for (EntityHandle entity : m_groups[G::Input])
+			{
+				const CInput& cInput = entity.get<CInput>();
+
+				if (cInput.controls.contains(event.key.code))
+					cInput.callback(entity, cInput.controls.at(event.key.code));
+			}
 			break;
 		}
 	}

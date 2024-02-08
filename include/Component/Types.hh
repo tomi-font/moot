@@ -2,8 +2,8 @@
 
 #include <Component/Composition.hh>
 #include <Component/CCollisionBox.hh>
+#include <Component/CInput.hh>
 #include <Component/CMove.hh>
-#include <Component/CPlayer.hh>
 #include <Component/CPosition.hh>
 #include <Component/CRender.hh>
 #include <Component/CRigidbody.hh>
@@ -14,7 +14,7 @@ using Components = std::tuple<
 	CPosition,
 	CRender,
 	CMove,
-	CPlayer,
+	CInput,
 	CCollisionBox,
 	CRigidbody,
 	CView>;
