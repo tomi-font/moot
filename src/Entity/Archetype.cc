@@ -13,12 +13,12 @@ Archetype::Archetype(ComponentComposition comp) :
 	assert(bits);
 
 	// One bit set in comp means one component type.
-	m_entities.reserve(__builtin_popcount(bits));
+	m_entities.reserve(setBitCount(bits));
 
 	// Iterate through all bits set in comp from low to high, creating the corresponding component vector.
 	while (bits)
 	{
-		const unsigned variantIndex = __builtin_ctz(bits);
+		const unsigned variantIndex = firstBitSetPos(bits);
 
 		variantIndexToCompileTime<ComponentVectorVariant>(variantIndex,
 			[this](auto I)
@@ -29,7 +29,7 @@ Archetype::Archetype(ComponentComposition comp) :
 		bits ^= 1 << variantIndex;
 	}
 
-	assert(__builtin_popcount(m_comp.bits()) == m_entities.size());
+	assert(setBitCount(m_comp.bits()) == m_entities.size());
 }
 
 void Archetype::instantiate(const Template& temp)
@@ -41,7 +41,7 @@ void Archetype::instantiate(const Template& temp)
  	for (const Template::ComponentVariant& component : temp.components())
 	{
 		// Ensure that the template's components are stored in the expected order (ascending index).
-		assert(i == __builtin_popcount(m_comp.bits() & ((1 << component.index()) - 1)));
+		assert(i == setBitCount(m_comp.bits() & ((1 << component.index()) - 1)));
 
 		variantIndexToCompileTime<Template::ComponentVariant>(component.index(),
 			[&](auto I)
@@ -58,11 +58,11 @@ void Archetype::instantiate(const Template& temp)
 
 unsigned Archetype::computeEntityCount() const
 {
-	const unsigned firstVariantIndex = __builtin_ctz(m_comp.bits());
+	const unsigned firstVariantIndex = firstBitSetPos(m_comp.bits());
 
 	return variantIndexToCompileTime<ComponentVectorVariant>(firstVariantIndex,
 		[this](auto I)
 		{
-			return std::get<I>(m_entities[0]).size();
+			return static_cast<unsigned>(std::get<I>(m_entities[0]).size());
 		});
 }

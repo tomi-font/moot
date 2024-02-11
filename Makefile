@@ -6,14 +6,13 @@ OBJDIR := .obj
 SRC := $(shell find $(SRCDIR) -name *.cc)
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-CXXFLAGS := -std=gnu++2b -Iinclude -MMD -Wall -Wextra -Wno-switch
+CXX := clang++
+CXXFLAGS := -std=gnu++26 -Iinclude -MMD -MP -Weverything -Wno-switch -Wno-c++98-compat -Wno-pre-c++14-compat -Wno-padded -Wno-implicit-int-float-conversion -Wno-suggest-destructor-override -Wno-c++20-extensions
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
 endif
 LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
-
-all: $(NAME)
 
 $(NAME): $(OBJ)
 	$(CXX) -o$@ $^ $(LDFLAGS) $(LDLIBS)
@@ -27,9 +26,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 clean:
 	rm -rf $(OBJDIR)
 
-fclean: clean
+distclean: clean
 	rm -f $(NAME)
 
-re: fclean all
+re: distclean
+	make
 
-.PHONY: all clean fclean re
+.PHONY: all clean distclean re

@@ -32,12 +32,12 @@ private:
 	// Measures the time elapsed between updates.
 	sf::Clock m_clock;
 
-	bool m_running;
-
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
 
 	EventManager m_eventManager;
+
+	bool m_running;
 
 	// Returns the matching archetype, creating it if it didn't exist.
 	Archetype* getArchetype(ComponentComposition);

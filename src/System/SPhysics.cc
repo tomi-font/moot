@@ -28,14 +28,14 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 {
 	sf::Vector2f shift;
 
-	if (move.x)
+	if (move.x != 0.f)
 		shift.x = hitBox.left + (move.x > 0.f ? -(rect.left + rect.width) : hitBox.width - rect.left);
 
-	if (move.y)
+	if (move.y != 0.f)
 	{
 		shift.y = hitBox.top + (move.y > 0.f ? -(rect.top + rect.height) : hitBox.height - rect.top);
 
-		if (move.x)
+		if (move.x != 0.f)
 		{
 			if ((std::signbit(move.x) == std::signbit(move.y)) ?
 			(shift.y * move.x > shift.x * move.y) : (shift.y * move.x < shift.x * move.y))
@@ -49,7 +49,10 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 	rect.left += shift.x;
 	rect.top += shift.y;
 
-	if (crig && shift.y && rect.top + rect.height == hitBox.top)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+	if (crig && shift.y != 0.f && rect.top + rect.height == hitBox.top)
+#pragma clang diagnostic pop
 	{
 		crig->grounded = true;
 		crig->velocity = 0.f;
@@ -67,7 +70,7 @@ static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos
 			computeCollision(move, rect, cboxWall, crig);
 	}
 
-	if (move.x || move.y)
+	if (move != sf::Vector2f())
 	{
 		cpos->x = rect.left;
 		cpos->y = rect.top;
@@ -122,7 +125,10 @@ void SPhysics::update(float elapsedTime) const
 		{
 			for (const CCollisionBox& boxWall : m_groups[G::Collidable].getAll<CCollisionBox>())
 			{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
 				if (cbox->top + cbox->height == boxWall.top
+#pragma clang diagnostic pop
 				&& cbox->left + cbox->width > boxWall.left
 				&& cbox->left < boxWall.left + boxWall.width)
 				{
@@ -135,7 +141,7 @@ void SPhysics::update(float elapsedTime) const
 		move.y += crig->velocity;
 
 		grounded:
-		if (move.x || move.y)
+		if (move != sf::Vector2f())
 		{
 			move *= elapsedTime;
 			const bool moved = processCollidable(m_groups[G::Collidable], &entity.get<CPosition>(), cbox, move, crig);

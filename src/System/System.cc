@@ -1,6 +1,10 @@
 #include <System/System.hh>
 #include <cassert>
 
+System::~System()
+{
+}
+
 void System::setWindow(sf::RenderWindow* window)
 {
 	assert(!m_window);

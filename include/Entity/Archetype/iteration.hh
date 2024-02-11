@@ -21,7 +21,7 @@ template<> class ArchetypeIterator<EntityHandle> : public ArchetypeIteratorBase
 public:
     using ArchetypeIteratorBase::ArchetypeIteratorBase;
 
-    virtual EntityHandle operator*() const { return { *m_archIt, m_idx }; }
+    EntityHandle operator*() const { return { *m_archIt, m_idx }; }
 
     ArchetypeIterator& operator++()
     {

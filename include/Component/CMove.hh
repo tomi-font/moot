@@ -14,7 +14,7 @@ struct CMove
 
 private:
 
-	const unsigned short m_speed;
-
 	sf::Vector2f m_velocity;
+
+	const unsigned short m_speed;
 };

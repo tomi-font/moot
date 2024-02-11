@@ -24,6 +24,7 @@ void SInput::update(float) const
 		case sf::Event::KeyPressed:
 			if (event.key.code == sf::Keyboard::Q || event.key.code == sf::Keyboard::Escape)
 			{
+				[[fallthrough]];
 		case sf::Event::Closed:
 				broadcast(Event::PlayerQuit);
 				break;

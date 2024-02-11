@@ -1,9 +1,10 @@
 #pragma once
 
+#include <utility/bit.hh>
 #include <cassert>
 
 // Interface type for construction of component IDs to prevent implicit conversions.
-enum ComponentIndex {};
+enum ComponentIndex : unsigned {};
 
 // Describes a composition of components, i.e. which components are present.
 class ComponentComposition
@@ -23,9 +24,9 @@ public:
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
 	constexpr bool has(ComponentComposition r) const
 	{
-		assert(__builtin_popcount(r.bits()) == 1);
+		assert(setBitCount(r.bits()) == 1);
 		return m_bits & r.bits();
-	};
+	}
 	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.bits()) == r.bits(); }
 	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.bits()); }
 

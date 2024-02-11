@@ -4,8 +4,8 @@
 
 World::World(sf::RenderWindow* window) :
 	EventUser(&m_eventManager),
-	m_running(true),
-	m_systems(std::tuple_size_v<Systems>)
+	m_systems(std::tuple_size_v<Systems>),
+	m_running(true)
 {
 	m_systems[SId<SInput>] = std::make_unique<SInput>();
 	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();

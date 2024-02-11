@@ -10,13 +10,14 @@ public:
 
 	EventUser() {}
 	EventUser(EventManager*);
+	virtual ~EventUser() {}
 
 	void setEventManager(EventManager*);
 
-	virtual void listenToEvents() {}
+	virtual void listenToEvents();
 
 	// Callback for when an event whose type was subscribed to is triggered.
-	virtual void triggered(const Event&) {}
+	virtual void triggered(const Event&);
 
 protected:
 

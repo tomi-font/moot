@@ -2,6 +2,7 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
+#include <utility/bit.hh>
 #include <utility/tuple/toVectorVariant.hh>
 #include <cassert>
 #include <span>
@@ -35,7 +36,7 @@ public:
 
 		// Components will always be stored in the ComponentVectorVariant order.
 		// The index is how many bits are set before this component type's bit.
-		const unsigned index = __builtin_popcount(m_comp.bits() & (CId<T>.bits() - 1));
+		const unsigned index = setBitCount(m_comp.bits() & (CId<T>.bits() - 1));
 
 		return std::get<std::vector<T>>(m_entities[index]);
 	}
@@ -46,11 +47,11 @@ private:
 
 	unsigned computeEntityCount() const;
 
+	unsigned m_entityCount;
+
 	// Variant containing vectors of every component.
 	using ComponentVectorVariant = tupleToVectorVariant<Components>::type;
 
 	// Components of the same type are stored contiguously; one vector for each.
 	std::vector<ComponentVectorVariant>	m_entities;
-
-	unsigned m_entityCount;
 };

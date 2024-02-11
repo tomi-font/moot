@@ -11,7 +11,7 @@ class System : public EventUser
 {
 public:
 
-	virtual ~System() {}
+	virtual ~System();
 
 	virtual void update(float elapsedTime) const = 0;
 

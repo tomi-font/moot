@@ -13,6 +13,14 @@ void EventUser::setEventManager(EventManager* em)
 	m_eventManager = em;
 }
 
+void EventUser::listenToEvents()
+{
+}
+
+void EventUser::triggered(const Event&)
+{
+}
+
 void EventUser::listen(Event::Type et)
 {
 	assert(m_eventManager);
