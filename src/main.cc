@@ -52,21 +52,20 @@ static CInput::Watch jumpInputWatch()
 	};
 }
 
-int	main()
+static void configureWindow(sf::RenderWindow& window)
 {
-	// Manual creation of the window.
-	auto vm = sf::VideoMode::getDesktopMode();
-	vm.width /= 2;
-	vm.height /= 2;
-	sf::RenderWindow window(vm, "demo");
-	window.setPosition(sf::Vector2i(vm.width / 2, vm.height / 2));
+	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
+	halfScreen.width /= 2;
+	halfScreen.height /= 2;
+	
+	window.create(halfScreen, "demo");
+	window.setPosition(sf::Vector2i(halfScreen.width / 2, halfScreen.height / 2));
 	window.setVerticalSyncEnabled(true);
 	window.setKeyRepeatEnabled(false);
+}
 
-	World world(&window);
-
-	// Manual creation of a player.
-	const sf::Vector2f viewSize(vm.width, vm.height);
+static Template createPlayer(const sf::Vector2f& viewSize)
+{
 	sf::Vector2f pos(0, -viewSize.y);
 	sf::Vector2f size(100.f, 100.f);
 	Template temp;
@@ -77,16 +76,29 @@ int	main()
 	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
 	temp.add(CRigidbody());
 	temp.add(CView(sf::FloatRect(-viewSize.x * .5f, -viewSize.y, viewSize.x, viewSize.y)));
-	world.instantiate(temp);
+	return temp;
+}
 
-	// Manual creation of a platform.
-	size.x = std::numeric_limits<float>::max();
-	size.y = std::numeric_limits<float>::min();
-	pos = { -(size.x / 2), 0 };
-	temp = {};
-	temp.add(CPosition(pos));
-	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
-	world.instantiate(temp);
+static Template createGround()
+{
+	Template temp;
+	sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
+	CPosition cPos = {{ -(size.x / 2), 0 }};
+
+	temp.add(cPos);
+	temp.add(CCollisionBox(sf::FloatRect(cPos, size)));
+	return temp;	
+}
+
+int	main()
+{
+	sf::RenderWindow window;
+	configureWindow(window);
+
+	World world(&window);
+
+	world.instantiate(createPlayer(window.getView().getSize()));
+	world.instantiate(createGround());
 
 	addQuitControls(world);
 

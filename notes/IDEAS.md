@@ -7,8 +7,6 @@
 
 - arrays performance: avoiding reallocations as much as possible (currently, vectors are let to default behaviour)
 
-- Entity IDs: Use part of the bits for the Archetype index, and the rest for the Components' index in the Archetype.
-
 - Separate the event listeners and triggers.
 
 - Systems' storing
