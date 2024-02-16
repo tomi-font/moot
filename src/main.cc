@@ -41,14 +41,13 @@ static CInput::Watch moveInputWatch()
 static CInput::Watch jumpInputWatch()
 {
 	return {
-		{ {.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W} },
-		[](EntityHandle player, const sf::Event&)
 		{
-			// TODO: Decouple from CRigidbody's internal logic. Possibly by making an interface to it.
-			CRigidbody* rig = &player.get<CRigidbody>();
-
-			rig->grounded = false;
-			rig->velocity = -1000;
+			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W},
+			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::S},
+		},
+		[](EntityHandle player, const sf::Event& event)
+		{
+			player.get<CRigidbody>().applyForce((event.key.code == sf::Keyboard::W) ? -1000 : 1000);
 		}
 	};
 }

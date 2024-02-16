@@ -54,8 +54,7 @@ static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::
 	if (crig && shift.y != 0.f && rect.top + rect.height == hitBox.top)
 #pragma clang diagnostic pop
 	{
-		crig->grounded = true;
-		crig->velocity = 0.f;
+		crig->ground();
 	}
 }
 
@@ -121,7 +120,7 @@ void SPhysics::update(float elapsedTime) const
 		CCollisionBox* cbox = &entity.get<CCollisionBox>();
 		sf::Vector2f   move = cmov->velocity();
 
-		if (crig->grounded)
+		if (crig->grounded())
 		{
 			for (const CCollisionBox& boxWall : m_groups[G::Collidable].getAll<CCollisionBox>())
 			{
@@ -135,10 +134,9 @@ void SPhysics::update(float elapsedTime) const
 					goto grounded;
 				}
 			}
-			crig->grounded = false;
 		}
 		crig->applyForce(c_gravityAcceleration * elapsedTime);
-		move.y += crig->velocity;
+		move.y += crig->velocity();
 
 		grounded:
 		if (move != sf::Vector2f())
