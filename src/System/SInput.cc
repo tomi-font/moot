@@ -19,26 +19,12 @@ void SInput::update(float) const
 {
 	for (sf::Event event; m_window->pollEvent(event);)
 	{
-		switch (event.type)
+		for (EntityHandle entity : m_groups[G::Input])
 		{
-		case sf::Event::KeyPressed:
-			if (event.key.code == sf::Keyboard::Q || event.key.code == sf::Keyboard::Escape)
+			if (auto* callback = entity.get<CInput>().getCallback(event))
 			{
-				[[fallthrough]];
-		case sf::Event::Closed:
-				broadcast(Event::PlayerQuit);
-				break;
+				(*callback)(entity, event);
 			}
-			[[fallthrough]];
-		case sf::Event::KeyReleased:
-			for (EntityHandle entity : m_groups[G::Input])
-			{
-				const CInput& cInput = entity.get<CInput>();
-
-				if (cInput.controls.contains(event.key.code))
-					cInput.callback(entity, cInput.controls.at(event.key.code));
-			}
-			break;
 		}
 	}
 }

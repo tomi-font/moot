@@ -9,7 +9,6 @@ public:
 	enum Type
 	{
 		// Keep the enum values unassigned so that they are iterable.
-		PlayerQuit,
 		EntityMoved,
 		COUNT
 	};

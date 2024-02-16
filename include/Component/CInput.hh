@@ -1,16 +1,28 @@
 #pragma once
 
 #include <functional>
-#include <string>
-#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Event.hpp>
 
 class EntityHandle;
 
-struct CInput
+class CInput
 {
-	const std::unordered_map<sf::Keyboard::Key, std::string> controls;
-	
-	const std::function<void (EntityHandle, const std::string& key)> callback;
+public:
 
-	bool isKeyPressed(const std::string& keyName) const;
+	struct Watch
+	{
+		// The events of interest (for each, the type and specific data that must match).
+		std::vector<sf::Event> events;
+
+		using Callback = std::function<void (EntityHandle, const sf::Event&)>;
+		Callback callback;
+	};
+
+	CInput(std::vector<Watch>&& watches) : m_watches(std::move(watches)) {}
+
+	const Watch::Callback* getCallback(const sf::Event&) const;
+
+private:
+
+	const std::vector<Watch> m_watches;
 };

@@ -3,7 +3,6 @@
 #include <SFML/Window/Event.hpp>
 
 World::World(sf::RenderWindow* window) :
-	EventUser(&m_eventManager),
 	m_systems(std::tuple_size_v<Systems>),
 	m_running(true)
 {
@@ -17,7 +16,6 @@ World::World(sf::RenderWindow* window) :
 		system->listenToEvents();
 		system->setWindow(window);
 	}
-	listen(Event::PlayerQuit);
 
 	// Restart the clock to not count the setup time.
 	m_clock.restart();
@@ -58,10 +56,4 @@ Archetype* World::getArchetype(ComponentComposition comp)
 		system->match(arch);
 	}
 	return arch;
-}
-
-void World::triggered(const Event& event)
-{
-	assert(event.type == Event::PlayerQuit);
-	m_running = false;
 }

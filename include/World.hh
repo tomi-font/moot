@@ -3,20 +3,19 @@
 #include <Entity/Archetype.hh>
 #include <Entity/Template.hh>
 #include <Event/Manager.hh>
-#include <Event/User.hh>
 #include <System/System.hh>
 #include <deque>
 #include <memory>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 
-class World : EventUser
+class World
 {
 public:
 
 	World(sf::RenderWindow*);
 
 	bool isRunning() const { return m_running; }
+	void stopRunning() { m_running = false; }
 
 	// Updates all the systems.
 	void update();
@@ -41,6 +40,4 @@ private:
 
 	// Returns the matching archetype, creating it if it didn't exist.
 	Archetype* getArchetype(ComponentComposition);
-
-	void triggered(const Event&) override;
 };

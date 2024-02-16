@@ -1,14 +1,43 @@
 #include <Component/CInput.hh>
 #include <cassert>
+#include <cstring>
 
-bool CInput::isKeyPressed(const std::string& keyName) const
+static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
 {
-    for (const auto& [key, value] : controls)
+    // Size of the data of that event's type.
+    std::size_t size;
+
+    switch (lhs.type)
     {
-        if (value == keyName)
+    case sf::Event::KeyPressed:
+    case sf::Event::KeyReleased:
+        size = sizeof(lhs.key);
+        break;
+    case sf::Event::Closed:
+        size = 0;
+        break;
+    default:
+        assert(false);
+    }
+
+    return !std::memcmp(&lhs, &rhs, size + sizeof(lhs.type));
+}
+
+const CInput::Watch::Callback* CInput::getCallback(const sf::Event& event) const
+{
+    const Watch::Callback* callback = nullptr;
+
+    for (const Watch& watch : m_watches)
+    {
+        for (const sf::Event& watchEvent : watch.events)
         {
-            return sf::Keyboard::isKeyPressed(key);
+            if (watchEvent == event)
+            {
+                assert(!callback);
+                callback = &watch.callback;
+            }
         }
     }
-    assert(false);
+
+    return callback;
 }
