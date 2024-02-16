@@ -6,8 +6,19 @@ OBJDIR := .obj
 SRC := $(shell find $(SRCDIR) -name *.cc)
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
+DISABLED_WARNINGS := \
+	implicit-int-float-conversion \
+	padded \
+	suggest-destructor-override \
+	switch-enum \
+	c99-designator \
+	pre-c++14-compat \
+	pre-c++20-compat-pedantic \
+	c++98-compat \
+	c++20-extensions \
+
 CXX := clang++
-CXXFLAGS := -std=gnu++26 -Iinclude -MMD -MP -Weverything -Wno-switch -Wno-c++98-compat -Wno-pre-c++14-compat -Wno-padded -Wno-implicit-int-float-conversion -Wno-suggest-destructor-override -Wno-c++20-extensions
+CXXFLAGS := -std=gnu++26 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
