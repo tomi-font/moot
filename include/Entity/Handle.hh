@@ -36,6 +36,8 @@ public:
 
     EntityId id() const { return { m_arch->comp(), m_idx }; }
 
+    World* world() const { return m_arch->world(); }
+
 private:
 
     Archetype* const m_arch;

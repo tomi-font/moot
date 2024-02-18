@@ -3,8 +3,9 @@
 #include <Entity/Template.hh>
 #include <utility/variant/indexToCompileTime.hh>
 
-Archetype::Archetype(ComponentComposition comp) :
+Archetype::Archetype(ComponentComposition comp, World* world) :
 	ComponentComposable(comp),
+	m_world(world),
 	m_entityCount(0)
 {
 // prepares the archetype for storing all needed components

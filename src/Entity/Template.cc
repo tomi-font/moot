@@ -2,8 +2,8 @@
 
 void Template::add(ComponentVariant&& cv)
 {
-	if (!m_components.insert(std::move(cv)).second)
-		throw DuplicateComponentException();
+	const bool inserted = m_components.insert(std::move(cv)).second;
+	assert(inserted);
 
 	m_comp |= static_cast<ComponentIndex>(cv.index());
 }

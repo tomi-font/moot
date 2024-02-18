@@ -12,9 +12,7 @@ public:
 	// Variant containing every component.
 	using ComponentVariant = tupleToVariant<Components>::type;
 
-	struct DuplicateComponentException{};
-
-	// Adds a component. Throws DuplicateComponentException if trying to add a component that's already present.
+	// Adds a (not already present) component.
 	void add(ComponentVariant&&);
 
 	auto& components() const { return m_components; }

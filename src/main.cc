@@ -3,22 +3,22 @@
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-static void addQuitControls(World& world)
+static Template createQuitControls()
 {
-	Template entity;
+	Template temp;
 
-	entity.add(CInput({{
+	temp.add(CInput({{
 		{
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::Q},
 			{.type = sf::Event::Closed},
 		},
-		[&world](EntityHandle, const sf::Event&)
+		[](EntityHandle entity, const sf::Event&)
 		{
-			world.stopRunning();
+			entity.world()->stopRunning();
 		}
 	}}));
 
-	world.instantiate(entity);
+	return temp;
 }
 
 static CInput::Watch moveInputWatch()
@@ -73,7 +73,7 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	temp.add(CRender(pos, size, sf::Color::White));
 	temp.add(CMove(1000));
 	temp.add(CInput({moveInputWatch(), jumpInputWatch()}));
-	temp.add(CCollisionBox(sf::FloatRect(pos, size)));
+	temp.add(CCollisionBox({pos, size}));
 	temp.add(CRigidbody());
 	temp.add(CView(sf::FloatRect(-viewSize.x * .5f, -viewSize.y, viewSize.x, viewSize.y)));
 	return temp;
@@ -83,10 +83,10 @@ static Template createGround()
 {
 	Template temp;
 	sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
-	CPosition cPos = {{ -(size.x / 2), 0 }};
+	CPosition cPos = { -(size.x / 2), 0 };
 
 	temp.add(cPos);
-	temp.add(CCollisionBox(sf::FloatRect(cPos, size)));
+	temp.add(CCollisionBox({cPos, size}));
 	return temp;	
 }
 
@@ -100,7 +100,7 @@ int	main()
 	world.instantiate(createPlayer(window.getView().getSize()));
 	world.instantiate(createGround());
 
-	addQuitControls(world);
+	world.instantiate(createQuitControls());
 
 	while (world.isRunning())
 	{

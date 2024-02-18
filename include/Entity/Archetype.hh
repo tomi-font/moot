@@ -9,17 +9,20 @@
 #include <vector>
 
 class Template;
+class World;
 
 // Archetypes store components of entities that are the same, i.e. have exactly the same components.
 class Archetype : public ComponentComposable
 {
 public:
 
-	Archetype(ComponentComposition);
+	Archetype(ComponentComposition, World*);
 
 	// Currently Archetypes shall not be copied/moved to prevent pointer invalidation.
 	Archetype(const Archetype&) = delete;
 	void operator=(const Archetype&) = delete;
+
+	World* world() const { return m_world; }
 
 	auto entityCount() const
 	{
@@ -32,7 +35,7 @@ public:
 	std::span<T> getAll() noexcept
 	{
 		// Sanity check that the requested component type is present.
-		assert(m_comp.has(CId<T>));
+		assert(has<T>());
 
 		// Components will always be stored in the ComponentVectorVariant order.
 		// The index is how many bits are set before this component type's bit.
@@ -45,8 +48,10 @@ public:
 
 private:
 
-	unsigned computeEntityCount() const;
+	/* The world this Archetype belongs to. */
+	World* const m_world;
 
+	unsigned computeEntityCount() const;
 	unsigned m_entityCount;
 
 	// Variant containing vectors of every component.

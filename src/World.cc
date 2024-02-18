@@ -14,7 +14,7 @@ World::World(sf::RenderWindow* window) :
 	{
 		system->setEventManager(&m_eventManager);
 		system->listenToEvents();
-		system->setWindow(window);
+		system->initWindow(window);
 	}
 
 	// Restart the clock to not count the setup time.
@@ -48,7 +48,7 @@ Archetype* World::getArchetype(ComponentComposition comp)
 
 	// If we didn't find an archetype matching the composition,
 	// it means it doesn't exist so we have to create it.
-	Archetype* arch = &m_archs.emplace_back(comp);
+	Archetype* arch = &m_archs.emplace_back(comp, this);
 
 	// Then we must iterate the systems to see whether they're interested.
 	for (const auto& system : m_systems)
