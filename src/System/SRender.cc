@@ -29,9 +29,10 @@ void SRender::triggered(const Event& event)
 	const EntityHandle entity = getEntity(event.entityId);
 	if (!entity)
 		return;
+	const CPosition& cPos = entity.get<CPosition>();
 
 	if (entity.has<CRender>())
-		entity.get<CRender>().updatePosition(entity.get<CPosition>());
+		entity.get<CRender*>()->updatePosition(cPos);
 
 	if (entity.has<CView>())
 	{

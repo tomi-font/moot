@@ -64,7 +64,7 @@ static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos
 
 	for (EntityHandle entity : collidables)
 	{
-		CCollisionBox& cboxWall = entity.get<CCollisionBox>();
+		const CCollisionBox& cboxWall = entity.get<CCollisionBox>();
 		if (rect.intersects(cboxWall) && cbox != &cboxWall)
 			computeCollision(move, rect, cboxWall, crig);
 	}
@@ -90,10 +90,10 @@ void SPhysics::update(float elapsedTime) const
 	// First the moving entities that won't collide.
 	for (EntityHandle entity : m_groups[G::Ghost])
 	{
-		CMove& cmove = entity.get<CMove>();
+		const CMove& cmove = entity.get<CMove>();
 		if (cmove.isMoving())
 		{
-			entity.get<CPosition>() += cmove.velocity() * elapsedTime;
+			*entity.get<CPosition*>() += cmove.velocity() * elapsedTime;
 			entityMoved(entity);
 		}
 	}
@@ -101,12 +101,12 @@ void SPhysics::update(float elapsedTime) const
 	// Then the moving, collidable entities, without gravity.
 	for (EntityHandle entity : m_groups[G::Bird])
 	{
-		CMove& cmove = entity.get<CMove>();
+		const CMove& cmove = entity.get<CMove>();
 
 		if (cmove.isMoving())
 		{
 			sf::Vector2f move(cmove.velocity() * elapsedTime);
-			const bool moved = processCollidable(m_groups[G::Collidable], &entity.get<CPosition>(), &entity.get<CCollisionBox>(), move, nullptr);
+			const bool moved = processCollidable(m_groups[G::Collidable], entity.get<CPosition*>(), entity.get<CCollisionBox*>(), move, nullptr);
 			if (moved)
 				entityMoved(entity);
 		}
@@ -115,10 +115,9 @@ void SPhysics::update(float elapsedTime) const
 	// Then the moving, collidable entities, with gravity.
 	for (EntityHandle entity : m_groups[G::Char])
 	{
-		CRigidbody*    crig = &entity.get<CRigidbody>();
-		CMove*         cmov = &entity.get<CMove>();
-		CCollisionBox* cbox = &entity.get<CCollisionBox>();
-		sf::Vector2f   move = cmov->velocity();
+		CRigidbody*    crig = entity.get<CRigidbody*>();
+		CCollisionBox* cbox = entity.get<CCollisionBox*>();
+		sf::Vector2f   move = entity.get<CMove>().velocity();
 
 		if (crig->grounded())
 		{
@@ -142,7 +141,7 @@ void SPhysics::update(float elapsedTime) const
 		if (move != sf::Vector2f())
 		{
 			move *= elapsedTime;
-			const bool moved = processCollidable(m_groups[G::Collidable], &entity.get<CPosition>(), cbox, move, crig);
+			const bool moved = processCollidable(m_groups[G::Collidable], entity.get<CPosition*>(), cbox, move, crig);
 			if (moved)
 				entityMoved(entity);
 		}

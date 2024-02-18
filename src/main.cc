@@ -32,7 +32,7 @@ static CInput::Watch moveInputWatch()
 		},
 		[](EntityHandle player, const sf::Event&)
 		{
-			player.get<CMove>().setMotion(
+			player.get<CMove*>()->setMotion(
 				sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A));
 		}
 	};
@@ -47,7 +47,7 @@ static CInput::Watch jumpInputWatch()
 		},
 		[](EntityHandle player, const sf::Event& event)
 		{
-			player.get<CRigidbody>().applyForce((event.key.code == sf::Keyboard::W) ? -1000 : 1000);
+			player.get<CRigidbody*>()->applyForce((event.key.code == sf::Keyboard::W) ? -500 : 1000);
 		}
 	};
 }
