@@ -40,10 +40,10 @@ void World::instantiate(const Template& temp)
 
 Archetype* World::getArchetype(ComponentComposition comp)
 {
-	for (Archetype& a : m_archs)
+	for (Archetype& arch : m_archs)
 	{
-		if (a.comp() == comp)
-			return &a;
+		if (arch.comp() == comp)
+			return &arch;
 	}
 
 	// If we didn't find an archetype matching the composition,
@@ -56,4 +56,20 @@ Archetype* World::getArchetype(ComponentComposition comp)
 		system->match(arch);
 	}
 	return arch;
+}
+
+EntityHandle World::getEntity(const std::string& name)
+{
+	for (Archetype& arch : m_archs)
+	{
+		if (arch.has<CName>())
+		{
+			const std::span cNames = arch.getAll<CName>();
+			const auto cNameIt = std::find(cNames.begin(), cNames.end(), name);
+			
+			if (cNameIt != cNames.end())
+				return { &arch, static_cast<unsigned int>(cNameIt - cNames.begin()) };
+		}
+	}
+	return {};
 }

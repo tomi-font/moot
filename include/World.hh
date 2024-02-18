@@ -22,6 +22,9 @@ public:
 
 	void instantiate(const Template&);
 
+	// Finds an entity by its name.
+	EntityHandle getEntity(const std::string&);
+
 private:
 
 	// Existing archetypes, where all the entities' components are.

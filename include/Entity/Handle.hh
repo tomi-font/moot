@@ -7,6 +7,7 @@ class EntityHandle
 {
 public:
 
+    EntityHandle() : m_arch(nullptr), m_idx(0) {}
     EntityHandle(Archetype* arch, unsigned index) : m_arch(arch), m_idx(index) {}
 
     operator bool() const { return m_arch; }
