@@ -36,25 +36,11 @@ void SRender::triggered(const Event& event)
 
 	if (entity.has<CView>())
 	{
-			// TODO: Set the view when the entity is created, before any EntityMoved event.
-			assert(m_window);
-
-			sf::View view = m_window->getView();
-			const sf::Vector2f& viewSize = view.getSize();
-			const sf::Vector2f& viewCenter = entity.get<CPosition>();
-			sf::FloatRect viewRect(viewCenter - viewSize / 2.f, viewSize);
-			const sf::FloatRect& viewLimits = entity.get<CView>().limits;
-
-			assert(viewLimits.width >= viewRect.width && viewLimits.height >= viewRect.height);
-
-			viewRect.left = std::max(viewRect.left, viewLimits.left);
-			viewRect.top = std::max(viewRect.top, viewLimits.top);
-
-			viewRect.left = std::min(viewRect.left + viewRect.width, viewLimits.left + viewLimits.width) - viewRect.width;
-			viewRect.top = std::min(viewRect.top + viewRect.height, viewLimits.top + viewLimits.height) - viewRect.height;
-
-			view.setCenter(sf::Vector2f(viewRect.left + viewSize.x / 2, viewRect.top + viewSize.y / 2));
-			m_window->setView(view);
+		// TODO: Set the view when the entity is created, before any EntityMoved event.
+		assert(m_window);
+		CView* cView = entity.get<CView*>();
+		cView->updatePosition(cPos);
+		m_window->setView(*cView);
 	}
 }
 

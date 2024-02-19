@@ -75,7 +75,7 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	temp.add(CInput({moveInputWatch(), jumpInputWatch()}));
 	temp.add(CCollisionBox({pos, size}));
 	temp.add(CRigidbody());
-	temp.add(CView(sf::FloatRect(-viewSize.x * .5f, -viewSize.y, viewSize.x, viewSize.y)));
+	temp.add(CView(viewSize, sf::FloatRect(-viewSize.x * .5f, -viewSize.y * 2, viewSize.x, viewSize.y * 2)));
 	return temp;
 }
 
