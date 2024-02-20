@@ -4,7 +4,7 @@
 #include <cassert>
 
 // Interface type for construction of component IDs to prevent implicit conversions.
-enum ComponentIndex : unsigned {};
+enum ComponentId : unsigned {};
 
 // Describes a composition of components, i.e. which components are present.
 class ComponentComposition
@@ -15,22 +15,47 @@ public:
 	using Bits = unsigned;
 
 	constexpr ComponentComposition() : m_bits(0) {}
-	constexpr ComponentComposition(ComponentIndex ci) : m_bits(1 << ci) {}
+	constexpr ComponentComposition(ComponentId cid) : m_bits(1 << cid) {}
 	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
-	constexpr ComponentComposition operator|(ComponentComposition r) const { return m_bits | r.bits(); }
-	constexpr void operator|=(ComponentComposition r) { m_bits |= r.bits(); }
+	constexpr auto count() const { return setBitCount(m_bits); }
+
+	constexpr ComponentComposition operator+(ComponentComposition r) const { return m_bits | r.bits(); }
+	constexpr void operator+=(ComponentComposition r) { m_bits |= r.bits(); }
+	constexpr void operator-=(ComponentComposition r)
+	{
+		assert(hasAllOf(r));
+		m_bits &= ~r.bits();
+	}
 
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
 	constexpr bool has(ComponentComposition r) const
 	{
-		assert(setBitCount(r.bits()) == 1);
+		assert(r.count() == 1);
 		return m_bits & r.bits();
 	}
 	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.bits()) == r.bits(); }
 	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.bits()); }
 
 	constexpr Bits bits() const { return m_bits; }
+
+	constexpr operator ComponentId() const
+	{
+		assert(count() == 1);
+		return static_cast<ComponentId>(firstBitSetPos(m_bits));
+	}
+
+	class Iterator
+	{
+		Bits m_bits;
+	public:
+		Iterator(Bits bits) : m_bits(bits) {}
+		bool operator==(const Iterator& right) const = default;
+		void operator++() { m_bits ^= 1 << firstBitSetPos(m_bits); }
+		ComponentId operator*() const { return static_cast<ComponentId>(firstBitSetPos(m_bits)); }
+	};
+	Iterator begin() const { return {m_bits}; }
+	Iterator end() const { return {0}; }
 
 private:
 

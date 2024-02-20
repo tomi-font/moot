@@ -16,9 +16,9 @@ constexpr float	c_gravityAcceleration = 2000.f;
 SPhysics::SPhysics()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::Ghost] = { CId<CPosition> | CId<CMove>, CId<CCollisionBox> | CId<CRigidbody> };
-	m_groups[G::Bird] = { CId<CPosition> | CId<CMove> | CId<CCollisionBox>, CId<CRigidbody> };
-	m_groups[G::Char] = { CId<CPosition> | CId<CMove> | CId<CCollisionBox> | CId<CRigidbody> };
+	m_groups[G::Ghost] = { CId<CPosition> + CId<CMove>, CId<CCollisionBox> + CId<CRigidbody> };
+	m_groups[G::Bird] = { CId<CPosition> + CId<CMove> + CId<CCollisionBox>, CId<CRigidbody> };
+	m_groups[G::Char] = { CId<CPosition> + CId<CMove> + CId<CCollisionBox> + CId<CRigidbody> };
 	m_groups[G::Collidable] = { CId<CCollisionBox> };
 }
 

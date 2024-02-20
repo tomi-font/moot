@@ -22,4 +22,4 @@ using Components = std::tuple<
 	CName>;
 
 // Gets a component's ID by using its class as the template.
-template<typename T> inline constexpr ComponentComposition CId = static_cast<ComponentIndex>(tupleIndex<T, Components>::value);
+template<typename T> inline constexpr ComponentComposition CId = static_cast<ComponentId>(tupleIndex<T, Components>::value);

@@ -1,5 +1,6 @@
 #include <Component/Group.hh>
 
+static_assert(sizeof(ComponentId) * 8 >= std::tuple_size_v<Components>);
 static_assert(sizeof(ComponentComposition::Bits) * 8 >= std::tuple_size_v<Components>);
 
 ComponentGroup::ComponentGroup(ComponentComposition required, ComponentComposition forbidden) :

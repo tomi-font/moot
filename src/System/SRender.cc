@@ -13,7 +13,7 @@ enum G
 SRender::SRender()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::View] = { CId<CView> | CId<CPosition> };
+	m_groups[G::View] = { CId<CView> + CId<CPosition> };
 	m_groups[G::Rendered] = { CId<CRender> };
 }
 

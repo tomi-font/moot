@@ -8,41 +8,34 @@ Archetype::Archetype(ComponentComposition comp, World* world) :
 	m_world(world),
 	m_entityCount(0)
 {
-// prepares the archetype for storing all needed components
+	// Prepare the Archetype for storing all needed components.
 
-	ComponentComposition::Bits bits = comp.bits();
-	assert(bits);
+	m_entities.reserve(comp.count());
 
-	// One bit set in comp means one component type.
-	m_entities.reserve(setBitCount(bits));
-
-	// Iterate through all bits set in comp from low to high, creating the corresponding component vector.
-	while (bits)
+	// Create the corresponding vector for every component present.
+	for (ComponentId cid : comp)
 	{
-		const unsigned variantIndex = firstBitSetPos(bits);
-
-		variantIndexToCompileTime<ComponentVectorVariant>(variantIndex,
+		variantIndexToCompileTime<ComponentVectorVariant>(cid,
 			[this](auto I)
 			{
 				m_entities.emplace_back(std::in_place_index<I>);
 			});
-
-		bits ^= 1 << variantIndex;
 	}
-
-	assert(setBitCount(m_comp.bits()) == m_entities.size());
 }
 
 void Archetype::instantiate(const Template& temp)
 {
 	assert(temp.comp() == m_comp);
+	ComponentComposition componentsLeft = m_comp;
 
 	// Instantiate a new entity by appending all of the template's components.
 	unsigned i = 0;
  	for (const Template::ComponentVariant& component : temp.components())
 	{
 		// Ensure that the template's components are stored in the expected order (ascending index).
-		assert(i == setBitCount(m_comp.bits() & ((1 << component.index()) - 1)));
+		const ComponentId cid = static_cast<ComponentId>(component.index());
+		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
+		componentsLeft -= cid;
 
 		variantIndexToCompileTime<Template::ComponentVariant>(component.index(),
 			[&](auto I)
@@ -59,7 +52,7 @@ void Archetype::instantiate(const Template& temp)
 
 unsigned Archetype::computeEntityCount() const
 {
-	const unsigned firstVariantIndex = firstBitSetPos(m_comp.bits());
+	const unsigned firstVariantIndex = *m_comp.begin();
 
 	return variantIndexToCompileTime<ComponentVectorVariant>(firstVariantIndex,
 		[this](auto I)
