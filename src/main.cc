@@ -12,7 +12,7 @@ static Template createQuitControls()
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::Q},
 			{.type = sf::Event::Closed},
 		},
-		[](EntityHandle entity, const sf::Event&)
+		[](EntityHandle& entity, const sf::Event&)
 		{
 			entity.world()->stopRunning();
 		}
@@ -30,7 +30,7 @@ static CInput::Watch moveInputWatch()
 			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::A},
 		  	{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::D},
 		},
-		[](EntityHandle player, const sf::Event&)
+		[](EntityHandle& player, const sf::Event&)
 		{
 			player.get<CMove*>()->setMotion(
 				sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A));
@@ -45,7 +45,7 @@ static CInput::Watch jumpInputWatch()
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W},
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::S},
 		},
-		[](EntityHandle player, const sf::Event& event)
+		[](EntityHandle& player, const sf::Event& event)
 		{
 			player.get<CRigidbody*>()->applyForce((event.key.code == sf::Keyboard::W) ? -500 : 1000);
 		}

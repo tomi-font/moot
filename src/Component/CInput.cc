@@ -23,9 +23,9 @@ static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
     return !std::memcmp(&lhs, &rhs, size + sizeof(lhs.type));
 }
 
-const CInput::Watch::Callback* CInput::getCallback(const sf::Event& event) const
+CInput::Watch::Callback CInput::getCallback(const sf::Event& event) const
 {
-    const Watch::Callback* callback = nullptr;
+    Watch::Callback callback = nullptr;
 
     for (const Watch& watch : m_watches)
     {
@@ -34,7 +34,7 @@ const CInput::Watch::Callback* CInput::getCallback(const sf::Event& event) const
             if (watchEvent == event)
             {
                 assert(!callback);
-                callback = &watch.callback;
+                callback = watch.callback;
             }
         }
     }
