@@ -3,3 +3,4 @@
 /resources/
 /compile_commands.json
 /.cache/
+/.vscode/launch.json

@@ -18,7 +18,7 @@ DISABLED_WARNINGS := \
 	c++20-extensions \
 
 CXX := clang++
-CXXFLAGS := -std=gnu++26 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
+CXXFLAGS := -std=gnu++26 -g -O0 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
