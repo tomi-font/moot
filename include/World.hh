@@ -25,6 +25,8 @@ public:
 	// Finds an entity by its name.
 	EntityHandle getEntity(const std::string&);
 
+	const sf::RenderWindow& window() const { return m_systems[0]->window(); }
+
 private:
 
 	// Existing archetypes, where all the entities' components are.

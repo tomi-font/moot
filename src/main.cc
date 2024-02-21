@@ -1,3 +1,4 @@
+#include <Entity/Manipulator.hh>
 #include <World.hh>
 #include <limits>
 #include <SFML/Window/VideoMode.hpp>
@@ -90,6 +91,51 @@ static Template createGround()
 	return temp;	
 }
 
+static Template createPlatformBuilder()
+{
+	Template temp;
+
+	temp.add(CInput({
+		{
+			{ {.type = sf::Event::MouseButtonPressed, .mouseButton.button = sf::Mouse::Button::Left} },
+			[](EntityHandle& entity, const sf::Event& event)
+			{
+				if (entity.world()->getEntity("platformInConstruction"))
+					return;
+				
+				World* world = entity.world();
+				const CPosition cPos = world->window().mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
+				Template platform;
+				
+				platform.add(cPos);
+				platform.add(CRender(cPos, {}, sf::Color::Black));
+				platform.add(CCollisionBox({cPos, {}}));
+				platform.add(CName("platformInConstruction"));
+
+				world->instantiate(platform);
+			}
+		},
+		{
+			{ {.type = sf::Event::MouseMoved} },
+			[](EntityHandle& entity, const sf::Event& event)
+			{
+				World* world = entity.world();
+				EntityManipulator platform = world->getEntity("platformInConstruction");
+				if (!platform)
+					return;
+
+				const sf::Vector2f mousePos = world->window().mapPixelToCoords({event.mouseMove.x, event.mouseMove.y});
+				sf::Vector2f newSize = mousePos - platform.get<CPosition>();
+				newSize.x = std::max(1.f, newSize.x);
+				newSize.y = std::max(1.f, newSize.y);
+
+				platform.resize(newSize);
+			}
+		},
+	}));
+	return temp;
+}
+
 int	main()
 {
 	sf::RenderWindow window;
@@ -99,7 +145,7 @@ int	main()
 
 	world.instantiate(createPlayer(window.getView().getSize()));
 	world.instantiate(createGround());
-
+	world.instantiate(createPlatformBuilder());
 	world.instantiate(createQuitControls());
 
 	while (world.isRunning())

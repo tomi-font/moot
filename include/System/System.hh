@@ -16,7 +16,7 @@ public:
 	virtual void update(float elapsedTime) const = 0;
 
 	void initWindow(sf::RenderWindow*);
-	void setWindow(sf::RenderWindow*);
+	const auto& window() const { return *m_window; }
 
 	// Appends the archetype to matching component groups.
 	void match(Archetype*);

@@ -13,6 +13,7 @@ public:
 	auto& vertices() const { return m_vertices; }
 
 	void updatePosition(const sf::Vector2f&);
+	void resize(const sf::Vector2f&);
 
 private:
 
