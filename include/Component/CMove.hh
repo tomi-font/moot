@@ -16,5 +16,5 @@ private:
 
 	sf::Vector2f m_velocity;
 
-	const unsigned short m_speed;
+	unsigned short m_speed;
 };

@@ -17,5 +17,5 @@ private:
 
 	sf::View m_view;
 
-	const sf::FloatRect m_limits;
+	sf::FloatRect m_limits;
 };

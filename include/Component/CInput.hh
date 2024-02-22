@@ -24,5 +24,5 @@ public:
 
 private:
 
-	const std::vector<Watch> m_watches;
+	std::vector<Watch> m_watches;
 };
