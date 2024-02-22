@@ -25,30 +25,48 @@ void World::update()
 {
 	const float elapsedTime = m_clock.restart().asSeconds();
 
+	// First remove and instantiate the entities that were queued for that.
+
+	for (const EntityHandle& entity : m_entitiesToRemove)
+	{
+		Archetype* arch = findArchetype(entity.comp());
+		assert(arch);
+		arch->remove(entity);
+	}
+	m_entitiesToRemove.clear();
+
+	for (Template& temp : m_entitiesToInstantiate)
+	{
+		getArchetype(temp.comp())->instantiate(temp);
+	}
+	m_entitiesToInstantiate.clear();
+
+
 	for (const auto& system : m_systems)
 	{
-		if (!m_running)
-			break;
 		system->update(elapsedTime);
 	}
 }
 
-void World::instantiate(const Template& temp)
-{
-	getArchetype(temp.comp())->instantiate(temp);
-}
-
-Archetype* World::getArchetype(ComponentComposition comp)
+Archetype* World::findArchetype(ComponentComposition comp)
 {
 	for (Archetype& arch : m_archs)
 	{
 		if (arch.comp() == comp)
 			return &arch;
 	}
+	return nullptr;
+}
+
+Archetype* World::getArchetype(ComponentComposition comp)
+{
+	Archetype* arch = findArchetype(comp);
+	if (arch)
+		return arch;
 
 	// If we didn't find an archetype matching the composition,
 	// it means it doesn't exist so we have to create it.
-	Archetype* arch = &m_archs.emplace_back(comp, this);
+	arch = &m_archs.emplace_back(comp, this);
 
 	// Then we must iterate the systems to see whether they're interested.
 	for (const auto& system : m_systems)
@@ -58,7 +76,7 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	return arch;
 }
 
-EntityHandle World::getEntity(const std::string& name)
+EntityHandle World::findEntity(const std::string& name)
 {
 	for (Archetype& arch : m_archs)
 	{

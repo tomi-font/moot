@@ -18,6 +18,7 @@ static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
         size = 0;
         break;
     case sf::Event::MouseButtonPressed:
+    case sf::Event::MouseButtonReleased:
         static_assert(offsetof(decltype(lhs.mouseButton), button) == 0);
         size = sizeof(lhs.mouseButton.button);
         break;

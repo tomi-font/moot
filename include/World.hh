@@ -20,14 +20,18 @@ public:
 	// Updates all the systems.
 	void update();
 
-	void instantiate(const Template&);
+	void instantiate(Template&& temp) { m_entitiesToInstantiate.push_back(std::move(temp)); }
+	void remove(EntityHandle&& entity) { m_entitiesToRemove.push_back(std::move(entity)); }
 
 	// Finds an entity by its name.
-	EntityHandle getEntity(const std::string&);
+	EntityHandle findEntity(const std::string&);
 
 	const sf::RenderWindow& window() const { return m_systems[0]->window(); }
 
 private:
+
+	Archetype* findArchetype(ComponentComposition);
+	Archetype* getArchetype(ComponentComposition);
 
 	// Existing archetypes, where all the entities' components are.
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
@@ -43,6 +47,8 @@ private:
 
 	bool m_running;
 
-	// Returns the matching archetype, creating it if it didn't exist.
-	Archetype* getArchetype(ComponentComposition);
+	// Entities are instantiated/removed asynchronously to prevent them
+	// getting modified while the Systems are iterating through them.
+	std::vector<Template> m_entitiesToInstantiate;
+	std::vector<EntityHandle> m_entitiesToRemove;
 };

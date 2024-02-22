@@ -50,6 +50,25 @@ void Archetype::instantiate(const Template& temp)
 	++m_entityCount;
 }
 
+void Archetype::remove(const EntityHandle& entity)
+{
+	const auto index = entity.m_idx;
+
+	assert(entity.m_arch == this);
+	assert(index < m_entityCount);
+
+	for (ComponentVectorVariant& componentVector : m_entities)
+	{
+		std::visit(
+			[index](auto& compVec)
+			{
+				compVec.erase(compVec.begin() + index);
+			},
+			componentVector);
+	}
+	--m_entityCount;
+}
+
 unsigned Archetype::computeEntityCount() const
 {
 	const unsigned firstVariantIndex = *m_comp.begin();

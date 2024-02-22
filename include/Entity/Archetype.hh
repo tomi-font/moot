@@ -45,6 +45,7 @@ public:
 	}
 
 	void instantiate(const Template&);
+	void remove(const EntityHandle&);
 
 private:
 

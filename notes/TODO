@@ -9,3 +9,8 @@
 
 - Debug logging with various verbosity levels/topics.
 - Replace manual bitfields with std::bitset.
+- Custom assert with message.
+
+- Think about what are the entities' position center (currently upper-left corner).
+
+- View zooming.

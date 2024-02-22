@@ -100,7 +100,7 @@ static Template createPlatformBuilder()
 			{ {.type = sf::Event::MouseButtonPressed, .mouseButton.button = sf::Mouse::Button::Left} },
 			[](EntityHandle& entity, const sf::Event& event)
 			{
-				if (entity.world()->getEntity("platformInConstruction"))
+				if (entity.world()->findEntity("platformInConstruction"))
 					return;
 				
 				World* world = entity.world();
@@ -112,7 +112,7 @@ static Template createPlatformBuilder()
 				platform.add(CCollisionBox({cPos, {}}));
 				platform.add(CName("platformInConstruction"));
 
-				world->instantiate(platform);
+				world->instantiate(std::move(platform));
 			}
 		},
 		{
@@ -120,7 +120,7 @@ static Template createPlatformBuilder()
 			[](EntityHandle& entity, const sf::Event& event)
 			{
 				World* world = entity.world();
-				EntityManipulator platform = world->getEntity("platformInConstruction");
+				EntityManipulator platform = world->findEntity("platformInConstruction");
 				if (!platform)
 					return;
 
@@ -130,6 +130,16 @@ static Template createPlatformBuilder()
 				newSize.y = std::max(1.f, newSize.y);
 
 				platform.resize(newSize);
+			}
+		},
+		{
+			{ {.type = sf::Event::MouseButtonReleased, .mouseButton.button = sf::Mouse::Button::Left} },
+			[](EntityHandle& entity, const sf::Event&)
+			{
+				World* world = entity.world();
+				EntityManipulator platform = world->findEntity("platformInConstruction");
+				assert(platform);
+				std::move(platform).remove<CName>();
 			}
 		},
 	}));

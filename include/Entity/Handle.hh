@@ -18,6 +18,8 @@ public:
         return m_arch->has<C>();
     }
 
+    ComponentComposition comp() const { return m_arch->comp(); }
+
     // Returns a const reference to the requested component.
     template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
     const C& get() const
@@ -44,4 +46,6 @@ private:
 
     Archetype* m_arch;
     const unsigned m_idx;
+
+    friend Archetype;
 };
