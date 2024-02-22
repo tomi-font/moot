@@ -82,9 +82,9 @@ static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos
 
 void SPhysics::update(float elapsedTime) const
 {
-	auto entityMoved = [this](const EntityHandle& entity)
+	auto entityMoved = [this](EntityHandle& entity)
 	{
-		broadcast({ Event::EntityMoved, entity.id() });
+		broadcast({ Event::EntityMoved, std::move(entity) });
 	};
 
 	// First the moving entities that won't collide.

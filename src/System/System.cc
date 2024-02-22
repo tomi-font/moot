@@ -17,11 +17,6 @@ void System::match(Archetype* arch)
 		group.match(arch);
 }
 
-EntityHandle System::getEntity(EntityId eid) const
-{
-	return { getArchetype(eid.comp), eid.index };
-}
-
 Archetype* System::getArchetype(ComponentComposition comp) const
 {
 	for (const ComponentGroup& group : m_groups)

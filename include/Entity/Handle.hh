@@ -1,15 +1,14 @@
 #pragma once
 
-#include <Entity/Id.hh>
 #include <Entity/Archetype.hh>
 
 class EntityHandle
 {
 public:
 
-    EntityHandle() : m_arch(nullptr), m_idx(0) {}
+    EntityHandle() : m_arch(nullptr), m_idx(0) { assert(!*this); }
     EntityHandle(Archetype* arch, unsigned index) : m_arch(arch), m_idx(index) {}
-    EntityHandle(EntityHandle&& entity) : EntityHandle(entity.m_arch, entity.m_idx) {}
+    EntityHandle(EntityHandle&& entity) : EntityHandle(entity.m_arch, entity.m_idx) { entity.destroy(); }
 
     operator bool() const { return m_arch; }
 
@@ -35,12 +34,14 @@ public:
         return (&m_arch->getAll<C>()[m_idx]);
     }
 
-    EntityId id() const { return { m_arch->comp(), m_idx }; }
-
     World* world() const { return m_arch->world(); }
+
+protected:
+
+    void destroy();
 
 private:
 
-    Archetype* const m_arch;
+    Archetype* m_arch;
     const unsigned m_idx;
 };

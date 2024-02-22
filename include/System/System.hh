@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Component/Group.hh>
-#include <Entity/Id.hh>
 #include <Event/User.hh>
 
 class Archetype;
@@ -22,8 +21,6 @@ public:
 	void match(Archetype*);
 
 protected:
-
-	EntityHandle getEntity(EntityId) const;
 
 	// Component groups of interest.
 	std::vector<ComponentGroup>	m_groups;

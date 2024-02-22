@@ -26,9 +26,7 @@ void SRender::triggered(const Event& event)
 {
 	assert(event.type == Event::EntityMoved);
 
-	const EntityHandle entity = getEntity(event.entityId);
-	if (!entity)
-		return;
+	auto& entity = event.entity;
 	const CPosition& cPos = entity.get<CPosition>();
 
 	if (entity.has<CRender>())
