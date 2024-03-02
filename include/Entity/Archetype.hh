@@ -2,6 +2,7 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
+#include <Entity/Context.hh>
 #include <utility/bit.hh>
 #include <utility/tuple/toVectorVariant.hh>
 #include <cassert>
@@ -45,7 +46,7 @@ public:
 	}
 
 	void instantiate(const Template&);
-	void remove(const EntityHandle&);
+	void remove(const EntityContext&);
 
 private:
 

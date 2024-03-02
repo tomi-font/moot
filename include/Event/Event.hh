@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Entity/Handle.hh>
+#include <Entity/Context.hh>
 
 struct Event
 {
@@ -13,5 +13,5 @@ struct Event
 	const Type type;
 
 	// The entity relevant to this event, if applicable.
-	const EntityHandle entity;
+	const EntityContext entity;
 };

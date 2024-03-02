@@ -50,7 +50,7 @@ void Archetype::instantiate(const Template& temp)
 	++m_entityCount;
 }
 
-void Archetype::remove(const EntityHandle& entity)
+void Archetype::remove(const EntityContext& entity)
 {
 	const auto index = entity.m_idx;
 

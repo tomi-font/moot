@@ -1,5 +1,5 @@
 #include <System/SRender.hh>
-#include <Entity/Archetype.hh>
+#include <Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 // Indices for this system's groups.
@@ -26,7 +26,7 @@ void SRender::triggered(const Event& event)
 {
 	assert(event.type == Event::EntityMoved);
 
-	auto& entity = event.entity;
+	Entity entity = event.entity;
 	const CPosition& cPos = entity.get<CPosition>();
 
 	if (entity.has<CRender>())

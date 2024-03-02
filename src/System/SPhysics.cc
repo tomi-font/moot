@@ -1,4 +1,5 @@
 #include <System/SPhysics.hh>
+#include <Entity/Entity.hh>
 #include <cmath>
 
 // Indices for this system's groups.
@@ -62,7 +63,7 @@ static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos
 {
 	sf::FloatRect rect(cbox->left + move.x, cbox->top + move.y, cbox->width, cbox->height);
 
-	for (EntityHandle entity : collidables)
+	for (Entity entity : collidables)
 	{
 		const CCollisionBox& cboxWall = entity.get<CCollisionBox>();
 		if (rect.intersects(cboxWall) && cbox != &cboxWall)
@@ -82,13 +83,13 @@ static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos
 
 void SPhysics::update(float elapsedTime) const
 {
-	auto entityMoved = [this](EntityHandle& entity)
+	auto entityMoved = [this](const Entity& entity)
 	{
-		broadcast({ Event::EntityMoved, std::move(entity) });
+		broadcast({ Event::EntityMoved, entity });
 	};
 
 	// First the moving entities that won't collide.
-	for (EntityHandle entity : m_groups[G::Ghost])
+	for (Entity entity : m_groups[G::Ghost])
 	{
 		const CMove& cmove = entity.get<CMove>();
 		if (cmove.isMoving())
@@ -99,7 +100,7 @@ void SPhysics::update(float elapsedTime) const
 	}
 
 	// Then the moving, collidable entities, without gravity.
-	for (EntityHandle entity : m_groups[G::Bird])
+	for (Entity entity : m_groups[G::Bird])
 	{
 		const CMove& cmove = entity.get<CMove>();
 
@@ -113,7 +114,7 @@ void SPhysics::update(float elapsedTime) const
 	}
 
 	// Then the moving, collidable entities, with gravity.
-	for (EntityHandle entity : m_groups[G::Char])
+	for (Entity entity : m_groups[G::Char])
 	{
 		CRigidbody*    crig = entity.get<CRigidbody*>();
 		CCollisionBox* cbox = entity.get<CCollisionBox*>();

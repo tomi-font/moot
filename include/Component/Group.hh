@@ -22,8 +22,8 @@ public:
 
 	Archetype* getArchetype(ComponentComposition comp) const;
 
-	ArchetypeIterator<EntityHandle> begin() const { return { m_archs.begin() }; }
-	ArchetypeIterator<EntityHandle> end() const { return { m_archs.end() }; }
+	ArchetypeIterator<EntityContext> begin() const { return { m_archs.begin() }; }
+	ArchetypeIterator<EntityContext> end() const { return { m_archs.end() }; }
 
 	// Allows iterating over all the components (of the given type) matched by this group.
 	template<typename C> ArchetypeIterable<C> getAll() const { return { m_archs }; }

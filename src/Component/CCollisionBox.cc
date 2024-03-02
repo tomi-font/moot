@@ -2,6 +2,6 @@
 
 void CCollisionBox::resize(const sf::Vector2f& size)
 {
-    width = size.x;
-    height = size.y;
+	width = size.x;
+	height = size.y;
 }

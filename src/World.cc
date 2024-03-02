@@ -1,6 +1,18 @@
 #include <World.hh>
 #include <System/Types.hh>
+#include <cstdint>
 #include <SFML/Window/Event.hpp>
+
+inline std::size_t std::hash<EntityContext>::operator()(const EntityContext& ec) const
+{
+	constexpr auto shift = 8 * (sizeof(std::size_t) - sizeof(ec.m_idx));
+	static_assert(shift > 0);
+
+	const std::size_t index = ec.m_idx;
+	const std::uintptr_t archAddr = reinterpret_cast<std::uintptr_t>(ec.m_arch);
+
+	return (index << shift) | archAddr;
+}
 
 World::World(sf::RenderWindow* window) :
 	m_systems(std::tuple_size_v<Systems>),
@@ -21,26 +33,26 @@ World::World(sf::RenderWindow* window) :
 	m_clock.restart();
 }
 
-void World::update()
+void World::updateEntities()
 {
-	const float elapsedTime = m_clock.restart().asSeconds();
-
-	// First remove and instantiate the entities that were queued for that.
-
-	for (const EntityHandle& entity : m_entitiesToRemove)
+	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		Archetype* arch = findArchetype(entity.comp());
-		assert(arch);
-		arch->remove(entity);
+		entity.m_arch->remove(entity);
 	}
 	m_entitiesToRemove.clear();
 
-	for (Template& temp : m_entitiesToInstantiate)
+	for (const Template& temp : m_entitiesToInstantiate)
 	{
 		getArchetype(temp.comp())->instantiate(temp);
 	}
 	m_entitiesToInstantiate.clear();
+}
 
+void World::update()
+{
+	const float elapsedTime = m_clock.restart().asSeconds();
+
+	updateEntities();
 
 	for (const auto& system : m_systems)
 	{
@@ -76,7 +88,7 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	return arch;
 }
 
-EntityHandle World::findEntity(const std::string& name)
+EntityContext World::findEntity(const std::string& name)
 {
 	for (Archetype& arch : m_archs)
 	{
@@ -86,8 +98,14 @@ EntityHandle World::findEntity(const std::string& name)
 			const auto cNameIt = std::find(cNames.begin(), cNames.end(), name);
 			
 			if (cNameIt != cNames.end())
-				return { &arch, static_cast<unsigned int>(cNameIt - cNames.begin()) };
+				return { arch.comp(), &arch, static_cast<unsigned int>(cNameIt - cNames.begin()) };
 		}
 	}
 	return {};
 }
+
+void World::remove(EntityContext&& entity)
+{
+	m_entitiesToRemove.insert(std::move(entity));
+}
+

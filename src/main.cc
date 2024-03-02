@@ -1,4 +1,4 @@
-#include <Entity/Manipulator.hh>
+#include <Entity/Entity.hh>
 #include <World.hh>
 #include <limits>
 #include <SFML/Window/VideoMode.hpp>
@@ -13,7 +13,7 @@ static Template createQuitControls()
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::Q},
 			{.type = sf::Event::Closed},
 		},
-		[](EntityHandle& entity, const sf::Event&)
+		[](const Entity& entity, const sf::Event&)
 		{
 			entity.world()->stopRunning();
 		}
@@ -27,11 +27,11 @@ static CInput::Watch moveInputWatch()
 	return {
 		{
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::A},
-		  	{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::D},
+			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::D},
 			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::A},
-		  	{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::D},
+			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::D},
 		},
-		[](EntityHandle& player, const sf::Event&)
+		[](Entity& player, const sf::Event&)
 		{
 			player.get<CMove*>()->setMotion(
 				sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A));
@@ -46,7 +46,7 @@ static CInput::Watch jumpInputWatch()
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W},
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::S},
 		},
-		[](EntityHandle& player, const sf::Event& event)
+		[](Entity& player, const sf::Event& event)
 		{
 			player.get<CRigidbody*>()->applyForce((event.key.code == sf::Keyboard::W) ? -500 : 1000);
 		}
@@ -98,7 +98,7 @@ static Template createPlatformBuilder()
 	temp.add(CInput({
 		{
 			{ {.type = sf::Event::MouseButtonPressed, .mouseButton.button = sf::Mouse::Button::Left} },
-			[](EntityHandle& entity, const sf::Event& event)
+			[](const Entity& entity, const sf::Event& event)
 			{
 				if (entity.world()->findEntity("platformInConstruction"))
 					return;
@@ -117,10 +117,10 @@ static Template createPlatformBuilder()
 		},
 		{
 			{ {.type = sf::Event::MouseMoved} },
-			[](EntityHandle& entity, const sf::Event& event)
+			[](const Entity& entity, const sf::Event& event)
 			{
 				World* world = entity.world();
-				EntityManipulator platform = world->findEntity("platformInConstruction");
+				Entity platform = world->findEntity("platformInConstruction");
 				if (!platform)
 					return;
 
@@ -134,12 +134,12 @@ static Template createPlatformBuilder()
 		},
 		{
 			{ {.type = sf::Event::MouseButtonReleased, .mouseButton.button = sf::Mouse::Button::Left} },
-			[](EntityHandle& entity, const sf::Event&)
+			[](const Entity& entity, const sf::Event&)
 			{
 				World* world = entity.world();
-				EntityManipulator platform = world->findEntity("platformInConstruction");
+				Entity platform = world->findEntity("platformInConstruction");
 				assert(platform);
-				std::move(platform).remove<CName>();
+
 			}
 		},
 	}));

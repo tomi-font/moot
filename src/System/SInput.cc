@@ -1,4 +1,5 @@
 #include <System/SInput.hh>
+#include <Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
@@ -19,7 +20,7 @@ void SInput::update(float) const
 {
 	for (sf::Event event; m_window->pollEvent(event);)
 	{
-		for (EntityHandle entity : m_groups[G::Input])
+		for (Entity entity : m_groups[G::Input])
 		{
 			if (auto* callback = entity.get<CInput>().getCallback(event))
 			{

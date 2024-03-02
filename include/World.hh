@@ -6,7 +6,13 @@
 #include <System/System.hh>
 #include <deque>
 #include <memory>
+#include <unordered_set>
 #include <SFML/System/Clock.hpp>
+
+template<> struct std::hash<EntityContext>
+{
+	inline std::size_t operator()(const EntityContext&) const;
+};
 
 class World
 {
@@ -17,18 +23,20 @@ public:
 	bool isRunning() const { return m_running; }
 	void stopRunning() { m_running = false; }
 
-	// Updates all the systems.
 	void update();
 
 	void instantiate(Template&& temp) { m_entitiesToInstantiate.push_back(std::move(temp)); }
-	void remove(EntityHandle&& entity) { m_entitiesToRemove.push_back(std::move(entity)); }
+	void remove(EntityContext&& entity);
 
 	// Finds an entity by its name.
-	EntityHandle findEntity(const std::string&);
+	EntityContext findEntity(const std::string&);
+
 
 	const sf::RenderWindow& window() const { return m_systems[0]->window(); }
 
 private:
+
+	void updateEntities();
 
 	Archetype* findArchetype(ComponentComposition);
 	Archetype* getArchetype(ComponentComposition);
@@ -50,5 +58,5 @@ private:
 	// Entities are instantiated/removed asynchronously to prevent them
 	// getting modified while the Systems are iterating through them.
 	std::vector<Template> m_entitiesToInstantiate;
-	std::vector<EntityHandle> m_entitiesToRemove;
+	std::unordered_set<EntityContext> m_entitiesToRemove;
 };
