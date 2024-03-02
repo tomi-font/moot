@@ -5,7 +5,7 @@ System::~System()
 {
 }
 
-void System::initWindow(sf::RenderWindow* window)
+void System::setWindow(sf::RenderWindow* window)
 {
 	assert(!m_window);
 	m_window = window;

@@ -33,11 +33,8 @@ public:
 
 	// Returns the vector containing the component type requested.
 	template<typename T>
-	std::span<T> getAll() noexcept
+	std::span<T> getAll()
 	{
-		// Sanity check that the requested component type is present.
-		assert(has<T>());
-
 		// Components will always be stored in the ComponentVectorVariant order.
 		// The index is how many bits are set before this component type's bit.
 		const unsigned index = setBitCount(m_comp.bits() & (CId<T>.bits() - 1));

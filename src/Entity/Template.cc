@@ -1,24 +1,14 @@
 #include <Entity/Template.hh>
 #include <utility/variant/indexToCompileTime.hh>
 
-Template::Template(const EntityHandle& entity) : ComponentComposable(entity.comp())
+void Template::add(ComponentVariant&& component)
 {
-	for (ComponentId cid : m_comp)
-	{
-		variantIndexToCompileTime<ComponentVariant>(cid,
-			[&](auto I)
-			{
-				m_components.insert(entity.get<std::tuple_element_t<I, Components>>());
-			});
-	}
-}
+	const ComponentId cid = static_cast<ComponentId>(component.index());
+	assert(!has(cid));
+	m_comp += cid;
 
-void Template::add(ComponentVariant&& cv)
-{
-	const bool inserted = m_components.insert(std::move(cv)).second;
-	assert(inserted);
-
-	m_comp += static_cast<ComponentId>(cv.index());
+	const bool added = m_components.insert(std::move(component)).second;
+	assert(added);
 }
 
 void Template::remove(ComponentId cid)

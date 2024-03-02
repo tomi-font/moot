@@ -109,7 +109,6 @@ static Template createPlatformBuilder()
 				
 				platform.add(cPos);
 				platform.add(CRender(cPos, {}, sf::Color::Black));
-				platform.add(CCollisionBox({cPos, {}}));
 				platform.add(CName("platformInConstruction"));
 
 				world->instantiate(std::move(platform));
@@ -140,6 +139,8 @@ static Template createPlatformBuilder()
 				Entity platform = world->findEntity("platformInConstruction");
 				assert(platform);
 
+				platform.remove<CName>();
+				platform.add(CCollisionBox(platform.get<CPosition>(), platform.get<CRender>().getSize()));
 			}
 		},
 	}));

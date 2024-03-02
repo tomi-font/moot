@@ -30,17 +30,17 @@ void Archetype::instantiate(const Template& temp)
 
 	// Instantiate a new entity by appending all of the template's components.
 	unsigned i = 0;
- 	for (const Template::ComponentVariant& component : temp.components())
+	for (const ComponentVariant& component : temp.m_components)
 	{
 		// Ensure that the template's components are stored in the expected order (ascending index).
 		const ComponentId cid = static_cast<ComponentId>(component.index());
 		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
 		componentsLeft -= cid;
 
-		variantIndexToCompileTime<Template::ComponentVariant>(component.index(),
+		variantIndexToCompileTime<ComponentVariant>(component.index(),
 			[&](auto I)
 			{
-				using ComponentType = std::variant_alternative_t<I, Template::ComponentVariant>;
+				using ComponentType = std::variant_alternative_t<I, ComponentVariant>;
 				auto& vec = std::get<std::vector<ComponentType>>(m_entities[i]);
 				auto& comp = std::get<ComponentType>(component);
 				vec.push_back(comp);

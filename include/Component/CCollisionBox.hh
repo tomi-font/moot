@@ -4,5 +4,7 @@
 
 struct CCollisionBox : sf::FloatRect
 {
-    void resize(const sf::Vector2f&);
+	using sf::FloatRect::Rect;
+
+	void resize(const sf::Vector2f&);
 };

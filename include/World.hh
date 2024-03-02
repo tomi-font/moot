@@ -31,11 +31,16 @@ public:
 	// Finds an entity by its name.
 	EntityContext findEntity(const std::string&);
 
+	void addComponentTo(EntityContext*, ComponentVariant&&);
+	void removeComponentFrom(EntityContext*, ComponentId);
 
-	const sf::RenderWindow& window() const { return m_systems[0]->window(); }
+	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
+
+	const sf::RenderWindow& window() const { return *m_window; }
 
 private:
 
+	void updateEntitiesComponents();
 	void updateEntities();
 
 	Archetype* findArchetype(ComponentComposition);
@@ -55,8 +60,13 @@ private:
 
 	bool m_running;
 
+	sf::RenderWindow* m_window;
+
 	// Entities are instantiated/removed asynchronously to prevent them
 	// getting modified while the Systems are iterating through them.
 	std::vector<Template> m_entitiesToInstantiate;
 	std::unordered_set<EntityContext> m_entitiesToRemove;
+
+	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
+	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 };
