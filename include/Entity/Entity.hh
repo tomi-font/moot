@@ -25,7 +25,7 @@ public:
 		assert(has<C>());
 		try
 		{
-			return (&m_arch->getAll<C>()[m_idx]);
+			return m_arch->get<C>(m_idx);
 		}
 		catch (const std::bad_variant_access&)
 		{
@@ -38,7 +38,10 @@ public:
 
 	void resize(const sf::Vector2f&);
 
-	void add(ComponentVariant&& component) { world()->addComponentTo(this, std::move(component)); }
+	template<typename C, typename...Args> void add(Args&&... args)
+	{
+		world()->addComponentTo(this, ComponentVariant(std::in_place_type<C>, std::forward<Args>(args)...));
+	}
 
 	template<typename C> void remove() { world()->removeComponentFrom(this, CId<C>); }
 };

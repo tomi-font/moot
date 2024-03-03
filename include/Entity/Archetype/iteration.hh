@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Entity/Archetype.hh>
+#include <Entity/Context.hh>
 
 class ArchetypeIteratorBase
 {
@@ -21,7 +22,7 @@ template<> class ArchetypeIterator<EntityContext> : public ArchetypeIteratorBase
 public:
 	using ArchetypeIteratorBase::ArchetypeIteratorBase;
 
-	EntityContext operator*() const { return { (*m_archIt)->comp(), *m_archIt, m_idx }; }
+	EntityContext operator*() const { return { *m_archIt, m_idx }; }
 
 	ArchetypeIterator& operator++()
 	{

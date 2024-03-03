@@ -8,15 +8,24 @@ class Template : public ComponentComposable
 {
 public:
 
-	Template() = default;
-
 	// Adds a (not already present) component.
 	void add(ComponentVariant&&);
+	template<typename C, typename...Args> void add(Args&&... args)
+	{
+		m_comp += CId<C>;
+		emplace(std::in_place_type<C>, std::forward<Args>(args)...);
+	}
 
 	// Removes a (present) component.
 	void remove(ComponentId);
 
 private:
+
+	template<typename...Args> void emplace(Args&&... args)
+	{
+		const bool added = m_components.emplace(std::forward<Args>(args)...).second;
+		assert(added);
+	}
 
 	// A set allows easily inserting components in their sorting order without knowing in advance the final composition.
 	std::set<ComponentVariant> m_components;

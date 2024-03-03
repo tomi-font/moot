@@ -1,8 +1,7 @@
 #pragma once
 
 #include <Component/Composable.hh>
-
-class Archetype;
+#include <Entity/Archetype.hh>
 
 // An entity context holds a temporary pointer to an entity as well as its component composition.
 class EntityContext : public ComponentComposable
@@ -14,7 +13,7 @@ class EntityContext : public ComponentComposable
 public:
 
 	EntityContext() : m_arch(nullptr), m_idx(0) { assert(!*this); }
-	EntityContext(ComponentComposition comp, Archetype* arch, unsigned index) : ComponentComposable(comp), m_arch(arch), m_idx(index) {}	
+	EntityContext(Archetype* arch, unsigned index) : ComponentComposable(*arch), m_arch(arch), m_idx(index) {}	
 	EntityContext(const EntityContext&) = default;
 	EntityContext(EntityContext&& ec) : EntityContext(ec) { ec.destroy(); }
 

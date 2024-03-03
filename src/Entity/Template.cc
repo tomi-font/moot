@@ -3,12 +3,8 @@
 
 void Template::add(ComponentVariant&& component)
 {
-	const ComponentId cid = static_cast<ComponentId>(component.index());
-	assert(!has(cid));
-	m_comp += cid;
-
-	const bool added = m_components.insert(std::move(component)).second;
-	assert(added);
+	m_comp += CVId(component);
+	emplace(std::move(component));
 }
 
 void Template::remove(ComponentId cid)
@@ -17,7 +13,7 @@ void Template::remove(ComponentId cid)
 
 	for (auto compIt = m_components.begin(); compIt != m_components.end(); ++compIt)
 	{
-		if ((*compIt).index() == cid)
+		if (CVId(*compIt) == cid)
 		{
 			m_components.erase(compIt);
 			m_comp -= cid;

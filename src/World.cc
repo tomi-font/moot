@@ -39,7 +39,7 @@ void World::updateEntities()
 {
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		entity.m_arch->remove(entity);
+		entity.m_arch->remove(entity.m_idx);
 	}
 	m_entitiesToRemove.clear();
 
@@ -104,7 +104,7 @@ EntityContext World::findEntity(const std::string& name)
 			const auto cNameIt = std::find(cNames.begin(), cNames.end(), name);
 			
 			if (cNameIt != cNames.end())
-				return { arch.comp(), &arch, static_cast<unsigned int>(cNameIt - cNames.begin()) };
+				return { &arch, static_cast<unsigned>(cNameIt - cNames.begin()) };
 		}
 	}
 	return {};
@@ -119,8 +119,7 @@ void World::remove(EntityContext&& entity)
 
 void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
 {	
-	const ComponentId cid = static_cast<ComponentId>(component.index());
-	assert(!entity->has(cid));
+	const auto cid = CVId(component);
 	entity->m_comp += cid;
 
 	const EntityContext& ec = *entity;
@@ -190,7 +189,8 @@ void World::updateEntitiesComponents()
 				variantIndexToCompileTime<ComponentVariant>(cid,
 					[&](auto I)
 					{
-						temp.add(origArch->getAll<std::tuple_element_t<I, Components>>()[entity.m_idx]);
+						using C = std::tuple_element_t<I, Components>;
+						temp.add<C>(*origArch->get<C>(entity.m_idx));
 					});
 			}
 		}
@@ -199,7 +199,7 @@ void World::updateEntitiesComponents()
 			temp.add(std::move(component));
 
 		// And replace the old entity by its updated version.
-		origArch->remove(entity);
+		origArch->remove(entity.m_idx);
 		getArchetype(temp.comp())->instantiate(temp);
 	}
 	m_componentsToAdd.clear();

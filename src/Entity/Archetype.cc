@@ -33,16 +33,16 @@ void Archetype::instantiate(const Template& temp)
 	for (const ComponentVariant& component : temp.m_components)
 	{
 		// Ensure that the template's components are stored in the expected order (ascending index).
-		const ComponentId cid = static_cast<ComponentId>(component.index());
+		const ComponentId cid = CVId(component);
 		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
 		componentsLeft -= cid;
 
 		variantIndexToCompileTime<ComponentVariant>(component.index(),
 			[&](auto I)
 			{
-				using ComponentType = std::variant_alternative_t<I, ComponentVariant>;
-				auto& vec = std::get<std::vector<ComponentType>>(m_entities[i]);
-				auto& comp = std::get<ComponentType>(component);
+				using C = std::variant_alternative_t<I, ComponentVariant>;
+				auto& vec = std::get<std::vector<C>>(m_entities[i]);
+				auto& comp = std::get<C>(component);
 				vec.push_back(comp);
 			});
 		++i;
@@ -50,11 +50,8 @@ void Archetype::instantiate(const Template& temp)
 	++m_entityCount;
 }
 
-void Archetype::remove(const EntityContext& entity)
+void Archetype::remove(const unsigned index)
 {
-	const auto index = entity.m_idx;
-
-	assert(entity.m_arch == this);
 	assert(index < m_entityCount);
 
 	for (ComponentVectorVariant& componentVector : m_entities)

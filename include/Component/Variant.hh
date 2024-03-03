@@ -3,11 +3,16 @@
 #include <Component/Types.hh>
 #include <utility/tuple/toVariant.hh>
 
-// Variant containing every component.
+// Variant that can hold every component.
 using ComponentVariant = tupleToVariant<Components>::type;
 
-// Compares ComponentVariants according to their ComponentId.
+// Returns the ID of the given component.
+constexpr ComponentId CVId(const ComponentVariant& component)
+{
+	return static_cast<ComponentId>(component.index());
+}
+
 constexpr bool operator<(const ComponentVariant& lhs, const ComponentVariant& rhs)
 {
-	return lhs.index() < rhs.index();
+	return CVId(lhs) < CVId(rhs);
 }

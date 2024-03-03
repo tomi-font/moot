@@ -70,25 +70,26 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	sf::Vector2f pos(0, -viewSize.y);
 	sf::Vector2f size(100.f, 100.f);
 	Template temp;
-	temp.add(CPosition(pos));
-	temp.add(CRender(pos, size, sf::Color::White));
-	temp.add(CMove(1000));
+	temp.add<CPosition>(pos);
+	temp.add<CRender>(pos, size, sf::Color::White);
+	temp.add<CMove>(1000);
 	temp.add(CInput({moveInputWatch(), jumpInputWatch()}));
-	temp.add(CCollisionBox({pos, size}));
-	temp.add(CRigidbody());
-	temp.add(CView(viewSize, sf::FloatRect(-viewSize.x * .5f, -viewSize.y * 2, viewSize.x, viewSize.y * 2)));
+	temp.add<CCollisionBox>(pos, size);
+	temp.add<CRigidbody>();
+	temp.add<CView>(viewSize, sf::FloatRect(-viewSize.x * .5f, -viewSize.y * 2, viewSize.x, viewSize.y * 2));
 	return temp;
 }
 
 static Template createGround()
 {
 	Template temp;
-	sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
-	CPosition cPos = { -(size.x / 2), 0 };
+	const sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
+	const sf::Vector2f pos = { -(size.x / 2), 0 };
 
-	temp.add(cPos);
-	temp.add(CCollisionBox({cPos, size}));
-	return temp;	
+
+	temp.add<CPosition>(pos);
+	temp.add<CCollisionBox>(pos, size);
+	return temp;
 }
 
 static Template createPlatformBuilder()

@@ -21,10 +21,14 @@ public:
 	constexpr auto count() const { return setBitCount(m_bits); }
 
 	constexpr ComponentComposition operator+(ComponentComposition r) const { return m_bits | r.bits(); }
-	constexpr void operator+=(ComponentComposition r) { m_bits |= r.bits(); }
+	constexpr void operator+=(ComponentComposition r)
+	{
+		assert(!has(r));
+		m_bits |= r.bits();
+	}
 	constexpr void operator-=(ComponentComposition r)
 	{
-		assert(hasAllOf(r));
+		assert(has(r));
 		m_bits &= ~r.bits();
 	}
 

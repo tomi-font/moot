@@ -2,7 +2,6 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
-#include <Entity/Context.hh>
 #include <utility/bit.hh>
 #include <utility/tuple/toVectorVariant.hh>
 #include <cassert>
@@ -32,18 +31,20 @@ public:
 	}
 
 	// Returns the vector containing the component type requested.
-	template<typename T>
-	std::span<T> getAll()
+	template<typename C> std::span<C> getAll()
 	{
 		// Components will always be stored in the ComponentVectorVariant order.
 		// The index is how many bits are set before this component type's bit.
-		const unsigned index = setBitCount(m_comp.bits() & (CId<T>.bits() - 1));
+		const unsigned index = setBitCount(m_comp.bits() & (CId<C>.bits() - 1));
 
-		return std::get<std::vector<T>>(m_entities[index]);
+		return std::get<std::vector<C>>(m_entities[index]);
 	}
+	// Returns the component of the requested type found at the given idex.
+	template<typename C> C* get(unsigned index) { return &getAll<C>()[index]; }
 
 	void instantiate(const Template&);
-	void remove(const EntityContext&);
+	// Removes the entity at the given index.
+	void remove(unsigned);
 
 private:
 
