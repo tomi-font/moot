@@ -59,7 +59,7 @@ private:
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.
 	std::vector<Template> m_entitiesToInstantiate;
-	std::unordered_set<EntityContext> m_entitiesToRemove;
+	std::set<EntityContext, std::greater<EntityContext>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 

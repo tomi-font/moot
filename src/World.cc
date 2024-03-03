@@ -59,10 +59,14 @@ void World::update()
 	const float elapsedTime = m_clock.restart().asSeconds();
 
 	// First remove and add existing entities' components.
+	// References to them get invalidated when removing entities.
 	updateEntitiesComponents();
 
 	// Then remove and instantiate the entities that are waiting for that.
 	updateEntities();
+
+	// References to entities cannot be stored between frames.
+	assert(EntityContext::instanceCount() == 0);
 
 	for (const auto& system : m_systems)
 	{
@@ -181,11 +185,16 @@ void World::updateEntitiesComponents()
 		const ComponentComposition origComp = origArch->comp();
 	
 		// TODO: Do this without going through a Template, by appending directly to the new Archetype?
-		Template temp;
+
+		// Schedule the entity to be removed and its updated version to be added.
+		// The removal shall only happen in updateEntities() because it invalidates the indices of other entities.
+		// Note that this means that the entity will temporarily not exist, which is totally fine as long as nothing is expected from it during that time.
+		m_entitiesToRemove.insert(entity);
+		Template& temp = m_entitiesToInstantiate.emplace_back();
 
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
-		// Start with the entity's original components that are kept.
+		// Start with the entity's original components minus those that are to be removed.
 		for (ComponentId cid : origComp)
 		{
 			if (!componentsToRemove.contains(cid))
@@ -198,13 +207,9 @@ void World::updateEntitiesComponents()
 					});
 			}
 		}
-		// To which components to be added are added.
+		// And to them add the components to be added.
 		for (auto& [cid, component] : m_componentsToAdd[entity])
 			temp.add(std::move(component));
-
-		// And replace the old entity by its updated version.
-		origArch->remove(entity.m_idx);
-		getArchetype(temp.comp())->instantiate(temp);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();

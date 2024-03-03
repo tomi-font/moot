@@ -35,7 +35,7 @@ public:
 
 private:
 
-	static sf::RenderWindow* window;
+	static inline sf::RenderWindow* window = nullptr;
 	static void set(decltype(window));
 
 	friend class World;

@@ -2,9 +2,10 @@
 
 #include <Component/Composable.hh>
 #include <Entity/Archetype.hh>
+#include <utility/InstanceCounter.hh>
 
 // An entity context holds a temporary pointer to an entity as well as its component composition.
-class EntityContext : public ComponentComposable
+class EntityContext : public ComponentComposable, InstanceCounter<EntityContext>
 {
 	friend class World;
 	friend struct std::hash<EntityContext>;
@@ -20,6 +21,7 @@ public:
 
 	// The component composition is not compared because it may differ between contexts of a same entity.
 	bool operator==(const EntityContext& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }
+	bool operator>(const EntityContext& right) const { return m_arch > right.m_arch && m_idx > right.m_idx; }
 
 protected:
 
