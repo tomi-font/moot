@@ -1,4 +1,5 @@
 #include <World.hh>
+#include <Entity/Entity.hh>
 #include <System/Types.hh>
 #include <utility/variant/indexToCompileTime.hh>
 #include <utility/Window.hh>
@@ -13,11 +14,13 @@ inline std::size_t std::hash<EntityContext>::operator()(const EntityContext& ec)
 	const std::size_t index = ec.m_idx;
 	const std::uintptr_t archAddr = reinterpret_cast<std::uintptr_t>(ec.m_arch);
 
+	// The composition is not used because it may differ between contexts of a same entity.
 	return (index << shift) | archAddr;
 }
 
 World::World(sf::RenderWindow* window) :
 	m_systems(std::tuple_size_v<Systems>),
+	m_namedEntities(CId<CName>),
 	m_running(true)
 {
 	Window::set(window);
@@ -92,21 +95,17 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	{
 		system->match(arch);
 	}
+	m_namedEntities.match(arch);
+
 	return arch;
 }
 
-EntityContext World::findEntity(const std::string& name)
+EntityContext World::findEntity(std::string_view name)
 {
-	for (Archetype& arch : m_archs)
+	for (Entity entity : m_namedEntities)
 	{
-		if (arch.has<CName>())
-		{
-			const std::span cNames = arch.getAll<CName>();
-			const auto cNameIt = std::find(cNames.begin(), cNames.end(), name);
-			
-			if (cNameIt != cNames.end())
-				return { &arch, static_cast<unsigned>(cNameIt - cNames.begin()) };
-		}
+		if (entity.get<CName>() == name)
+			return entity;
 	}
 	return {};
 }
@@ -120,10 +119,12 @@ void World::remove(EntityContext&& entity)
 
 void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
 {	
-	const auto cid = CVId(component);
+	const ComponentId cid = CVId(component);
 	entity->m_comp += cid;
 
-	const EntityContext& ec = *entity;
+	EntityContext ec = *entity;
+	// Clear the composition to make sure it doesn't get used as it would fall out of date.
+	ec.m_comp = {};
 	assert(!m_entitiesToRemove.contains(ec));
 
 	if (m_componentsToRemove.contains(ec))
@@ -141,7 +142,9 @@ void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
 	assert(entity->has(cid));
 	entity->m_comp -= cid;
 
-	const EntityContext& ec = *entity;
+	EntityContext ec = *entity;
+	// Clear the composition to make sure it doesn't get used as it would fall out of date.
+	ec.m_comp = {};
 	assert(!m_entitiesToRemove.contains(ec));
 	
 	if (m_componentsToAdd.contains(ec))

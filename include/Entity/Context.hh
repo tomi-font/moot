@@ -6,7 +6,6 @@
 // An entity context holds a temporary pointer to an entity as well as its component composition.
 class EntityContext : public ComponentComposable
 {
-	friend Archetype;
 	friend class World;
 	friend struct std::hash<EntityContext>;
 

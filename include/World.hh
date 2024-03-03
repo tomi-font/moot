@@ -28,11 +28,11 @@ public:
 	void instantiate(Template&& temp) { m_entitiesToInstantiate.push_back(std::move(temp)); }
 	void remove(EntityContext&& entity);
 
-	// Finds an entity by its name.
-	EntityContext findEntity(const std::string&);
-
 	void addComponentTo(EntityContext*, ComponentVariant&&);
 	void removeComponentFrom(EntityContext*, ComponentId);
+
+	// Finds an entity by its name.
+	EntityContext findEntity(std::string_view);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
@@ -56,13 +56,14 @@ private:
 
 	EventManager m_eventManager;
 
-	bool m_running;
-
-	// Entities are instantiated/removed asynchronously to prevent them
-	// getting modified while the Systems are iterating through them.
+	// Entities and components are added/removed asynchronously to prevent
+	// Archetypes getting modified while the Systems are iterating through them.
 	std::vector<Template> m_entitiesToInstantiate;
 	std::unordered_set<EntityContext> m_entitiesToRemove;
-
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
+
+	ComponentGroup m_namedEntities;
+
+	bool m_running;
 };
