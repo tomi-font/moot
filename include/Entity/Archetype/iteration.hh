@@ -11,7 +11,21 @@ protected:
 
 public:
 	ArchetypeIteratorBase(decltype(m_archIt) archIt) : m_archIt(archIt) {}
-	bool operator==(const ArchetypeIteratorBase& other) const { return m_archIt == other.m_archIt; }
+
+	bool operator==(ArchetypeIteratorBase& other)
+	{
+		while (m_archIt != other.m_archIt)
+		{
+			if (m_idx != (*m_archIt)->entityCount())
+				return false;
+
+			++m_archIt;
+			m_idx = 0;
+		}
+		return true;
+	}
+
+	void operator++() { ++m_idx; }
 };
 
 template<typename C> class ArchetypeIterator;
@@ -23,18 +37,6 @@ public:
 	using ArchetypeIteratorBase::ArchetypeIteratorBase;
 
 	EntityContext operator*() const { return { *m_archIt, m_idx }; }
-
-	ArchetypeIterator& operator++()
-	{
-		if (m_idx + 1 < (*m_archIt)->entityCount())
-			++m_idx;
-		else
-		{
-			++m_archIt;
-			m_idx = 0;
-		}
-		return *this;
-	}
 };
 
 // Iterates over components of a same type.
@@ -48,20 +50,11 @@ public:
 	C& operator*()
 	{
 		if (m_idx == 0)
-			m_components = (*m_archIt)->template getAll<C>();
-		return m_components[m_idx];
-	}
-
-	ArchetypeIterator& operator++()
-	{
-		if (m_idx + 1 < m_components.size())
-			++m_idx;
-		else
 		{
-			++m_archIt;
-			m_idx = 0;
+			m_components = (*m_archIt)->template getAll<C>();
+			assert(m_components.size() == (*m_archIt)->entityCount());
 		}
-		return *this;
+		return m_components[m_idx];
 	}
 };
 
