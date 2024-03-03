@@ -1,10 +1,11 @@
 #include <Entity/Template.hh>
 #include <utility/variant/indexToCompileTime.hh>
 
-void Template::add(ComponentVariant&& component)
+Template& Template::add(ComponentVariant&& component)
 {
 	m_comp += CVId(component);
 	emplace(std::move(component));
+	return *this;
 }
 
 void Template::remove(ComponentId cid)

@@ -9,11 +9,12 @@ class Template : public ComponentComposable
 public:
 
 	// Adds a (not already present) component.
-	void add(ComponentVariant&&);
-	template<typename C, typename...Args> void add(Args&&... args)
+	Template& add(ComponentVariant&&);
+	template<typename C, typename...Args> Template& add(Args&&... args)
 	{
 		m_comp += CId<C>;
 		emplace(std::in_place_type<C>, std::forward<Args>(args)...);
+		return *this;
 	}
 
 	// Removes a (present) component.

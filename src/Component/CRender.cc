@@ -2,16 +2,16 @@
 
 CRender::CRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color) :
 	m_vertices
-	{
-		sf::Vertex(pos, color),
-		sf::Vertex(sf::Vector2f(pos.x + size.x, pos.y), color),
-		sf::Vertex(pos + size, color),
-		sf::Vertex(sf::Vector2f(pos.x, pos.y + size.y), color)
-	}
+	({
+		{ pos, color },
+		{ {pos.x + size.x, pos.y}, color },
+		{ pos + size, color },
+		{ {pos.x, pos.y + size.y}, color },
+	})
 {
 }
 
-void CRender::updatePosition(const sf::Vector2f& pos)
+void CRender::setPosition(const sf::Vector2f& pos)
 {
 	const sf::Vector2f size(m_vertices[2].position - m_vertices[0].position);
 
@@ -23,9 +23,8 @@ void CRender::updatePosition(const sf::Vector2f& pos)
 
 void CRender::resize(const sf::Vector2f& size)
 {
-	m_vertices[1].position.x = m_vertices[0].position.x + size.x;
-	m_vertices[3].position.y = m_vertices[0].position.y + size.y;
+	m_vertices[2].position = m_vertices[0].position + size;
 
-	m_vertices[2].position.x = m_vertices[1].position.x;
-	m_vertices[2].position.y = m_vertices[3].position.y;
+	m_vertices[1].position.x = m_vertices[2].position.x;
+	m_vertices[3].position.y = m_vertices[2].position.y;
 }

@@ -36,8 +36,6 @@ public:
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
-	const sf::RenderWindow& window() const { return *m_window; }
-
 private:
 
 	void updateEntitiesComponents();
@@ -59,8 +57,6 @@ private:
 	EventManager m_eventManager;
 
 	bool m_running;
-
-	sf::RenderWindow* m_window;
 
 	// Entities are instantiated/removed asynchronously to prevent them
 	// getting modified while the Systems are iterating through them.

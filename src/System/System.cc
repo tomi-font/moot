@@ -1,14 +1,14 @@
 #include <System/System.hh>
+#include <utility/Window.hh>
 #include <cassert>
+
+System::System() : m_window(Window::window)
+{
+	assert(m_window);
+}
 
 System::~System()
 {
-}
-
-void System::setWindow(sf::RenderWindow* window)
-{
-	assert(!m_window);
-	m_window = window;
 }
 
 void System::match(Archetype* arch)

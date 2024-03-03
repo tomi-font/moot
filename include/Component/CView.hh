@@ -9,7 +9,7 @@ public:
 	// Constructs the view by its size and the area it is limited to show.
 	CView(const sf::Vector2f& size, const sf::FloatRect& limits);
 
-	void updatePosition(sf::Vector2f);
+	void setPosition(sf::Vector2f);
 
 	operator const sf::View&() const { return m_view; }
 

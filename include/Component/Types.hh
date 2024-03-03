@@ -8,6 +8,7 @@
 #include <Component/CPosition.hh>
 #include <Component/CRender.hh>
 #include <Component/CRigidbody.hh>
+#include <Component/CUiRender.hh>
 #include <Component/CView.hh>
 #include <utility/tuple/index.hh>
 
@@ -19,7 +20,8 @@ using Components = std::tuple<
 	CCollisionBox,
 	CRigidbody,
 	CView,
-	CName>;
+	CName,
+	CUiRender>;
 
 // Gets a component's ID by using its class as the template.
 template<typename T> inline constexpr ComponentComposition CId = static_cast<ComponentId>(tupleIndex<T, Components>::value);

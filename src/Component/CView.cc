@@ -8,7 +8,7 @@ CView::CView(const sf::Vector2f& size, const sf::FloatRect& limits) :
 	assert(limits.width >= size.x && limits.height >= size.y);
 }
 
-void CView::updatePosition(sf::Vector2f center)
+void CView::setPosition(sf::Vector2f center)
 {
 	center.x = std::max(center.x, m_limits.left);
 	center.y = std::max(center.y, m_limits.top);

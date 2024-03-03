@@ -1,14 +1,13 @@
 #include <Entity/Entity.hh>
 #include <World.hh>
+#include <utility/Window.hh>
 #include <limits>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 static Template createQuitControls()
 {
-	Template temp;
-
-	temp.add(CInput({{
+	return Template().add(CInput({{
 		{
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::Q},
 			{.type = sf::Event::Closed},
@@ -18,8 +17,6 @@ static Template createQuitControls()
 			entity.world()->stopRunning();
 		}
 	}}));
-
-	return temp;
 }
 
 static CInput::Watch moveInputWatch()
@@ -82,70 +79,62 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 
 static Template createGround()
 {
-	Template temp;
 	const sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
 	const sf::Vector2f pos = { -(size.x / 2), 0 };
 
-
-	temp.add<CPosition>(pos);
-	temp.add<CCollisionBox>(pos, size);
-	return temp;
+	return Template()
+		.add<CPosition>(pos)
+		.add<CCollisionBox>(pos, size);
 }
 
 static Template createPlatformBuilder()
 {
-	Template temp;
-
-	temp.add(CInput({
+	return Template().add(CInput({
 		{
 			{ {.type = sf::Event::MouseButtonPressed, .mouseButton.button = sf::Mouse::Button::Left} },
 			[](const Entity& entity, const sf::Event& event)
 			{
 				if (entity.world()->findEntity("platformInConstruction"))
 					return;
-				
-				World* world = entity.world();
-				const CPosition cPos = world->window().mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
-				Template platform;
-				
-				platform.add(cPos);
-				platform.add(CRender(cPos, {}, sf::Color::Black));
-				platform.add(CName("platformInConstruction"));
 
-				world->instantiate(std::move(platform));
+				Template platform;
+
+				platform.add<CUiRender>(Window::mapPixelToUi(event.mouseButton), sf::Color::Black);
+				platform.add<CName>("platformInConstruction");
+
+				entity.world()->instantiate(std::move(platform));
 			}
 		},
 		{
 			{ {.type = sf::Event::MouseMoved} },
 			[](const Entity& entity, const sf::Event& event)
 			{
-				World* world = entity.world();
-				Entity platform = world->findEntity("platformInConstruction");
+				Entity platform = entity.world()->findEntity("platformInConstruction");
 				if (!platform)
 					return;
+				CUiRender* cUiRender = platform.get<CUiRender*>();
+				const sf::Vector2f mouseUiPos = Window::mapPixelToUi(event.mouseMove);
 
-				const sf::Vector2f mousePos = world->window().mapPixelToCoords({event.mouseMove.x, event.mouseMove.y});
-				sf::Vector2f newSize = mousePos - platform.get<CPosition>();
-				newSize.x = std::max(1.f, newSize.x);
-				newSize.y = std::max(1.f, newSize.y);
-
-				platform.resize(newSize);
+				cUiRender->resize(mouseUiPos - cUiRender->position());
 			}
 		},
 		{
 			{ {.type = sf::Event::MouseButtonReleased, .mouseButton.button = sf::Mouse::Button::Left} },
-			[](const Entity& entity, const sf::Event&)
+			[](const Entity& entity, const sf::Event& event)
 			{
-				World* world = entity.world();
-				Entity platform = world->findEntity("platformInConstruction");
+				Entity platform = entity.world()->findEntity("platformInConstruction");
 				assert(platform);
+				const sf::Vector2f pos = Window::mapUiToWorld(platform.get<CUiRender>().position());
+				const sf::Vector2f size = Window::mapPixelToWorld(event.mouseButton) - pos;
 
 				platform.remove<CName>();
-				platform.add(CCollisionBox(platform.get<CPosition>(), platform.get<CRender>().getSize()));
+				platform.remove<CUiRender>();
+				platform.add<CPosition>(pos);
+				platform.add<CCollisionBox>(pos, size);
+				platform.add<CRender>(pos, size, sf::Color::Black);
 			}
 		},
 	}));
-	return temp;
 }
 
 int	main()

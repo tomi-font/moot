@@ -1,6 +1,7 @@
 #include <World.hh>
 #include <System/Types.hh>
 #include <utility/variant/indexToCompileTime.hh>
+#include <utility/Window.hh>
 #include <cstdint>
 #include <SFML/Window/Event.hpp>
 
@@ -17,9 +18,10 @@ inline std::size_t std::hash<EntityContext>::operator()(const EntityContext& ec)
 
 World::World(sf::RenderWindow* window) :
 	m_systems(std::tuple_size_v<Systems>),
-	m_running(true),
-	m_window(window)
+	m_running(true)
 {
+	Window::set(window);
+
 	m_systems[SId<SInput>] = std::make_unique<SInput>();
 	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();
 	m_systems[SId<SRender>] = std::make_unique<SRender>();
@@ -28,7 +30,6 @@ World::World(sf::RenderWindow* window) :
 	{
 		system->setEventManager(&m_eventManager);
 		system->listenToEvents();
-		system->setWindow(window);
 	}
 
 	// Restart the clock to not count the setup time.
