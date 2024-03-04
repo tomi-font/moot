@@ -1,6 +1,5 @@
+/compile_commands.json
 /demo
 /.obj/
-/resources/
-/compile_commands.json
 /.cache/
-/.vscode/launch.json
+/.vscode/
