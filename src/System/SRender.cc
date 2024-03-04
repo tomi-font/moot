@@ -7,7 +7,7 @@ enum G
 {
 	View,
 	WorldRendered,
-	UiRendered,
+	HudRendered,
 	COUNT
 };
 
@@ -16,7 +16,7 @@ SRender::SRender()
 	m_groups.resize(G::COUNT);
 	m_groups[G::View] = { CId<CView> + CId<CPosition> };
 	m_groups[G::WorldRendered] = { CId<CRender> };
-	m_groups[G::UiRendered] = { CId<CUiRender> };
+	m_groups[G::HudRendered] = { CId<CHudRender> };
 }
 
 void SRender::listenToEvents()
@@ -55,16 +55,16 @@ void SRender::update(float) const
 		m_window->draw(cRenders[0].vertices().data(), cRenders.size() * 4, sf::Quads);
 	}
 
-	sf::Transform uiTransform;
+	sf::Transform hudTransform;
 	const sf::View& view = m_window->getView();
-	uiTransform.translate(view.getCenter() - view.getSize() / 2.f);
-	uiTransform.scale(view.getSize());
+	hudTransform.translate(view.getCenter() - view.getSize() / 2.f);
+	hudTransform.scale(view.getSize());
 	
-	for (Archetype* arch : m_groups[G::UiRendered].archetypes())
+	for (Archetype* arch : m_groups[G::HudRendered].archetypes())
 	{
-		const auto& cUiRenders = arch->getAll<CUiRender>();
+		const auto& cHudRenders = arch->getAll<CHudRender>();
 
-		m_window->draw(cUiRenders[0].vertices().data(), cUiRenders.size() * 4, sf::Quads, uiTransform);
+		m_window->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
 	}
 
 	m_window->display();

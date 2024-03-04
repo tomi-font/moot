@@ -13,14 +13,14 @@ public:
 	}
 
 	template<typename T> static
-	sf::Vector2f mapPixelToUi(const T& pos)
+	sf::Vector2f mapPixelToHud(const T& pos)
 	{
 		const sf::Vector2f windowSize(window->getSize());
 		return {pos.x / windowSize.x, pos.y / windowSize.y};
 	}
 
 	template<typename T> static
-	sf::Vector2i mapUiToPixel(const T& pos)
+	sf::Vector2i mapHudToPixel(const T& pos)
 	{
 		const sf::Vector2f windowSize(window->getSize());
 		return {static_cast<int>(pos.x * windowSize.x),
@@ -28,9 +28,9 @@ public:
 	}
 
 	template<typename T> static
-	sf::Vector2f mapUiToWorld(const T& pos)
+	sf::Vector2f mapHudToWorld(const T& pos)
 	{
-		return window->mapPixelToCoords(mapUiToPixel(pos));
+		return window->mapPixelToCoords(mapHudToPixel(pos));
 	}
 
 private:

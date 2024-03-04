@@ -99,7 +99,7 @@ static Template createPlatformBuilder()
 
 				Template platform;
 
-				platform.add<CUiRender>(Window::mapPixelToUi(event.mouseButton), sf::Color::Black);
+				platform.add<CHudRender>(Window::mapPixelToHud(event.mouseButton), sf::Color::Black);
 				platform.add<CName>("platformInConstruction");
 
 				entity.world()->instantiate(std::move(platform));
@@ -112,10 +112,9 @@ static Template createPlatformBuilder()
 				Entity platform = entity.world()->findEntity("platformInConstruction");
 				if (!platform)
 					return;
-				CUiRender* cUiRender = platform.get<CUiRender*>();
-				const sf::Vector2f mouseUiPos = Window::mapPixelToUi(event.mouseMove);
+				CHudRender* cHudRender = platform.get<CHudRender*>();
 
-				cUiRender->resize(mouseUiPos - cUiRender->position());
+				cHudRender->resize(Window::mapPixelToHud(event.mouseMove) - cHudRender->position());
 			}
 		},
 		{
@@ -124,11 +123,11 @@ static Template createPlatformBuilder()
 			{
 				Entity platform = entity.world()->findEntity("platformInConstruction");
 				assert(platform);
-				const sf::Vector2f pos = Window::mapUiToWorld(platform.get<CUiRender>().position());
+				const sf::Vector2f pos = Window::mapHudToWorld(platform.get<CHudRender>().position());
 				const sf::Vector2f size = Window::mapPixelToWorld(event.mouseButton) - pos;
 
 				platform.remove<CName>();
-				platform.remove<CUiRender>();
+				platform.remove<CHudRender>();
 				platform.add<CPosition>(pos);
 				platform.add<CCollisionBox>(pos, size);
 				platform.add<CRender>(pos, size, sf::Color::Black);

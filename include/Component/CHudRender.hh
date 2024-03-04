@@ -2,7 +2,7 @@
 
 #include <Component/CRender.hh>
 
-class CUiRender : public CRender
+class CHudRender : public CRender
 {
 public:
 
