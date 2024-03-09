@@ -48,18 +48,27 @@ void SRender::update(float) const
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 
+	const sf::View& view = m_window->getView();
+	const sf::Vector2f& viewSize = view.getSize();
+
+	// Render the entities with the Y axis flipped so that the Y coordinates grow upwards.
+	sf::Transform yAxisTransform;
+	yAxisTransform.translate(0, viewSize.y);
+	yAxisTransform.scale(1, -1);
+
 	for (Archetype* arch : m_groups[G::WorldRendered].archetypes())
 	{
 		const auto& cRenders = arch->getAll<CRender>();
 
-		m_window->draw(cRenders[0].vertices().data(), cRenders.size() * 4, sf::Quads);
+		m_window->draw(cRenders[0].vertices().data(), cRenders.size() * 4, sf::Quads, yAxisTransform);
 	}
 
+	// Render the HUD so that it always appears at the same place on screen.
 	sf::Transform hudTransform;
-	const sf::View& view = m_window->getView();
-	hudTransform.translate(view.getCenter() - view.getSize() / 2.f);
-	hudTransform.scale(view.getSize());
-	
+	hudTransform.translate(view.getCenter() - viewSize / 2.f);
+	hudTransform.combine(yAxisTransform);
+	hudTransform.scale(viewSize);
+
 	for (Archetype* arch : m_groups[G::HudRendered].archetypes())
 	{
 		const auto& cHudRenders = arch->getAll<CHudRender>();

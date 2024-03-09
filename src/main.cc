@@ -45,7 +45,7 @@ static CInput::Watch jumpInputWatch()
 		},
 		[](Entity& player, const sf::Event& event)
 		{
-			player.get<CRigidbody*>()->applyForce((event.key.code == sf::Keyboard::W) ? -500 : 1000);
+			player.get<CRigidbody*>()->applyForce(750 * (event.key.code == sf::Keyboard::W ? 1 : -1));
 		}
 	};
 }
@@ -64,7 +64,7 @@ static void configureWindow(sf::RenderWindow& window)
 
 static Template createPlayer(const sf::Vector2f& viewSize)
 {
-	sf::Vector2f pos(0, -viewSize.y);
+	sf::Vector2f pos(0, viewSize.y);
 	sf::Vector2f size(100.f, 100.f);
 	Template temp;
 	temp.add<CPosition>(pos);
@@ -73,7 +73,7 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	temp.add(CInput({moveInputWatch(), jumpInputWatch()}));
 	temp.add<CCollisionBox>(pos, size);
 	temp.add<CRigidbody>();
-	temp.add<CView>(viewSize, sf::FloatRect(-viewSize.x * .5f, -viewSize.y * 2, viewSize.x, viewSize.y * 2));
+	temp.add<CView>(viewSize, sf::FloatRect(-viewSize.x * .5f, viewSize.y * 2, viewSize.x, viewSize.y * 2));
 	return temp;
 }
 

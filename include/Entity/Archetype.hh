@@ -20,6 +20,7 @@ public:
 
 	// Currently Archetypes shall not be copied/moved to prevent pointer invalidation.
 	Archetype(const Archetype&) = delete;
+	Archetype(Archetype&&) = delete;
 	void operator=(const Archetype&) = delete;
 
 	World* world() const { return m_world; }

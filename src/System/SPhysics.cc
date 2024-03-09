@@ -135,7 +135,7 @@ void SPhysics::update(float elapsedTime) const
 				}
 			}
 		}
-		crig->applyForce(c_gravityAcceleration * elapsedTime);
+		crig->applyForce(-c_gravityAcceleration * elapsedTime);
 		move.y += crig->velocity();
 
 		grounded:

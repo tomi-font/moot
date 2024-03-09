@@ -36,8 +36,6 @@ public:
 
 	World* world() const { return m_arch->world(); }
 
-	void resize(const sf::Vector2f&);
-
 	template<typename C, typename...Args> void add(Args&&... args)
 	{
 		world()->addComponentTo(this, ComponentVariant(std::in_place_type<C>, std::forward<Args>(args)...));
