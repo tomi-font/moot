@@ -36,7 +36,7 @@ template<> class ArchetypeIterator<EntityContext> : public ArchetypeIteratorBase
 public:
 	using ArchetypeIteratorBase::ArchetypeIteratorBase;
 
-	EntityContext operator*() const { return { *m_archIt, m_idx }; }
+	EntityContext operator*() const { return { (*m_archIt)->comp(), *m_archIt, m_idx }; }
 };
 
 // Iterates over components of a same type.

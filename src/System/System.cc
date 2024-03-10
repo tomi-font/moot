@@ -17,12 +17,15 @@ void System::match(Archetype* arch)
 		group.match(arch);
 }
 
-Archetype* System::getArchetype(ComponentComposition comp) const
+bool System::initializes(ComponentComposition comp)
 {
 	for (const ComponentGroup& group : m_groups)
-	{
-		if (group.matches(comp))
-			return group.getArchetype(comp);
-	}
-	return nullptr;
+		if (group.initializesEntities() && group.matches(comp))
+			return true;
+	return false;
+}
+
+void System::initialize(const Entity&) const
+{
+	assert(false);
 }

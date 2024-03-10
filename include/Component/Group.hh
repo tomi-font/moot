@@ -11,12 +11,13 @@ class ComponentGroup
 public:
 
 	ComponentGroup() {}
-	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition());
+	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition(), bool initializesEntities = false);
 
 	// Appends the given Archetype upon match.
 	void match(Archetype*);
 
 	bool matches(ComponentComposition comp) const;
+	bool initializesEntities() const { return m_initializesEntities; }
 
 	std::span<Archetype* const> archetypes() const { return m_archs; }
 
@@ -37,4 +38,7 @@ private:
 	ComponentComposition m_required;
 	// Components whose presence is forbidden.
 	ComponentComposition m_forbidden;
+
+	// Whether entities instantiated in matching archetypes need to be initialized.
+	bool m_initializesEntities;
 };

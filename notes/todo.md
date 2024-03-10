@@ -11,3 +11,5 @@
 - Define an entity's position (and even size?) only when instantiating it.
 
 - Rework the physics system.
+
+- Switch to using C++ modules.

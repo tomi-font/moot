@@ -2,6 +2,7 @@
 
 #include <Component/Composable.hh>
 #include <Component/Types.hh>
+#include <Entity/Context.hh>
 #include <utility/bit.hh>
 #include <utility/tuple/toVectorVariant.hh>
 #include <cassert>
@@ -43,7 +44,7 @@ public:
 	// Returns the component of the requested type found at the given idex.
 	template<typename C> C* get(unsigned index) { return &getAll<C>()[index]; }
 
-	void instantiate(const Template&);
+	EntityContext instantiate(const Template&);
 	// Removes the entity at the given index.
 	void remove(unsigned);
 

@@ -49,7 +49,14 @@ void World::updateEntities()
 
 	for (const Template& temp : m_entitiesToInstantiate)
 	{
-		getArchetype(temp.comp())->instantiate(temp);
+		const ComponentComposition comp = temp.comp();
+		const Entity entity = getArchetype(comp)->instantiate(temp);
+
+		for (const auto& system : m_systems)
+		{
+			if (system->initializes(comp))
+				system->initialize(entity);
+		}
 	}
 	m_entitiesToInstantiate.clear();
 }

@@ -14,7 +14,7 @@ enum G
 SRender::SRender()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::View] = { CId<CView> + CId<CPosition> };
+	m_groups[G::View] = { CId<CView> + CId<CPosition>, {}, true };
 	m_groups[G::WorldRendered] = { CId<CRender> };
 	m_groups[G::HudRendered] = { CId<CHudRender> };
 }
@@ -24,11 +24,8 @@ void SRender::listenToEvents()
 	listen(Event::EntityMoved);
 }
 
-void SRender::triggered(const Event& event)
+static void updateViewPosition(const Entity& entity, sf::RenderWindow* window)
 {
-	assert(event.type == Event::EntityMoved);
-
-	Entity entity = event.entity;
 	const CPosition& cPos = entity.get<CPosition>();
 
 	if (entity.has<CRender>())
@@ -36,12 +33,21 @@ void SRender::triggered(const Event& event)
 
 	if (entity.has<CView>())
 	{
-		// TODO: Set the view when the entity is created, before any EntityMoved event.
-		assert(m_window);
 		CView* cView = entity.get<CView*>();
 		cView->setPosition(cPos);
-		m_window->setView(*cView);
+		window->setView(*cView);
 	}
+}
+
+void SRender::triggered(const Event& event)
+{
+	assert(event.type == Event::EntityMoved);
+	updateViewPosition(event.entity, m_window);
+}
+
+void SRender::initialize(const Entity& entity) const
+{
+	updateViewPosition(entity, m_window);
 }
 
 void SRender::update(float) const

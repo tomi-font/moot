@@ -23,7 +23,7 @@ Archetype::Archetype(ComponentComposition comp, World* world) :
 	}
 }
 
-void Archetype::instantiate(const Template& temp)
+EntityContext Archetype::instantiate(const Template& temp)
 {
 	assert(temp.comp() == m_comp);
 	ComponentComposition componentsLeft = m_comp;
@@ -47,7 +47,10 @@ void Archetype::instantiate(const Template& temp)
 			});
 		++i;
 	}
+	
+	const auto index = m_entityCount;
 	++m_entityCount;
+	return {m_comp, this, index};
 }
 
 void Archetype::remove(const unsigned index)
