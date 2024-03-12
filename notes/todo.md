@@ -11,3 +11,5 @@
 - Rework the physics system.
 
 - Switch to using C++ modules.
+
+- Review how the ComponentGroups are created.

@@ -11,12 +11,13 @@ class ComponentGroup
 public:
 
 	ComponentGroup() {}
-	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition(), bool initializesEntities = false);
+	ComponentGroup(ComponentComposition required, ComponentComposition forbidden = ComponentComposition(), bool initializesEntities = false) : ComponentGroup({required}, forbidden, initializesEntities) {}
+	ComponentGroup(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden, bool initializesEntities);
 
 	// Appends the given Archetype upon match.
 	void match(Archetype*);
 
-	bool matches(ComponentComposition comp) const;
+	bool matches(ComponentComposition) const;
 	bool initializesEntities() const { return m_initializesEntities; }
 
 	std::span<Archetype* const> archetypes() const { return m_archs; }
@@ -34,8 +35,8 @@ private:
 	// Matching archetypes.
 	std::vector<Archetype*> m_archs;
 
-	// Components whose presence is required.
-	ComponentComposition m_required;
+	// Components whose presence is required. Every different composition is an or; any one of them matching will fulfill the required criteria.
+	std::vector<ComponentComposition> m_required;
 	// Components whose presence is forbidden.
 	ComponentComposition m_forbidden;
 

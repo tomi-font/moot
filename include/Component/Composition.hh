@@ -19,6 +19,7 @@ public:
 	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
 	constexpr auto count() const { return setBitCount(m_bits); }
+	constexpr bool empty() const { return !count(); }
 
 	constexpr ComponentComposition operator+(ComponentComposition r) const { return m_bits | r.bits(); }
 	constexpr void operator+=(ComponentComposition r)
