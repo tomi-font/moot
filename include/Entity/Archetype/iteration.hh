@@ -12,7 +12,7 @@ protected:
 public:
 	ArchetypeIteratorBase(decltype(m_archIt) archIt) : m_archIt(archIt) {}
 
-	bool operator==(ArchetypeIteratorBase& other)
+	bool operator==(ArchetypeIteratorBase& other) &
 	{
 		while (m_archIt != other.m_archIt)
 		{
@@ -24,6 +24,7 @@ public:
 		}
 		return true;
 	}
+	bool operator==(ArchetypeIteratorBase&& other) && { return *this == other; }
 
 	void operator++() { ++m_idx; }
 };

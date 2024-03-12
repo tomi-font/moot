@@ -2,23 +2,55 @@
 #include <cassert>
 
 CView::CView(const sf::Vector2f& size, const sf::FloatRect& limits) :
-	m_view({}, size),
-	m_limits(limits.left + size.x / 2, limits.top - size.y / 2, limits.width - size.x, limits.height - size.y)
+	m_windowView({}, size),
+	m_limits(limits)
 {
 	assert(limits.width >= size.x && limits.height >= size.y);
 }
 
-void CView::setPosition(sf::Vector2f center)
+void CView::setCenter(sf::Vector2f center)
 {
-	center.x = std::max(center.x, m_limits.left);
-	center.y = std::min(center.y, m_limits.top);
+	const sf::Vector2f& viewSize = m_windowView.getSize();
 
-	center.x = std::min(center.x, m_limits.left + m_limits.width);
-	center.y = std::max(center.y, m_limits.top - m_limits.height);
+	m_theoreticalCenter = center;
 
-	// Flip the view's Y axis because the same is done when rendering the entities so that the Y coordinates grow upwards.
+	center.x = std::min(
+		std::max(center.x, m_limits.left + viewSize.x / 2),
+		m_limits.left + m_limits.width - viewSize.x / 2
+	);
+	center.y = std::max(
+		std::min(center.y, m_limits.top - viewSize.y / 2),
+		m_limits.top - m_limits.height + viewSize.y / 2
+	);
+
+	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
 	center.y *= -1;
-	center.y += m_view.getSize().y;
+	center.y += m_windowView.getSize().y;
 
-	m_view.setCenter(center);
+	m_windowView.setCenter(center);
+	m_hasChanged = true;
+}
+
+void CView::zoom(float factor)
+{
+	assert(factor > 0);
+
+	if (factor > 1)
+	{
+		const sf::Vector2f& viewSize = m_windowView.getSize();
+		factor = std::min({factor, m_limits.width / viewSize.x, m_limits.height / viewSize.y});
+	}
+	m_windowView.zoom(factor);
+
+	// Adjust the view's center to take into account its area limits that may change its actual center
+	// and especially to account for the fact that the view's center is altered by the Y axis flipping.
+	setCenter(m_theoreticalCenter);
+	assert(m_hasChanged);
+}
+
+void CView::update(sf::RenderTarget* renderTarget)
+{
+	assert(m_hasChanged);
+	renderTarget->setView(m_windowView);
+	m_hasChanged = false;
 }

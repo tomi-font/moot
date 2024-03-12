@@ -28,7 +28,7 @@ static CInput::Watch moveInputWatch()
 			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::A},
 			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::D},
 		},
-		[](Entity& player, const sf::Event&)
+		[](const Entity& player, const sf::Event&)
 		{
 			player.get<CMove*>()->setMotion(
 				sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A));
@@ -43,9 +43,20 @@ static CInput::Watch jumpInputWatch()
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W},
 			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::S},
 		},
-		[](Entity& player, const sf::Event& event)
+		[](const Entity& player, const sf::Event& event)
 		{
 			player.get<CRigidbody*>()->applyForce(750 * (event.key.code == sf::Keyboard::W ? 1 : -1));
+		}
+	};
+}
+
+static CInput::Watch zoomInputWatch()
+{
+	return {
+		{ {.type = sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel } },
+		[](const Entity& entity, const sf::Event& event)
+		{
+			entity.get<CView*>()->zoom(1 - event.mouseWheelScroll.delta / 4);
 		}
 	};
 }
@@ -70,10 +81,10 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	temp.add<CPosition>(pos);
 	temp.add<CRender>(pos, size, sf::Color::White);
 	temp.add<CMove>(1000);
-	temp.add(CInput({moveInputWatch(), jumpInputWatch()}));
+	temp.add(CInput({moveInputWatch(), jumpInputWatch(), zoomInputWatch()}));
 	temp.add<CCollisionBox>(pos, size);
 	temp.add<CRigidbody>();
-	temp.add<CView>(viewSize, sf::FloatRect(-viewSize.x * .5f, viewSize.y * 2, viewSize.x, viewSize.y * 2));
+	temp.add<CView>(viewSize, sf::FloatRect({-viewSize.x, viewSize.y * 2}, viewSize * 2.f));
 	return temp;
 }
 
@@ -122,7 +133,8 @@ static Template createPlatformBuilder()
 			[](const Entity& entity, const sf::Event& event)
 			{
 				Entity platform = entity.world()->findEntity("platformInConstruction");
-				assert(platform);
+				if (!platform)
+					return;
 				const sf::Vector2f pos = Window::mapHudToWorld(platform.get<CHudRender>().position());
 				const sf::Vector2f size = Window::mapPixelToWorld(event.mouseButton) - pos;
 

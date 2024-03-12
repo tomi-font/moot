@@ -2,13 +2,11 @@
 
 - Logging with various verbosity levels/topics.
 
-- View zooming.
-
 - Implement a ComponentGroup::getAllContiguous().
 
 - Update SFML to 2.6.
 
-- Define an entity's position (and even size?) only when instantiating it.
+- Define an entity's position only when instantiating it.
 
 - Rework the physics system.
 

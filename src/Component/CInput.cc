@@ -22,6 +22,10 @@ static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
 		static_assert(offsetof(decltype(lhs.mouseButton), button) == 0);
 		size = sizeof(lhs.mouseButton.button);
 		break;
+	case sf::Event::MouseWheelScrolled:
+		static_assert(offsetof(decltype(lhs.mouseWheelScroll), wheel) == 0);
+		size = sizeof(lhs.mouseWheelScroll.wheel);
+		break;
 	default:
 		assert(false);
 	}

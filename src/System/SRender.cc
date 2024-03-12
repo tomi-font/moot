@@ -14,7 +14,7 @@ enum G
 SRender::SRender()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::View] = { CId<CView> + CId<CPosition>, {}, true };
+	m_groups[G::View] = { CId<CView>, {}, true };
 	m_groups[G::WorldRendered] = { CId<CRender> };
 	m_groups[G::HudRendered] = { CId<CHudRender> };
 }
@@ -24,35 +24,47 @@ void SRender::listenToEvents()
 	listen(Event::EntityMoved);
 }
 
-static void updateViewPosition(const Entity& entity, sf::RenderWindow* window)
+static void updateViewCenter(const Entity& entity)
 {
-	const CPosition& cPos = entity.get<CPosition>();
+	sf::Vector2f pos = entity.get<CPosition>();
 
 	if (entity.has<CRender>())
-		entity.get<CRender*>()->setPosition(cPos);
-
-	if (entity.has<CView>())
 	{
-		CView* cView = entity.get<CView*>();
-		cView->setPosition(cPos);
-		window->setView(*cView);
+		// Center the view on the entity's visible center.
+		pos += entity.get<CRender>().getSize() / 2.f;
 	}
+	
+	entity.get<CView*>()->setCenter(pos);
 }
 
 void SRender::triggered(const Event& event)
 {
 	assert(event.type == Event::EntityMoved);
-	updateViewPosition(event.entity, m_window);
+	const Entity entity = event.entity;
+
+	if (entity.has<CRender>())
+		entity.get<CRender*>()->setPosition(entity.get<CPosition>());
+
+	if (entity.has<CView>())
+		updateViewCenter(entity);
 }
 
 void SRender::initialize(const Entity& entity) const
 {
-	updateViewPosition(entity, m_window);
+	updateViewCenter(entity);
 }
 
 void SRender::update(float) const
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
+
+	const auto& cViews = m_groups[G::View].getAll<CView>();
+	assert(cViews.begin() != cViews.end());
+	for (CView& cView: cViews)
+	{
+		if (cView.hasChanged())
+			cView.update(m_window);
+	}
 
 	const sf::View& view = m_window->getView();
 	const sf::Vector2f& viewSize = view.getSize();
