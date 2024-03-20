@@ -3,7 +3,7 @@ NAME := demo
 SRCDIR := src
 OBJDIR := .obj
 
-SRC := $(shell find $(SRCDIR) -name *.cc)
+SRC := $(shell find $(SRCDIR) -name '*.cc')
 OBJ := $(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
 DISABLED_WARNINGS := \
@@ -16,6 +16,8 @@ DISABLED_WARNINGS := \
 	pre-c++20-compat-pedantic \
 	c++98-compat \
 	c++20-extensions \
+	gnu-anonymous-struct \
+	nested-anon-types \
 
 CXX := clang++
 CXXFLAGS := -std=gnu++26 -g -O0 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
@@ -43,4 +45,4 @@ distclean: clean
 re: distclean
 	make
 
-.PHONY: all clean distclean re
+.PHONY: clean distclean re

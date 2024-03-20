@@ -1,19 +1,19 @@
 #pragma once
 
+#include <SFML/System/Vector2.hpp>
+
 class CRigidbody
 {
 public:
 
-	void applyForce(float force);
-	void ground();
+	void applyYForce(float force) { m_velocity.y += force; }
+	
+	void zeroVelocityX() { m_velocity.x = 0; }
+	void zeroVelocityY() { m_velocity.y = 0; }
 
-	float velocity() const { return m_velocity; }
-	bool grounded() const { return m_grounded; }
+	auto& velocity() const { return m_velocity; }
 
 private:
 
-	float m_velocity = 0;
-
-	// TODO: Re-think the grounded mechanism.
-	bool m_grounded = false;
+	sf::Vector2f m_velocity;
 };

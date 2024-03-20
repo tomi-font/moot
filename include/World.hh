@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Entity/Archetype.hh>
+#include <Entity/hash.hh>
 #include <Entity/Template.hh>
 #include <Event/Manager.hh>
 #include <System/System.hh>
@@ -8,11 +9,6 @@
 #include <memory>
 #include <unordered_set>
 #include <SFML/System/Clock.hpp>
-
-template<> struct std::hash<EntityContext>
-{
-	inline std::size_t operator()(const EntityContext&) const;
-};
 
 class World
 {

@@ -8,8 +8,10 @@
 
 - Define an entity's position only when instantiating it.
 
-- Rework the physics system.
-
 - Switch to using C++ modules.
 
 - Review how the ComponentGroups are created.
+
+- Implement world properties.
+
+- Scale things according to real world values.

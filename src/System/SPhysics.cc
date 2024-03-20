@@ -1,150 +1,254 @@
 #include <System/SPhysics.hh>
 #include <Entity/Entity.hh>
-#include <cmath>
+
+constexpr float c_gravitationalAcceleration = 999.80665f;
 
 // Indices for this system's groups.
 enum G
 {
-	Ghost, // Entities that only have a move component.
-	Bird, // Entities that move and collide, without rigidbody.
-	Char, // Entities that move and collide, with rigidbody.
-	Collidable,	// All entities that are collidable.
+	Dynamic, // Entities that might move, whether voluntarily or not.
+	Collidable,	// Entities that can be collided.
 	COUNT
 };
-
-constexpr float	c_gravityAcceleration = 2000.f;
 
 SPhysics::SPhysics()
 {
 	m_groups.resize(G::COUNT);
-	m_groups[G::Ghost] = { CId<CPosition> + CId<CMove>, CId<CCollisionBox> + CId<CRigidbody> };
-	m_groups[G::Bird] = { CId<CPosition> + CId<CMove> + CId<CCollisionBox>, CId<CRigidbody> };
-	m_groups[G::Char] = { CId<CPosition> + CId<CMove> + CId<CCollisionBox> + CId<CRigidbody> };
+	m_groups[G::Dynamic] = { {CId<CMove>, CId<CRigidbody>}, {}, false };
 	m_groups[G::Collidable] = { CId<CCollisionBox> };
 }
 
-// TODO: Revise this whole thing,
-
-static void	computeCollision(sf::Vector2f& move, sf::FloatRect& rect, const sf::FloatRect& hitBox, CRigidbody* crig)
+void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& move) const
 {
-	sf::Vector2f shift;
+	*entity.get<CPosition*>() += move;
+	broadcast({Event::EntityMoved, entity});
+}
 
-	if (move.x != 0.f)
-		shift.x = hitBox.left + (move.x > 0.f ? -(rect.left + rect.width) : hitBox.width - rect.left);
+static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
+											const CCollisionBox& b, const Vector2f& bMove)
+{
+	// The move of A relative to B.
+	const Vector2f relativeMove = aMove - bMove;
+	assert(aMove.isNotZero() && relativeMove.isNotZero());
 
-	if (move.y != 0.f)
+	a.assertIntersects(b, false);
+	(a + aMove).assertIntersects(b + bMove);
+
+	Vector2f ratios;
+
+	if (relativeMove.x > 0)
+		ratios.x = (b.left - a.right()) / relativeMove.x;
+	else if (relativeMove.x < 0)
+		ratios.x = (a.left - b.right()) / -relativeMove.x;
+
+	if (relativeMove.y > 0)
+		ratios.y = (b.bottom - a.top()) / relativeMove.y;
+	else if (relativeMove.y < 0)
+		ratios.y = (a.bottom - b.top()) / -relativeMove.y;
+
+	// One ratio may be negative if the entities were already overlapping on an axis.
+	assert(ratios.x <= 1 && ratios.y <= 1);
+	assert(ratios.x >= 0 || ratios.y >= 0);
+
+	return ratios;
+}
+
+static float firstContactPointMoveRatio(const Vector2f& ratios)
+{
+	// Use the higher ratio (later intersection time); it is when the entities overlap on both axes.
+	return std::max(ratios.x, ratios.y);
+}
+
+static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBox* a, Vector2f* aMove,
+                                                                    CCollisionBox* b, Vector2f* bMove)
+{
+	// The move of A relative to B.
+	const sf::Vector2f relativeMove = *aMove - *bMove;
+
+	Vector2i collidedOn;
+
+	if (ratios.x >= ratios.y)
+		collidedOn.x = normalize(relativeMove.x);
+	if (ratios.y >= ratios.x)
+		collidedOn.y = normalize(relativeMove.y);
+	
+	// The move ratio that's left after the first contact point.
+	const float ratioLeft = 1 - firstContactPointMoveRatio(ratios);
+
+	// First move B back to the (approximate) first contact point.
+	*bMove *= ratioLeft;
+	*b -= *bMove;
+
+	// Then do the same with A...
+	*aMove *= ratioLeft;
+	*a -= *aMove;
+
+	// And make sure that it touches B where they collided.
+
+	if (collidedOn.x) // Contact happens horizontally.
 	{
-		shift.y = hitBox.top + (move.y > 0.f ? -(rect.top + rect.height) : hitBox.height - rect.top);
-
-		if (move.x != 0.f)
-		{
-			if ((std::signbit(move.x) == std::signbit(move.y)) ?
-			(shift.y * move.x > shift.x * move.y) : (shift.y * move.x < shift.x * move.y))
-				shift.x = 0;
-			else
-				shift.y = 0;
-		}
+		if (collidedOn.x == 1)
+			a->setRight(b->left);
+		else
+			a->left = b->right();
+	}
+	if (collidedOn.y) // Contact happens vertically.
+	{
+		if (collidedOn.y == 1)
+			a->setTop(b->bottom);
+		else
+			a->bottom = b->top();
 	}
 
-	move += shift;
-	rect.left += shift.x;
-	rect.top += shift.y;
+	a->assertIntersects(*b, false);
+	// TODO: add factor
+	(*a + *aMove).assertIntersects(*b + *bMove);
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-	if (crig && shift.y != 0.f && rect.top + rect.height == hitBox.top)
-#pragma clang diagnostic pop
+	assert(collidedOn.x or collidedOn.y);
+	return collidedOn;
+}
+
+static void applyRigidbodyCollisionForces(const Vector2i& collidedOn, CRigidbody* a, CRigidbody* b)
+{
+	assert(a);
+
+	for (CRigidbody* cRigidbody : {a, b})
 	{
-		crig->ground();
+		if (!cRigidbody)
+			break;
+
+		if (collidedOn.x)
+			cRigidbody->zeroVelocityX();
+		if (collidedOn.y)
+			cRigidbody->zeroVelocityY();
 	}
 }
 
-static bool	processCollidable(const ComponentGroup& collidables, CPosition* cpos, CCollisionBox* cbox, sf::Vector2f& move, CRigidbody* crig)
+static void adjustMoveAfterCollision(const Vector2i& collidedOn, const CCollisionBox& a, Vector2f* aMove,
+									                             const CCollisionBox& b, Vector2f* bMove)
 {
-	sf::FloatRect rect(cbox->left + move.x, cbox->top + move.y, cbox->width, cbox->height);
-
-	for (Entity entity : collidables)
+	if (collidedOn.x == 1)
 	{
-		const CCollisionBox& cboxWall = entity.get<CCollisionBox>();
-		if (rect.intersects(cboxWall) && cbox != &cboxWall)
-			computeCollision(move, rect, cboxWall, crig);
+		assert(equal(a.right(), b.left));
+		aMove->x = std::min(0.f, aMove->x);
+		bMove->x = std::max(0.f, bMove->x);
+	}
+	else if (collidedOn.x == -1)
+	{
+		assert(equal(a.left, b.right()));
+		aMove->x = std::max(0.f, aMove->x);
+		bMove->x = std::min(0.f, bMove->x);
 	}
 
-	if (move != sf::Vector2f())
+	if (collidedOn.y == 1)
 	{
-		cpos->x = rect.left;
-		cpos->y = rect.top;
-		cbox->left = rect.left;
-		cbox->top = rect.top;
-		return true;
+		assert(equal(a.top(), b.bottom));
+		aMove->y = std::min(0.f, aMove->y);
+		bMove->y = std::max(0.f, bMove->y);
 	}
-	return false;
+	else if (collidedOn.y == -1)
+	{
+		assert(equal(a.bottom, b.top()));
+		aMove->y = std::max(0.f, aMove->y);
+		bMove->y = std::min(0.f, bMove->y);
+	}
+	
+	(a + *aMove).assertIntersects(b + *bMove, false);
 }
+
+struct CollidableProvisional
+{
+	Vector2f move;
+	CCollisionBox cCol;
+};
 
 void SPhysics::update(float elapsedTime) const
 {
-	auto entityMoved = [this](const Entity& entity)
-	{
-		broadcast({ Event::EntityMoved, entity });
-	};
+	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
 
-	// First the moving entities that won't collide.
-	for (Entity entity : m_groups[G::Ghost])
+	for (Entity entity : m_groups[G::Dynamic])
 	{
-		const CMove& cmove = entity.get<CMove>();
-		if (cmove.isMoving())
+		Vector2f velocity;
+
+		if (entity.has<CMove>())
+			velocity += entity.get<CMove>().velocity();
+
+		if (entity.has<CRigidbody>())
 		{
-			*entity.get<CPosition*>() += cmove.velocity() * elapsedTime;
-			entityMoved(entity);
+			CRigidbody* cRigidbody = entity.get<CRigidbody*>();
+			cRigidbody->applyYForce(-c_gravitationalAcceleration * elapsedTime);
+			velocity += cRigidbody->velocity();
 		}
+
+		if (velocity.isZero())
+			continue;
+		const Vector2f move = velocity * elapsedTime;
+		assert(move.isNotZero());
+
+		if (entity.has<CCollisionBox>())
+			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>() + move));
+		else
+			moveEntity(entity, move);
 	}
 
-	// Then the moving, collidable entities, without gravity.
-	for (Entity entity : m_groups[G::Bird])
+	for (auto movingCollidableIt = movingCollidables.begin();
+	     movingCollidableIt != movingCollidables.end();
+	     movingCollidableIt = movingCollidables.erase(movingCollidableIt))
 	{
-		const CMove& cmove = entity.get<CMove>();
+		const Entity& entity = movingCollidableIt->first;
+		CollidableProvisional& prov = movingCollidableIt->second;
+		CCollisionBox* cCol = entity.get<CCollisionBox*>();
 
-		if (cmove.isMoving())
+		bool collided = false;
+		
+		for (Entity other : m_groups[G::Collidable])
 		{
-			sf::Vector2f move(cmove.velocity() * elapsedTime);
-			const bool moved = processCollidable(m_groups[G::Collidable], entity.get<CPosition*>(), entity.get<CCollisionBox*>(), move, nullptr);
-			if (moved)
-				entityMoved(entity);
-		}
-	}
+			CCollisionBox* otherCCol = other.get<CCollisionBox*>();
 
-	// Then the moving, collidable entities, with gravity.
-	for (Entity entity : m_groups[G::Char])
-	{
-		CRigidbody*    crig = entity.get<CRigidbody*>();
-		CCollisionBox* cbox = entity.get<CCollisionBox*>();
-		sf::Vector2f   move = entity.get<CMove>().velocity();
+			CollidableProvisional* otherProv;
+			CollidableProvisional otherStaticProv;
 
-		if (crig->grounded())
-		{
-			for (const CCollisionBox& boxWall : m_groups[G::Collidable].getAll<CCollisionBox>())
+			if (movingCollidables.contains(other))
 			{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-				if (cbox->top + cbox->height == boxWall.top
-#pragma clang diagnostic pop
-				&& cbox->left + cbox->width > boxWall.left
-				&& cbox->left < boxWall.left + boxWall.width)
-				{
-					goto grounded;
-				}
-			}
-		}
-		crig->applyForce(-c_gravityAcceleration * elapsedTime);
-		move.y += crig->velocity();
+				if (entity == other)
+					continue; // Cannot collide against itself.
 
-		grounded:
-		if (move != sf::Vector2f())
-		{
-			move *= elapsedTime;
-			const bool moved = processCollidable(m_groups[G::Collidable], entity.get<CPosition*>(), cbox, move, crig);
-			if (moved)
-				entityMoved(entity);
+				otherProv = &movingCollidables[other];
+			}
+			else
+			{
+				otherProv = &otherStaticProv;
+				otherProv->cCol = *otherCCol;
+			}
+
+			if (!prov.cCol.intersects(otherProv->cCol))
+				continue;
+
+			const Vector2f ratios = firstContactPointMoveRatios(*cCol, prov.move, *otherCCol, otherProv->move);
+
+			const Vector2i collidedOn = moveBackToFirstContactPoint(ratios, &prov.cCol, &prov.move, &otherProv->cCol, &otherProv->move);
+
+			if (entity.has<CRigidbody>())
+				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), other.getOrNull<CRigidbody*>());
+			
+			adjustMoveAfterCollision(collidedOn, prov.cCol, &prov.move, otherProv->cCol, &otherProv->move);
+
+			assert(otherProv->move.isZero() or movingCollidables.contains(other));
+
+			collided = true;
 		}
+
+		if (collided)
+		{
+			// Apply the part of the movement that is collision-free.
+			prov.cCol += prov.move;
+		}
+
+		*cCol = prov.cCol;
+		const Vector2f finalMove = cCol->position() - entity.get<CPosition>();
+	
+		if (finalMove.isNotZero())
+			moveEntity(entity, finalMove);
+		// TODO: else assert
 	}
 }

@@ -22,7 +22,8 @@ public:
 
 	// The component composition is not compared because it may differ between contexts of a same entity.
 	bool operator==(const EntityContext& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }
-	bool operator>(const EntityContext& right) const { return m_arch > right.m_arch && m_idx > right.m_idx; }
+	bool operator<(const EntityContext& right) const { return m_arch < right.m_arch || m_idx < right.m_idx; }
+	bool operator>(const EntityContext& right) const { return m_arch > right.m_arch || m_idx > right.m_idx; }
 
 protected:
 
@@ -35,4 +36,9 @@ protected:
 		m_comp = {};
 		assert(!*this);
 	}
+
+private:
+
+	bool operator<=(const EntityContext& right) const;
+	bool operator>=(const EntityContext& right) const;
 };

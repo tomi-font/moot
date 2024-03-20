@@ -7,10 +7,9 @@ struct CMove
 {
 	CMove(unsigned short speed) : m_speed(speed) {}
 
-	bool isMoving() const { return m_velocity != sf::Vector2f(); }
-	const auto& velocity() const { return m_velocity; }
+	auto& velocity() const { return m_velocity; }
 
-	void setMotion(int direction) { m_velocity.x = m_speed * direction; }
+	void setMotionX(int direction);
 
 private:
 

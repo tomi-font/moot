@@ -8,7 +8,6 @@ class Entity : public EntityContext
 public:
 
 	Entity(const EntityContext& ec) : EntityContext(ec) {}
-	Entity(const Entity&) = delete;
 
 	// Returns a const reference to the requested component.
 	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
@@ -32,6 +31,16 @@ public:
 			// The requested component was just added and is still in the staging phase.
 			return &std::get<C>(*world()->getStagedComponentOf(*this, CId<C>));
 		}
+	}
+
+	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
+	CP getOrNull() const
+	{
+		using C = std::remove_pointer_t<CP>;
+		if (has<C>())
+			return get<CP>();
+		else
+			return nullptr;
 	}
 
 	World* world() const { return m_arch->world(); }
