@@ -1,9 +1,7 @@
 #include <Entity/Entity.hh>
-#include <World.hh>
+#include <Game.hh>
 #include <utility/Window.hh>
 #include <limits>
-#include <SFML/Window/VideoMode.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
 
 static Template createQuitControls()
 {
@@ -150,11 +148,10 @@ static Template createPlatformBuilder()
 
 int	main()
 {
-	sf::RenderWindow window;
-	configureWindow(window);
-
-	World world(&window);
-
+	Game game;
+	World& world = *game.world();
+	const sf::RenderWindow& window = *game.window();
+	
 	world.instantiate(createPlayer(window.getView().getSize()));
 	world.instantiate(createGround());
 	world.instantiate(createPlatformBuilder());
