@@ -7,6 +7,7 @@ class Entity : public EntityContext
 {
 public:
 
+	Entity() {}
 	Entity(const EntityContext& ec) : EntityContext(ec) {}
 
 	// Returns a const reference to the requested component.

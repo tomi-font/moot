@@ -59,18 +59,6 @@ static CInput::Watch zoomInputWatch()
 	};
 }
 
-static void configureWindow(sf::RenderWindow& window)
-{
-	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
-	halfScreen.width /= 2;
-	halfScreen.height /= 2;
-	
-	window.create(halfScreen, "demo");
-	window.setPosition(sf::Vector2i(halfScreen.width / 2, halfScreen.height / 2));
-	window.setVerticalSyncEnabled(true);
-	window.setKeyRepeatEnabled(false);
-}
-
 static Template createPlayer(const sf::Vector2f& viewSize)
 {
 	sf::Vector2f pos(0, viewSize.y);

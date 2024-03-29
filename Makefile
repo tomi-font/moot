@@ -18,6 +18,7 @@ DISABLED_WARNINGS := \
 	c++20-extensions \
 	gnu-anonymous-struct \
 	nested-anon-types \
+	shadow-field-in-constructor \
 
 CXX := clang++
 CXXFLAGS := -std=gnu++26 -g -O0 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))

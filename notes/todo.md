@@ -1,5 +1,3 @@
-- Foolproof the collisions when the move is bigger than the object.
-
 - Logging with various verbosity levels/topics.
 
 - Implement a ComponentGroup::getAllContiguous().
@@ -15,3 +13,5 @@
 - Implement world properties.
 
 - Scale things according to real world values.
+
+- Process all the collisions in the order they happen.

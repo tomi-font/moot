@@ -15,8 +15,6 @@ public:
 
 	EntityContext() : m_arch(nullptr), m_idx(0) { assert(!*this); }
 	EntityContext(ComponentComposition comp, Archetype* arch, unsigned index) : ComponentComposable(comp), m_arch(arch), m_idx(index) {}	
-	EntityContext(const EntityContext&) = default;
-	EntityContext(EntityContext&& ec) : EntityContext(ec) { ec.destroy(); }
 
 	operator bool() const { return m_arch; }
 
@@ -28,7 +26,7 @@ public:
 protected:
 
 	Archetype* m_arch;
-	const unsigned m_idx;
+	unsigned m_idx;
 
 	void destroy()
 	{

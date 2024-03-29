@@ -12,4 +12,5 @@ protected:
 	~InstanceCounter() { --s_m_instanceCount; }
 
 	InstanceCounter(const InstanceCounter&) : InstanceCounter() {}
+	InstanceCounter& operator=(const InstanceCounter&) = default;
 };

@@ -18,9 +18,9 @@ SPhysics::SPhysics()
 	m_groups[G::Collidable] = { CId<CCollisionBox> };
 }
 
-void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& move) const
+void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& pos) const
 {
-	*entity.get<CPosition*>() += move;
+	*entity.get<CPosition*>() = pos;
 	broadcast({Event::EntityMoved, entity});
 }
 
@@ -46,8 +46,8 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 	else if (relativeMove.y < 0)
 		ratios.y = (a.bottom - b.top()) / -relativeMove.y;
 
-	// One ratio may be negative if the entities were already overlapping on an axis.
 	assert(ratios.x <= 1 && ratios.y <= 1);
+	// One ratio may be negative if the entities were already overlapping on an axis.
 	assert(ratios.x >= 0 || ratios.y >= 0);
 
 	return ratios;
@@ -71,7 +71,9 @@ static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBo
 		collidedOn.x = normalize(relativeMove.x);
 	if (ratios.y >= ratios.x)
 		collidedOn.y = normalize(relativeMove.y);
-	
+
+	assert(collidedOn.x or collidedOn.y);
+
 	// The move ratio that's left after the first contact point.
 	const float ratioLeft = 1 - firstContactPointMoveRatio(ratios);
 
@@ -104,7 +106,6 @@ static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBo
 	// TODO: add factor
 	(*a + *aMove).assertIntersects(*b + *bMove);
 
-	assert(collidedOn.x or collidedOn.y);
 	return collidedOn;
 }
 
@@ -162,6 +163,50 @@ struct CollidableProvisional
 	CCollisionBox cCol;
 };
 
+struct Collision
+{
+	Vector2f moveRatios;
+	Entity other;
+	CollidableProvisional otherProv;
+
+	operator bool() const { return other; }
+};
+
+static Collision getFirstCollision(const Entity& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,
+                                   const ComponentGroup& collidables,
+								   const std::unordered_map<Entity, CollidableProvisional>& movingCollidables)
+{
+	struct Collision firstCollision;
+	float firstCollisionRatio = 2; // More than 1.
+
+	for (Entity other : collidables)
+	{
+		const CCollisionBox& otherCCol = other.get<CCollisionBox>();
+		CollidableProvisional otherProv;
+		
+		if (movingCollidables.contains(other))
+		{
+			if (entity == other)
+				continue; // Cannot collide against itself.
+			otherProv = movingCollidables.at(other);
+		}
+		else
+			otherProv.cCol = otherCCol;
+		
+		if (!prov.cCol.intersects(otherProv.cCol))
+			continue;
+		
+		const Vector2f ratios = firstContactPointMoveRatios(cCol, prov.move, otherCCol, otherProv.move);
+		const float ratio = firstContactPointMoveRatio(ratios);
+		if (ratio < firstCollisionRatio)
+		{
+			firstCollisionRatio = ratio;
+			firstCollision = { ratios, other, otherProv };
+		}
+	}
+	return firstCollision;
+}
+
 void SPhysics::update(float elapsedTime) const
 {
 	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
@@ -188,7 +233,7 @@ void SPhysics::update(float elapsedTime) const
 		if (entity.has<CCollisionBox>())
 			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>() + move));
 		else
-			moveEntity(entity, move);
+			moveEntity(entity, entity.get<CPosition>() + move);
 	}
 
 	for (auto movingCollidableIt = movingCollidables.begin();
@@ -199,56 +244,31 @@ void SPhysics::update(float elapsedTime) const
 		CollidableProvisional& prov = movingCollidableIt->second;
 		CCollisionBox* cCol = entity.get<CCollisionBox*>();
 
-		bool collided = false;
-		
-		for (Entity other : m_groups[G::Collidable])
+		while (Collision c = getFirstCollision(entity, prov, *cCol, m_groups[G::Collidable], movingCollidables))
 		{
-			CCollisionBox* otherCCol = other.get<CCollisionBox*>();
-
-			CollidableProvisional* otherProv;
-			CollidableProvisional otherStaticProv;
-
-			if (movingCollidables.contains(other))
-			{
-				if (entity == other)
-					continue; // Cannot collide against itself.
-
-				otherProv = &movingCollidables[other];
-			}
-			else
-			{
-				otherProv = &otherStaticProv;
-				otherProv->cCol = *otherCCol;
-			}
-
-			if (!prov.cCol.intersects(otherProv->cCol))
-				continue;
-
-			const Vector2f ratios = firstContactPointMoveRatios(*cCol, prov.move, *otherCCol, otherProv->move);
-
-			const Vector2i collidedOn = moveBackToFirstContactPoint(ratios, &prov.cCol, &prov.move, &otherProv->cCol, &otherProv->move);
+			const Vector2i collidedOn = moveBackToFirstContactPoint(c.moveRatios, &prov.cCol, &prov.move, &c.otherProv.cCol, &c.otherProv.move);
 
 			if (entity.has<CRigidbody>())
-				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), other.getOrNull<CRigidbody*>());
+				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), c.other.getOrNull<CRigidbody*>());
 			
-			adjustMoveAfterCollision(collidedOn, prov.cCol, &prov.move, otherProv->cCol, &otherProv->move);
+			adjustMoveAfterCollision(collidedOn, prov.cCol, &prov.move, c.otherProv.cCol, &c.otherProv.move);
 
-			assert(otherProv->move.isZero() or movingCollidables.contains(other));
-
-			collided = true;
-		}
-
-		if (collided)
-		{
-			// Apply the part of the movement that is collision-free.
+			// Update the provisional positions to reflect the changes brought by this collision.
 			prov.cCol += prov.move;
+			if (movingCollidables.contains(c.other))
+			{
+				c.otherProv.cCol += c.otherProv.move;
+				movingCollidables[c.other] = c.otherProv;
+			}
+			else
+				assert(c.otherProv.move.isZero());
 		}
 
-		*cCol = prov.cCol;
-		const Vector2f finalMove = cCol->position() - entity.get<CPosition>();
-	
-		if (finalMove.isNotZero())
-			moveEntity(entity, finalMove);
+		if (prov.cCol.position() != cCol->position())
+		{
+			*cCol = prov.cCol;
+			moveEntity(entity, cCol->position());
+		}
 		// TODO: else assert
 	}
 }
