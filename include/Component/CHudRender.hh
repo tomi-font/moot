@@ -6,7 +6,7 @@ class CHudRender : CRender
 {
 public:
 
-	CHudRender(const sf::Vector2f& pos, sf::Color color);
+	CHudRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color);
 	
 	using CRender::vertices;
 	const sf::Vector2f& position() const { return m_vertices[0].position; }

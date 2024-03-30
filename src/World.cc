@@ -21,9 +21,6 @@ World::World(sf::RenderWindow* window) :
 		system->setEventManager(&m_eventManager);
 		system->listenToEvents();
 	}
-
-	// Restart the clock to not count the setup time.
-	m_clock.restart();
 }
 
 void World::updateEntities()

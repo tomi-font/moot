@@ -19,9 +19,11 @@ public:
 	bool isRunning() const { return m_running; }
 	void stopRunning() { m_running = false; }
 
+	void restartClock() { m_clock.restart(); }
 	void update();
 
 	void instantiate(Template&& temp) { m_entitiesToInstantiate.push_back(std::move(temp)); }
+	void instantiate(const Template& temp) { m_entitiesToInstantiate.push_back(temp); }
 	void remove(EntityContext&& entity);
 
 	void addComponentTo(EntityContext*, ComponentVariant&&);

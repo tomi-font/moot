@@ -1,7 +1,7 @@
 #include <Component/CHudRender.hh>
 
-CHudRender::CHudRender(const sf::Vector2f& pos, sf::Color color) :
-	CRender(pos, {}, color)
+CHudRender::CHudRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color) :
+	CRender(pos, size, color)
 {
 }
 

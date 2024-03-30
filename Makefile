@@ -19,6 +19,8 @@ DISABLED_WARNINGS := \
 	gnu-anonymous-struct \
 	nested-anon-types \
 	shadow-field-in-constructor \
+	global-constructors \
+	exit-time-destructors \
 
 CXX := clang++
 CXXFLAGS := -std=gnu++26 -g -O0 -MMD -MP -I include -isystem lib -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))

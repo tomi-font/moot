@@ -1,7 +1,7 @@
 #include <Component/CView.hh>
 #include <cassert>
 
-CView::CView(const sf::Vector2f& size, const sf::FloatRect& limits) :
+CView::CView(const sf::Vector2f& size, const FloatRect& limits) :
 	m_windowView({}, size),
 	m_limits(limits)
 {
@@ -18,9 +18,9 @@ void CView::setCenter(sf::Vector2f center)
 		std::max(center.x, m_limits.left + viewSize.x / 2),
 		m_limits.left + m_limits.width - viewSize.x / 2
 	);
-	center.y = std::max(
-		std::min(center.y, m_limits.top - viewSize.y / 2),
-		m_limits.top - m_limits.height + viewSize.y / 2
+	center.y = std::min(
+		std::max(center.y, m_limits.bottom + viewSize.y / 2),
+		m_limits.bottom + m_limits.height - viewSize.y / 2
 	);
 
 	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.

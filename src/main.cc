@@ -1,7 +1,6 @@
 #include <Entity/Entity.hh>
 #include <Game.hh>
 #include <utility/Window.hh>
-#include <limits>
 
 static Template createQuitControls()
 {
@@ -70,18 +69,8 @@ static Template createPlayer(const sf::Vector2f& viewSize)
 	temp.add(CInput({moveInputWatch(), jumpInputWatch(), zoomInputWatch()}));
 	temp.add<CCollisionBox>(pos, size);
 	temp.add<CRigidbody>();
-	temp.add<CView>(viewSize, sf::FloatRect({-viewSize.x, viewSize.y * 2}, viewSize * 2.f));
+	temp.add<CView>(viewSize, FloatRect({-viewSize.x, 0}, viewSize * 2.f));
 	return temp;
-}
-
-static Template createGround()
-{
-	const sf::Vector2f size = { std::numeric_limits<float>::max(), std::numeric_limits<float>::min() };
-	const sf::Vector2f pos = { -(size.x / 2), 0 };
-
-	return Template()
-		.add<CPosition>(pos)
-		.add<CCollisionBox>(pos, size);
 }
 
 static Template createPlatformBuilder()
@@ -96,7 +85,7 @@ static Template createPlatformBuilder()
 
 				Template platform;
 
-				platform.add<CHudRender>(Window::mapPixelToHud(event.mouseButton), sf::Color::Black);
+				platform.add(CHudRender(Window::mapPixelToHud(event.mouseButton), {}, sf::Color::Black));
 				platform.add<CName>("platformInConstruction");
 
 				entity.world()->instantiate(std::move(platform));
@@ -137,16 +126,14 @@ static Template createPlatformBuilder()
 int	main()
 {
 	Game game;
+	game.create();
+
 	World& world = *game.world();
 	const sf::RenderWindow& window = *game.window();
 	
 	world.instantiate(createPlayer(window.getView().getSize()));
-	world.instantiate(createGround());
 	world.instantiate(createPlatformBuilder());
 	world.instantiate(createQuitControls());
 
-	while (world.isRunning())
-	{
-		world.update();
-	}
+	game.play();
 }
