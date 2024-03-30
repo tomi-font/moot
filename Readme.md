@@ -1,4 +1,4 @@
-## Description
+## description
 
 This:
 
@@ -7,7 +7,13 @@ This:
 - is a way for me to experiment with some C++ features along the way.
 - is not made with external audience in mind.
 
-## Dependencies
+## dependencies
 
+- Clang (for the warnings)
+
+### libraries
+
+- Boost.Mp11
 - SFML 2.5.1 (graphics, window, system)
-- Boost (MP11)
+- Lua 5.4.6
+- sol 3.3.0

@@ -21,12 +21,12 @@ DISABLED_WARNINGS := \
 	shadow-field-in-constructor \
 
 CXX := clang++
-CXXFLAGS := -std=gnu++26 -g -O0 -Iinclude -MMD -MP -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
+CXXFLAGS := -std=gnu++26 -g -O0 -MMD -MP -I include -isystem lib -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
 endif
-LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system
+LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system -llua
 
 $(NAME): $(OBJ)
 	$(CXX) -o$@ $^ $(LDFLAGS) $(LDLIBS)
