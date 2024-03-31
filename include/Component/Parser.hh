@@ -8,6 +8,8 @@ class ComponentParser
 {
 public:
 
+	static void registerAll(sol::state*);
+
 	using Data = sol::basic_object<sol::basic_reference<false>>;
 	using Parser = void(*)(Template*, const Data&);
 

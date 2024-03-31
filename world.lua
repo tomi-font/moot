@@ -5,4 +5,15 @@ ground = {
 		size = {20000, 1}
 	}
 }
+
+quitControls = {
+	Input = {
+		{
+			{Event.KeyPressed(Key.Q), Event.WindowClosed},
+			exitGame
+		}
+	},
+}
+
 spawn(ground)
+spawn(quitControls)

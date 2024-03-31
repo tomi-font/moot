@@ -1,24 +1,41 @@
 #include <Factory.hh>
 #include <Component/Parser.hh>
 
-Factory::Factory() : m_lua(new sol::state)
+Factory::Factory() : m_lua(*new sol::state)
 {
-	auto& lua = *m_lua;
+	m_lua.open_libraries(sol::lib::base);
 
-	lua.open_libraries(sol::lib::base);
-
-	lua.set_function("spawn", &Factory::spawn, this);
+	registerUniversal();
 }
 
 Factory::~Factory()
 {
+	m_templates.clear();
+	// The Lua state must be the last thing to be destroyed.
+	delete &m_lua;
+}
+
+void Factory::registerUniversal()
+{
+	ComponentParser::registerAll(&m_lua);
+}
+
+void Factory::registerWorldSpecific(World* world)
+{
+	m_lua.set_function("spawn",
+		[this, world](sol::table entity)
+		{
+			spawn(world, entity);
+		}
+	);
+	m_lua.set_function("exitGame", &World::stopRunning, world);
 }
 
 void Factory::populateWorld(World* world)
 {
-	m_world = world;
+	registerWorldSpecific(world);
 
-	m_lua->script_file("world.lua");
+	m_lua.script_file("world.lua");
 }
 
 constexpr std::string_view c_uidKey = "uid";
@@ -36,7 +53,7 @@ static void createTemplate(Template& entity, sol::table& componentTable)
 	}
 }
 
-void Factory::spawn(sol::table componentTable)
+void Factory::spawn(World* world, sol::table componentTable)
 {
 	const auto uid = componentTable[c_uidKey];
 	if (!uid.valid())
@@ -47,5 +64,5 @@ void Factory::spawn(sol::table componentTable)
 		createTemplate(m_templates.emplace_back(), componentTable);
 	}
 
-	m_world->instantiate(m_templates.at(uid.get<unsigned>()));
+	world->instantiate(m_templates.at(uid.get<unsigned>()));
 }

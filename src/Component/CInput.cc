@@ -11,7 +11,8 @@ static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
 	{
 	case sf::Event::KeyPressed:
 	case sf::Event::KeyReleased:
-		size = sizeof(lhs.key);
+		static_assert(offsetof(decltype(lhs.key), code) == 0);
+		size = sizeof(lhs.key.code);
 		break;
 	case sf::Event::Closed:
 	case sf::Event::MouseMoved:

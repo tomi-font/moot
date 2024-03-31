@@ -18,8 +18,9 @@ public:
 
 private:
 
-	World m_world;
+	// Factory must be destroyed after World so that its context is valid when components containing references get destroyed.
 	Factory m_factory;
+	World m_world;
 
 	sf::RenderWindow m_window;
 };

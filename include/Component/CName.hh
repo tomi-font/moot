@@ -4,5 +4,5 @@
 
 struct CName : std::string
 {
-	CName(std::string&& name) : std::string(std::move(name)) {}
+	using std::string::basic_string;
 };

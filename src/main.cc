@@ -2,20 +2,6 @@
 #include <Game.hh>
 #include <utility/Window.hh>
 
-static Template createQuitControls()
-{
-	return Template().add(CInput({{
-		{
-			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::Q},
-			{.type = sf::Event::Closed},
-		},
-		[](const Entity& entity, const sf::Event&)
-		{
-			entity.world()->stopRunning();
-		}
-	}}));
-}
-
 static CInput::Watch moveInputWatch()
 {
 	return {
@@ -133,7 +119,6 @@ int	main()
 	
 	world.instantiate(createPlayer(window.getView().getSize()));
 	world.instantiate(createPlatformBuilder());
-	world.instantiate(createQuitControls());
 
 	game.play();
 }

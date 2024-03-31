@@ -14,11 +14,12 @@ public:
 
 private:
 
-	void spawn(sol::table);
+	void registerUniversal();
+	void registerWorldSpecific(World*);
 
-	std::unique_ptr<sol::state> m_lua;
-	
-	World* m_world;
+	void spawn(World*, sol::table);
+
+	sol::state& m_lua;
 
 	std::vector<Template> m_templates;
 };
