@@ -34,10 +34,9 @@ public:
 	}
 
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
-	constexpr bool has(ComponentComposition r) const
+	constexpr bool has(ComponentId cid) const
 	{
-		assert(r.count() == 1);
-		return m_bits & r.bits();
+		return m_bits & ComponentComposition(cid).bits();
 	}
 	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.bits()) == r.bits(); }
 	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.bits()); }

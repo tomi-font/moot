@@ -10,8 +10,7 @@ public:
 
 	static void registerAll(sol::state*);
 
-	using Data = sol::basic_object<sol::basic_reference<false>>;
-	using Parser = void(*)(Template*, const Data&);
+	using Parser = void(*)(const sol::object&, Template*);
 
 	static Parser get(const std::string_view& name) { return s_m_parsers.at(name); }
 

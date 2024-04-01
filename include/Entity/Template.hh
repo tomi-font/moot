@@ -2,19 +2,31 @@
 
 #include <Component/Composable.hh>
 #include <Component/Variant.hh>
-#include <set>
+#include <map>
 
 class Template : public ComponentComposable
 {
 public:
 
 	// Adds a (not already present) component.
-	Template& add(ComponentVariant&&);
-	template<typename C, typename...Args> Template& add(Args&&... args)
+	void add(ComponentVariant&&);
+	template<typename C, typename...Args> void add(Args&&... args)
 	{
-		m_comp += CId<C>;
-		emplace(std::in_place_type<C>, std::forward<Args>(args)...);
-		return *this;
+		add(CId<C>, std::in_place_type<C>, std::forward<Args>(args)...);
+	}
+
+	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
+	CP get()
+	{
+		using C = std::remove_pointer_t<CP>;
+		assert(has<C>());
+		return &std::get<C>(m_components.at(CId<C>));
+	}
+	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
+	const C& get() const
+	{
+		assert(has<C>());
+		return std::get<C>(m_components.at(CId<C>));
 	}
 
 	// Removes a (present) component.
@@ -22,14 +34,15 @@ public:
 
 private:
 
-	template<typename...Args> void emplace(Args&&... args)
+	template<typename...Args> void add(ComponentId cid, Args&&... args)
 	{
-		const bool added = m_components.emplace(std::forward<Args>(args)...).second;
+		m_comp += cid;
+		const bool added = m_components.try_emplace(cid, std::forward<Args>(args)...).second;
 		assert(added);
 	}
 
-	// A set allows easily inserting components in their sorting order without knowing in advance the final composition.
-	std::set<ComponentVariant> m_components;
+	// A map allows easily inserting mutable components in their sorting order without knowing in advance the final composition.
+	std::map<ComponentId, ComponentVariant> m_components;
 
 	friend class Archetype;
 };

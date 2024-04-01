@@ -7,6 +7,7 @@
 #include <System/System.hh>
 #include <deque>
 #include <memory>
+#include <set>
 #include <unordered_set>
 #include <SFML/System/Clock.hpp>
 
@@ -22,9 +23,9 @@ public:
 	void restartClock() { m_clock.restart(); }
 	void update();
 
-	void instantiate(Template&& temp) { m_entitiesToInstantiate.push_back(std::move(temp)); }
-	void instantiate(const Template& temp) { m_entitiesToInstantiate.push_back(temp); }
-	void remove(EntityContext&& entity);
+	void instantiate(const Template& temp);
+	void instantiate(const Template&, const sf::Vector2f& pos);
+	void remove(EntityContext);
 
 	void addComponentTo(EntityContext*, ComponentVariant&&);
 	void removeComponentFrom(EntityContext*, ComponentId);

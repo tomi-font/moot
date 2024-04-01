@@ -17,7 +17,7 @@ private:
 	void registerUniversal();
 	void registerWorldSpecific(World*);
 
-	void spawn(World*, sol::table);
+	const Template& getTemplate(sol::table);
 
 	sol::state& m_lua;
 

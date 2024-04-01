@@ -4,6 +4,7 @@
 
 struct CCollisionBox : FloatRect
 {
-	using FloatRect::Rect;
+	CCollisionBox() = default;
 	CCollisionBox(const Rect& rect) : Rect(rect) {}
+	CCollisionBox(const sf::Vector2f& size) : Rect({}, size) {}
 };

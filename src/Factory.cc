@@ -1,5 +1,6 @@
 #include <Factory.hh>
-#include <Component/Parser.hh>
+#include <parsing/ComponentParser.hh>
+#include <parsing/types.hh>
 
 Factory::Factory() : m_lua(*new sol::state)
 {
@@ -22,12 +23,16 @@ void Factory::registerUniversal()
 
 void Factory::registerWorldSpecific(World* world)
 {
-	m_lua.set_function("spawn",
+	m_lua.set_function("spawn", sol::overload(
 		[this, world](sol::table entity)
 		{
-			spawn(world, entity);
+			world->instantiate(getTemplate(entity));
+		},
+		[this, world](sol::table entity, sol::table pos)
+		{
+			world->instantiate(getTemplate(entity), asVector2f(pos));
 		}
-	);
+	));
 	m_lua.set_function("exitGame", &World::stopRunning, world);
 }
 
@@ -38,31 +43,33 @@ void Factory::populateWorld(World* world)
 	m_lua.script_file("world.lua");
 }
 
-constexpr std::string_view c_uidKey = "uid";
-
-static void createTemplate(Template& entity, sol::table& componentTable)
+static void parseTemplate(Template& entity, const sol::table& componentTable)
 {
 	for (const auto& [key, value] : componentTable)
 	{
-		const auto& componentName = key.as<std::string_view>();
-		if (componentName == c_uidKey)
-			continue;
-
-		auto parser = ComponentParser::get(key.as<std::string_view>());
-		parser(&entity, value);
+		ComponentParser::Parser parser = ComponentParser::get(key.as<std::string_view>());
+		parser(value, &entity);
 	}
 }
 
-void Factory::spawn(World* world, sol::table componentTable)
+const Template& Factory::getTemplate(sol::table componentTable)
 {
+	constexpr std::string_view c_uidKey = "uid";
+	unsigned index;
 	const auto uid = componentTable[c_uidKey];
 	if (!uid.valid())
 	{
-		componentTable[c_uidKey] = m_templates.size();
-		assert(uid.get<unsigned>() == m_templates.size());
+		index = static_cast<unsigned>(m_templates.size());
+		parseTemplate(m_templates.emplace_back(), componentTable);
 
-		createTemplate(m_templates.emplace_back(), componentTable);
+		componentTable[c_uidKey] = index;
+		assert(uid.get<unsigned>() == index);
 	}
-
-	world->instantiate(m_templates.at(uid.get<unsigned>()));
+	else
+	{
+		// TODO: If in Lua tables are copied after having been spawned the UID will likely also get copied.
+		index = uid.get<unsigned>();
+		assert(index < m_templates.size());
+	}
+	return m_templates[index];
 }

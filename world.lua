@@ -1,7 +1,5 @@
 ground = {
-	Position = {-10000, -1},
 	CollisionBox = {
-		pos = {-10000, -1},
 		size = {20000, 1}
 	}
 }
@@ -15,5 +13,7 @@ quitControls = {
 	},
 }
 
-spawn(ground)
+groundSize = ground.CollisionBox.size
+spawn(ground, {-groundSize[1] / 2, -groundSize[2]})
+
 spawn(quitControls)

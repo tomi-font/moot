@@ -105,11 +105,41 @@ EntityContext World::findEntity(std::string_view name)
 	return {};
 }
 
-void World::remove(EntityContext&& entity)
+static void setComponentsPosition(Template* entity, const sf::Vector2f& pos)
+{
+	if (entity->has<CCollisionBox>())
+		entity->get<CCollisionBox*>()->setPosition(pos);
+	
+	if (entity->has<CRender>())
+		entity->get<CRender*>()->setPosition(pos);
+}
+
+static void prepareForInstantiation(Template* entity)
+{
+	if (entity->has<CPosition>())
+		setComponentsPosition(entity, entity->get<CPosition>());
+	else
+		assert(entity->comp().hasNoneOf(CId<CCollisionBox> + CId<CRender> + CId<CView> + CId<CMove> + CId<CRigidbody>));
+}
+
+void World::instantiate(const Template& temp)
+{
+	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
+	prepareForInstantiation(&entity);
+}
+
+void World::instantiate(const Template& temp, const sf::Vector2f& pos)
+{
+	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
+	entity.add<CPosition>(pos);
+	prepareForInstantiation(&entity);
+}
+
+void World::remove(EntityContext entity)
 {
 	m_componentsToRemove.erase(entity);
 	m_componentsToAdd.erase(entity);
-	m_entitiesToRemove.insert(std::move(entity));
+	m_entitiesToRemove.insert(entity);
 }
 
 void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
@@ -201,6 +231,8 @@ void World::updateEntitiesComponents()
 		// And to them add the components to be added.
 		for (auto& [cid, component] : m_componentsToAdd[entity])
 			temp.add(std::move(component));
+		
+		prepareForInstantiation(&temp);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();

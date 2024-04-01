@@ -8,7 +8,7 @@ class CRender
 {
 public:
 
-	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color);
+	CRender(const sf::Vector2f& size, sf::Color color) : CRender({}, size, color) {}
 
 	auto& vertices() const { return m_vertices; }
 	sf::Vector2f getSize() const { return m_vertices[2].position - m_vertices[0].position; }
@@ -16,6 +16,8 @@ public:
 	void setPosition(const sf::Vector2f&);
 
 protected:
+
+	CRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color);
 
 	std::array<sf::Vertex, 4> m_vertices;
 

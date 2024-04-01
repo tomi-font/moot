@@ -23,21 +23,21 @@ Archetype::Archetype(ComponentComposition comp, World* world) :
 	}
 }
 
-EntityContext Archetype::instantiate(const Template& temp)
+EntityContext Archetype::instantiate(const Template& entity)
 {
-	assert(temp.comp() == m_comp);
+	assert(entity.comp() == m_comp);
 	ComponentComposition componentsLeft = m_comp;
 
 	// Instantiate a new entity by appending all of the template's components.
 	unsigned i = 0;
-	for (const ComponentVariant& component : temp.m_components)
+	for (const auto& [cid, component] : entity.m_components)
 	{
 		// Ensure that the template's components are stored in the expected order (ascending index).
-		const ComponentId cid = CVId(component);
 		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
 		componentsLeft -= cid;
 
-		variantIndexToCompileTime<ComponentVariant>(component.index(),
+		assert(cid == component.index());
+		variantIndexToCompileTime<ComponentVariant>(cid,
 			[&](auto I)
 			{
 				using C = std::variant_alternative_t<I, ComponentVariant>;

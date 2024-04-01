@@ -1,8 +1,7 @@
 #pragma once
 
 #include <utility/math.hh>
-#include <utility/Vector2.hh>
-#include <algorithm>
+#include <SFML/System/Vector2.hpp>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 struct Rect
@@ -33,6 +32,11 @@ struct Rect
 	}
 	Rect<T> operator-(const sf::Vector2<T>& move) const { return Rect(*this) -= move; }
 
+	void setPosition(const sf::Vector2<T>& pos)
+	{
+		left = pos.x;
+		bottom = pos.y;
+	}
 	void setRight(T rightCoord) { left = rightCoord - width; }
 	void setTop(T topCoord) { bottom = topCoord - height; }
 
