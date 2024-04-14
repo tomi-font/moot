@@ -2,61 +2,6 @@
 #include <Game.hh>
 #include <utility/Window.hh>
 
-static CInput::Watch moveInputWatch()
-{
-	return {
-		{
-			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::A},
-			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::D},
-			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::A},
-			{.type = sf::Event::KeyReleased, .key.code = sf::Keyboard::D},
-		},
-		[](const Entity& player, const sf::Event&)
-		{
-			player.get<CMove*>()->setMotionX(
-				sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A));
-		}
-	};
-}
-
-static CInput::Watch jumpInputWatch()
-{
-	return {
-		{
-			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::W},
-			{.type = sf::Event::KeyPressed, .key.code = sf::Keyboard::S},
-		},
-		[](const Entity& player, const sf::Event& event)
-		{
-			player.get<CRigidbody*>()->applyYForce(750 * (event.key.code == sf::Keyboard::W ? 1 : -1));
-		}
-	};
-}
-
-static CInput::Watch zoomInputWatch()
-{
-	return {
-		{ {.type = sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel } },
-		[](const Entity& entity, const sf::Event& event)
-		{
-			entity.get<CView*>()->zoom(1 - event.mouseWheelScroll.delta / 4);
-		}
-	};
-}
-
-static Template createPlayer(const sf::Vector2f& viewSize)
-{
-	sf::Vector2f size(100.f, 100.f);
-	Template temp;
-	temp.add<CRender>(size, sf::Color::White);
-	temp.add<CMove>(1000);
-	temp.add(CInput({moveInputWatch(), jumpInputWatch(), zoomInputWatch()}));
-	temp.add<CCollisionBox>(size);
-	temp.add<CRigidbody>();
-	temp.add<CView>(viewSize, FloatRect({-viewSize.x, 0}, viewSize * 2.f));
-	return temp;
-}
-
 static Template createPlatformBuilder()
 {
 	Template temp;
@@ -115,10 +60,6 @@ int	main()
 	game.create();
 
 	World& world = *game.world();
-	const sf::RenderWindow& window = *game.window();
-	const auto& viewSize = window.getView().getSize();
-	
-	world.instantiate(createPlayer(viewSize), {0, viewSize.y});
 	world.instantiate(createPlatformBuilder());
 
 	game.play();

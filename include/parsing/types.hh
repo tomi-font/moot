@@ -71,7 +71,7 @@ static inline auto asVector2f(const sol::object& var) {	return asVector2<float>(
 
 template<typename T> Rect<T> asRect(const sol::object& var)
 {
-	const auto& array = asArray<T, 4>(var);
-	return {array[0], array[1], array[2], array[3]};
+	const auto& luaArray = asLuaArray<2>(var);
+	return {asVector2<T>(luaArray[1]), asVector2<T>(luaArray[2])};
 }
 static inline auto asFloatRect(const sol::object& var) { return asRect<float>(var); }

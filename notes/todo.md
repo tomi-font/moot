@@ -15,3 +15,7 @@
 - Scale things according to real world values.
 
 - Process all the collisions in the order they happen.
+
+- Implement own Event struct for input events.
+
+- Automatic game exit on default window close.

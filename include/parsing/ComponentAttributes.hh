@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <sol/sol.hpp>
 
-class ComponentParser
+class ComponentAttributes
 {
 public:
 
@@ -12,7 +12,7 @@ public:
 
 	using Parser = void(*)(const sol::object&, Template*);
 
-	static Parser get(const std::string_view& name) { return s_m_parsers.at(name); }
+	static Parser getParser(const std::string_view& name) { return s_m_parsers.at(name); }
 
 private:
 

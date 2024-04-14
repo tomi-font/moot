@@ -9,7 +9,7 @@ struct CMove
 
 	auto& velocity() const { return m_velocity; }
 
-	void setMotionX(int direction);
+	void setXMotion(int direction);
 
 private:
 

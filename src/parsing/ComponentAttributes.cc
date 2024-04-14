@@ -1,21 +1,54 @@
-#include <parsing/ComponentParser.hh>
+#include <parsing/ComponentAttributes.hh>
 #include <Entity/Entity.hh>
 #include <parsing/types.hh>
 
-static void registerCInput(sol::state* lua)
+static void registerEvents(sol::state* lua)
 {
-	sol::table event = lua->create_table("Event");
+	// Event Type
+	auto et = lua->create_table("Event");
 
-	event["WindowClosed"] = sf::Event(sf::Event::Closed);
-	
-	event["KeyPressed"] = [](sf::Keyboard::Key keyCode)
+	et["WindowClose"] = sf::Event(sf::Event::Closed);
+	et["MouseWheelScroll"] = sf::Event{sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel};
+	et["KeyPress"] = [](sf::Keyboard::Key keyCode)
 	{
 		return sf::Event{sf::Event::KeyPressed, .key.code = keyCode};
 	};
-	lua->new_enum("Key", "Q", sf::Keyboard::Key::Q);
+	et["KeyRelease"] = [](sf::Keyboard::Key keyCode)
+	{
+		return sf::Event{sf::Event::KeyReleased, .key.code = keyCode};
+	};
+
+	lua->new_usertype<sf::Event>("sf.Event",
+		"key", &sf::Event::key,
+		"mouseWheel", &sf::Event::mouseWheelScroll);
+
+	lua->new_usertype<sf::Event::KeyEvent>("sf.Event.KeyEvent",
+		"code", &sf::Event::KeyEvent::code);
+	lua->new_usertype<sf::Event::MouseWheelScrollEvent>("sf.Event.MouseWheelScrollEvent",
+		"delta", &sf::Event::MouseWheelScrollEvent::delta);
 }
 
-void ComponentParser::registerAll(sol::state* lua)
+static void registerCInput(sol::state* lua)
+{
+	registerEvents(lua);
+
+	lua->new_enum("Key",
+		"A", sf::Keyboard::Key::A,
+		"D", sf::Keyboard::Key::D,
+		"Q", sf::Keyboard::Key::Q,
+		"S", sf::Keyboard::Key::S,
+		"W", sf::Keyboard::Key::W
+	);
+
+	// TODO: move to post-populating
+	lua->set_function("isKeyPressed",
+		[](sf::Keyboard::Key key)
+		{
+			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
+		});
+}
+
+void ComponentAttributes::registerAll(sol::state* lua)
 {
 	registerCInput(lua);
 }
@@ -29,8 +62,12 @@ template<> void parser<CPosition>(const sol::object& data, Template* entity)
 
 template<> void parser<CRender>(const sol::object& data, Template* entity)
 {
-	const auto& map = asLuaMap<1>(data);
-	entity->add<CRender>(asVector2f(map["size"]), sf::Color::Black);
+	const auto& map = asLuaMap<2>(data);
+	
+	const auto& colorComponents = asArray<sf::Uint8, 3>(map["color"]);
+	const sf::Color color = {colorComponents[0], colorComponents[1], colorComponents[2]};
+
+	entity->add<CRender>(asVector2f(map["size"]), color);
 }
 
 template<> void parser<CMove>(const sol::object& data, Template* entity)
@@ -47,7 +84,7 @@ template<> void parser<CInput>(const sol::object& data, Template* entity)
 	{
 		const auto& watch = asLuaArray<2>(value);
 
-		watches.emplace_back(asArray<sf::Event>(watch[1]), as<sol::function>(watch[2]));
+		watches.emplace_back(asArray<sf::Event>(watch[1]), as<sol::protected_function>(watch[2]));
 	}
 	entity->add<CInput>(std::move(watches));
 }
@@ -81,7 +118,7 @@ template<> void parser<CHudRender>(const sol::object& data, Template* entity)
 	entity->add<CHudRender>(asVector2f(map["pos"]), asVector2f(map["size"]), sf::Color::Black);
 }
 
-static constexpr std::initializer_list<std::pair<const std::string_view, ComponentParser::Parser>> parsers =
+static constexpr std::initializer_list<std::pair<const std::string_view, ComponentAttributes::Parser>> parsers =
 {
 	{"Position", parser<CPosition>},
 	{"Render", parser<CRender>},
@@ -94,4 +131,4 @@ static constexpr std::initializer_list<std::pair<const std::string_view, Compone
 	{"HUD", parser<CHudRender>},
 };
 static_assert(parsers.size() == std::tuple_size_v<Components>);
-const std::unordered_map<std::string_view, ComponentParser::Parser> ComponentParser::s_m_parsers = parsers;
+const std::unordered_map<std::string_view, ComponentAttributes::Parser> ComponentAttributes::s_m_parsers = parsers;
