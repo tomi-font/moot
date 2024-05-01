@@ -31,7 +31,7 @@ public:
 	void removeComponentFrom(EntityContext*, ComponentId);
 
 	// Finds an entity by its name.
-	EntityContext findEntity(std::string_view);
+	std::optional<Entity> findEntity(std::string_view);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 

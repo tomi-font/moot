@@ -95,7 +95,7 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	return arch;
 }
 
-EntityContext World::findEntity(std::string_view name)
+std::optional<Entity> World::findEntity(std::string_view name)
 {
 	for (Entity entity : m_namedEntities)
 	{

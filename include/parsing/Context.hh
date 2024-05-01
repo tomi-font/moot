@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Entity/TemplateStore.hh>
 #include <sol/forward.hpp>
 
+class TemplateStore;
 class World;
 
 class ParsingContext
@@ -12,10 +12,12 @@ public:
 	ParsingContext();
 	~ParsingContext();
 
+	void registerPrePopulating(World*, TemplateStore*);
+	void registerPostPopulating(World*);
+	
 	void process(const std::string& file);
 
-	void registerSpecific(World*, TemplateStore*);
-	void registerPostPopulating();
+	void update();
 
 private:
 

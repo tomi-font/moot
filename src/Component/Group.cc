@@ -1,7 +1,7 @@
 #include <Component/Group.hh>
 
-static_assert(sizeof(ComponentId) * 8 >= std::tuple_size_v<Components>);
-static_assert(sizeof(ComponentComposition::Bits) * 8 >= std::tuple_size_v<Components>);
+static_assert(sizeof(ComponentId) * 8 >= ComponentCount);
+static_assert(sizeof(ComponentComposition::Bits) * 8 >= ComponentCount);
 
 ComponentGroup::ComponentGroup(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden, bool initializesEntities) :
 	m_required(required),

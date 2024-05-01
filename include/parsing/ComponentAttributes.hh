@@ -10,9 +10,11 @@ public:
 
 	static void registerAll(sol::state*);
 
-	using Parser = void(*)(const sol::object&, Template*);
+	using Parser = ComponentVariant(*)(const sol::object&);
 
 	static Parser getParser(const std::string_view& name) { return s_m_parsers.at(name); }
+
+	static void parse(const std::pair<sol::object, sol::object>& component, Template*);
 
 private:
 

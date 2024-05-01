@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility/Rect.hh>
+#include <SFML/Graphics/Color.hpp>
 #include <sol/sol.hpp>
 
 template<typename T> T as(const sol::object& var)
@@ -14,17 +15,22 @@ static inline sol::table asLuaMap(const sol::object& var)
 {
 	return as<sol::table>(var);
 }
-template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
+inline std::pair<sol::table, unsigned> asLuaMapSize(const sol::object& var)
 {
 	const auto& luaMap = asLuaMap(var);
 	unsigned size = 0;
 	for (auto it = luaMap.cbegin(); it != luaMap.cend(); ++it)
 		++size;
+	return {luaMap, size};
+}
+template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
+{
+	const auto& [luaMap, size] = asLuaMapSize(var);
 	assert(size == N);
 	return luaMap;
 } 
 
-static sol::table asLuaArray(const sol::object& var)
+inline sol::table asLuaArray(const sol::object& var)
 {
 	const auto& luaArray = asLuaMap(var);
 	for (const auto& [luaIndex, value] : luaArray)
@@ -64,8 +70,13 @@ template<typename T> std::vector<T> asArray(const sol::object& var)
 
 template<typename T> sf::Vector2<T> asVector2(const sol::object& var)
 {
-	const auto& array = asArray<T, 2>(var);
-	return {array[0], array[1]};
+	if (var.get_type() == sol::type::table)
+	{
+		const auto& array = asArray<T, 2>(var);
+		return {array[0], array[1]};
+	}
+	else
+		return as<sf::Vector2<T>>(var);
 }
 static inline auto asVector2f(const sol::object& var) {	return asVector2<float>(var); }
 
@@ -75,3 +86,14 @@ template<typename T> Rect<T> asRect(const sol::object& var)
 	return {asVector2<T>(luaArray[1]), asVector2<T>(luaArray[2])};
 }
 static inline auto asFloatRect(const sol::object& var) { return asRect<float>(var); }
+
+inline sf::Color asColor(const sol::object& var)
+{
+	if (var.get_type() == sol::type::table)
+	{
+		const auto& colorComponents = asArray<decltype(sf::Color::r), 3>(var);
+		return {colorComponents[0], colorComponents[1], colorComponents[2]};
+	}
+	else
+		return as<sf::Color>(var);
+}

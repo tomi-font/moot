@@ -23,5 +23,8 @@ void Game::play()
 	m_world.restartClock();
 
 	while (m_world.isRunning())
+	{
 		m_world.update();
+		m_factory.update();
+	}
 }

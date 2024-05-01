@@ -15,12 +15,14 @@ DISABLED_WARNINGS := \
 	pre-c++14-compat \
 	pre-c++20-compat-pedantic \
 	c++98-compat \
+	c++20-compat \
 	c++20-extensions \
 	gnu-anonymous-struct \
 	nested-anon-types \
 	shadow-field-in-constructor \
 	global-constructors \
 	exit-time-destructors \
+	unsafe-buffer-usage \
 
 CXX := clang++
 CXXFLAGS := -std=gnu++26 -g -O0 -MMD -MP -I include -isystem lib -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))

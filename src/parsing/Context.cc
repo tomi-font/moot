@@ -1,8 +1,8 @@
 #include <parsing/Context.hh>
+#include <parsing/CallbackParameters.hh>
 #include <parsing/ComponentAttributes.hh>
 #include <parsing/EntityFunctions.hh>
-#include <parsing/types.hh>
-#include <World.hh>
+#include <parsing/GlobalFunctions.hh>
 
 ParsingContext::ParsingContext() : m_lua(*new sol::state)
 {
@@ -31,37 +31,9 @@ void ParsingContext::registerUniversal()
 	ComponentAttributes::registerAll(&m_lua);
 }
 
-static const Template& getTemplate(sol::table componentTable, TemplateStore* templateStore)
+void ParsingContext::registerPrePopulating(World* world, TemplateStore* templateStore)
 {
-	auto uidObj = componentTable["uid"];
-	if (uidObj.valid())
-		return templateStore->getTemplate(uidObj.get<unsigned>());
-
-	const auto [temp, uid] = templateStore->newTemplate();
-
-	for (const auto& [key, value] : componentTable)
-	{
-		auto parser = ComponentAttributes::getParser(key.as<std::string_view>());
-		parser(value, temp);
-	}
-	
-	uidObj = uid;
-	return *temp;
-}
-
-void ParsingContext::registerSpecific(World* world, TemplateStore* templateStore)
-{
-	m_lua.set_function("spawn", sol::overload(
-		[=](sol::table entity)
-		{
-			world->instantiate(getTemplate(entity, templateStore));
-		},
-		[=](sol::table entity, sol::table pos)
-		{
-			world->instantiate(getTemplate(entity, templateStore), asVector2f(pos));
-		}
-	));
-	m_lua.set_function("exitGame", &World::stopRunning, world);
+	GlobalFunctions::registerPrePopulating(&m_lua, world, templateStore);
 }
 
 void ParsingContext::process(const std::string& file)
@@ -69,7 +41,15 @@ void ParsingContext::process(const std::string& file)
 	m_lua.script_file(file);
 }
 
-void ParsingContext::registerPostPopulating()
+void ParsingContext::registerPostPopulating(World* world)
 {
+	GlobalFunctions::registerPostPopulating(&m_lua, world);
 	EntityFunctions::registerAll(&m_lua);
+	CallbackParameters::registerAll(&m_lua);
+}
+
+void ParsingContext::update()
+{
+	// Force the garbage collection between frames to make sure that Entity references do not remain.
+	m_lua.collect_garbage();
 }

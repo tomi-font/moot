@@ -46,10 +46,12 @@ public:
 
 	World* world() const { return m_arch->world(); }
 
-	template<typename C, typename...Args> void add(Args&&... args)
+	void add(ComponentVariant&& component)
 	{
-		world()->addComponentTo(this, ComponentVariant(std::in_place_type<C>, std::forward<Args>(args)...));
+		world()->addComponentTo(this, std::move(component));
 	}
-
-	template<typename C> void remove() { world()->removeComponentFrom(this, CId<C>); }
+	void remove(ComponentId cid)
+	{
+		world()->removeComponentFrom(this, cid);
+	}
 };

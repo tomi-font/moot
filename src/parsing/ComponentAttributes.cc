@@ -1,36 +1,22 @@
 #include <parsing/ComponentAttributes.hh>
 #include <Entity/Entity.hh>
+#include <parsing/ComponentNames.hh>
 #include <parsing/types.hh>
 
-static void registerEvents(sol::state* lua)
+template<typename C> static void registerAttributeValues(sol::state* lua);
+
+template<> void registerAttributeValues<CInput>(sol::state* lua)
 {
 	// Event Type
 	auto et = lua->create_table("Event");
 
 	et["WindowClose"] = sf::Event(sf::Event::Closed);
 	et["MouseWheelScroll"] = sf::Event{sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel};
-	et["KeyPress"] = [](sf::Keyboard::Key keyCode)
-	{
-		return sf::Event{sf::Event::KeyPressed, .key.code = keyCode};
-	};
-	et["KeyRelease"] = [](sf::Keyboard::Key keyCode)
-	{
-		return sf::Event{sf::Event::KeyReleased, .key.code = keyCode};
-	};
-
-	lua->new_usertype<sf::Event>("sf.Event",
-		"key", &sf::Event::key,
-		"mouseWheel", &sf::Event::mouseWheelScroll);
-
-	lua->new_usertype<sf::Event::KeyEvent>("sf.Event.KeyEvent",
-		"code", &sf::Event::KeyEvent::code);
-	lua->new_usertype<sf::Event::MouseWheelScrollEvent>("sf.Event.MouseWheelScrollEvent",
-		"delta", &sf::Event::MouseWheelScrollEvent::delta);
-}
-
-static void registerCInput(sol::state* lua)
-{
-	registerEvents(lua);
+	et["MouseMove"] = sf::Event(sf::Event::MouseMoved);
+	et["KeyPress"] = [](sf::Keyboard::Key keyCode) { return sf::Event{sf::Event::KeyPressed, .key.code = keyCode}; };
+	et["KeyRelease"] = [](sf::Keyboard::Key keyCode) { return sf::Event{sf::Event::KeyReleased, .key.code = keyCode}; };
+	et["MouseButtonPress"] = [](sf::Mouse::Button button) { return sf::Event{sf::Event::MouseButtonPressed, .mouseButton.button = button}; };
+	et["MouseButtonRelease"] = [](sf::Mouse::Button button) { return sf::Event{sf::Event::MouseButtonReleased, .mouseButton.button = button}; };
 
 	lua->new_enum("Key",
 		"A", sf::Keyboard::Key::A,
@@ -39,44 +25,44 @@ static void registerCInput(sol::state* lua)
 		"S", sf::Keyboard::Key::S,
 		"W", sf::Keyboard::Key::W
 	);
+	lua->new_enum("MouseButton",
+		"Left", sf::Mouse::Button::Left
+	);
+}
 
-	// TODO: move to post-populating
-	lua->set_function("isKeyPressed",
-		[](sf::Keyboard::Key key)
-		{
-			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
-		});
+template<> void registerAttributeValues<sf::Color>(sol::state* lua)
+{
+	auto colors = lua->create_table("Color");
+	
+	colors["Black"] = sf::Color::Black;
 }
 
 void ComponentAttributes::registerAll(sol::state* lua)
 {
-	registerCInput(lua);
+	registerAttributeValues<CInput>(lua);
+	registerAttributeValues<sf::Color>(lua);
 }
 
-template<typename T> static void parser(const sol::object&, Template*);
+template<typename C> static ComponentVariant parser(const sol::object&);
 
-template<> void parser<CPosition>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CPosition>(const sol::object& data)
 {
-	entity->add<CPosition>(asVector2f(data));
+	return CPosition(asVector2f(data));
 }
 
-template<> void parser<CRender>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CRender>(const sol::object& data)
 {
 	const auto& map = asLuaMap<2>(data);
-	
-	const auto& colorComponents = asArray<sf::Uint8, 3>(map["color"]);
-	const sf::Color color = {colorComponents[0], colorComponents[1], colorComponents[2]};
-
-	entity->add<CRender>(asVector2f(map["size"]), color);
+	return CRender(asVector2f(map["size"]), asColor(map["color"]));
 }
 
-template<> void parser<CMove>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CMove>(const sol::object& data)
 {
 	const auto& map = asLuaMap<1>(data);
-	entity->add<CMove>(as<unsigned>(map["speed"]));
+	return CMove(as<unsigned short>(map["speed"]));
 }
 
-template<> void parser<CInput>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CInput>(const sol::object& data)
 {
 	std::vector<CInput::Watch> watches;
 
@@ -86,49 +72,61 @@ template<> void parser<CInput>(const sol::object& data, Template* entity)
 
 		watches.emplace_back(asArray<sf::Event>(watch[1]), as<sol::protected_function>(watch[2]));
 	}
-	entity->add<CInput>(std::move(watches));
+	return CInput(std::move(watches));
 }
 
-template<> void parser<CCollisionBox>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CCollisionBox>(const sol::object& data)
 {
 	const auto& map = asLuaMap<1>(data);
-	entity->add<CCollisionBox>(asVector2f(map["size"]));
+	return CCollisionBox(asVector2f(map["size"]));
 }
 
-template<> void parser<CRigidbody>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CRigidbody>(const sol::object& data)
 {
 	asLuaMap<0>(data);
-	entity->add<CRigidbody>();
+	return CRigidbody();
 }
 
-template<> void parser<CView>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CView>(const sol::object& data)
 {
 	const auto& map = asLuaMap<2>(data);
-	entity->add<CView>(asVector2f(map["size"]), asFloatRect(map["limits"]));
+	return CView(asVector2f(map["size"]), asFloatRect(map["limits"]));
 }
 
-template<> void parser<CName>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CName>(const sol::object& data)
 {
-	entity->add<CName>(as<std::string_view>(data));
+	return CName(as<std::string_view>(data));
 }
 
-template<> void parser<CHudRender>(const sol::object& data, Template* entity)
+template<> ComponentVariant parser<CHudRender>(const sol::object& data)
 {
-	const auto& map = asLuaMap<2>(data);
-	entity->add<CHudRender>(asVector2f(map["pos"]), asVector2f(map["size"]), sf::Color::Black);
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& sizeObj = map["size"];
+	assert(mapSize == 2 + sizeObj.valid());
+	const auto size = sizeObj.valid() ? asVector2f(map["size"]) : sf::Vector2f();
+	return CHudRender(asVector2f(map["pos"]), size, asColor(map["color"]));
 }
 
-static constexpr std::initializer_list<std::pair<const std::string_view, ComponentAttributes::Parser>> parsers =
+using ParserPair = std::pair<const std::string_view, ComponentAttributes::Parser>;
+
+template<typename C> static constexpr ParserPair parserPair = {ComponentName<C>, parser<C>};
+static constexpr std::initializer_list<ParserPair> parserPairs =
 {
-	{"Position", parser<CPosition>},
-	{"Render", parser<CRender>},
-	{"Move", parser<CMove>},
-	{"Input", parser<CInput>},
-	{"CollisionBox", parser<CCollisionBox>},
-	{"Rigidbody", parser<CRigidbody>},
-	{"View", parser<CView>},
-	{"Name", parser<CName>},
-	{"HUD", parser<CHudRender>},
+	parserPair<CPosition>,
+	parserPair<CRender>,
+	parserPair<CMove>,
+	parserPair<CInput>,
+	parserPair<CCollisionBox>,
+	parserPair<CRigidbody>,
+	parserPair<CView>,
+	parserPair<CName>,
+	parserPair<CHudRender>,
 };
-static_assert(parsers.size() == std::tuple_size_v<Components>);
-const std::unordered_map<std::string_view, ComponentAttributes::Parser> ComponentAttributes::s_m_parsers = parsers;
+static_assert(parserPairs.size() == ComponentCount);
+decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers = parserPairs;
+
+void ComponentAttributes::parse(const std::pair<sol::object, sol::object>& component, Template* temp)
+{
+	const Parser parser = getParser(as<std::string_view>(component.first));
+	temp->add(parser(component.second));
+}

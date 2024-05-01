@@ -8,9 +8,9 @@ EntityFactory::~EntityFactory()
 
 void EntityFactory::populateWorld(World* world)
 {
-	m_context.registerSpecific(world, this);
+	m_context.registerPrePopulating(world, this);
 
 	m_context.process("world.lua");
 
-	m_context.registerPostPopulating();
+	m_context.registerPostPopulating(world);
 }

@@ -11,6 +11,8 @@ public:
 
 	void populateWorld(World*);
 
+	void update() { m_context.update(); }
+
 private:
 
 	ParsingContext m_context;
