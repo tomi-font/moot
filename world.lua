@@ -1,12 +1,12 @@
-ground = {
+local ground = {
 	CollisionBox = {
 		size = {20000, 1}
 	}
 }
-groundSize = ground.CollisionBox.size
+local groundSize = ground.CollisionBox.size
 spawn(ground, {-groundSize[1] / 2, -groundSize[2]})
 
-quitControls = {
+local quitControls = {
 	Input = {
 		{
 			{Event.KeyPress(Key.Q), Event.WindowClose},
@@ -16,7 +16,7 @@ quitControls = {
 }
 spawn(quitControls)
 
-player = {
+local player = {
 	Position = {0, 900},
 	Render = {
 		size = {100, 100},
@@ -59,7 +59,7 @@ player = {
 }
 spawn(player)
 
-platformBuilder = {
+local platformBuilder = {
 	Input = {
 		{
 			{Event.MouseButtonPress(MouseButton.Left)},

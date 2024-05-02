@@ -5,11 +5,13 @@
 #include <parsing/types.hh>
 #include <utility/Window.hh>
 
-static const Template& getTemplate(sol::table componentTable, TemplateStore* templateStore)
+static constexpr std::string_view c_templateUidKey = "uid";
+
+static const Template& findOrMakeTemplate(sol::table componentTable, TemplateStore* templateStore, const sol::table& templateMetatable)
 {
-	auto uidObj = componentTable["uid"];
+	auto uidObj = componentTable[c_templateUidKey];
 	if (uidObj.valid())
-		return templateStore->getTemplate(uidObj.get<unsigned>());
+		return templateStore->getTemplate(as<TemplateUid>(uidObj));
 
 	const auto [temp, uid] = templateStore->newTemplate();
 
@@ -17,21 +19,34 @@ static const Template& getTemplate(sol::table componentTable, TemplateStore* tem
 		ComponentAttributes::parse(component, temp);
 
 	uidObj = uid;
+	componentTable[sol::metatable_key] = templateMetatable;
+
 	return *temp;
 }
 
 void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, TemplateStore* templateStore)
 {
+	const sol::table templateMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
+		[templateStore](const sol::table& temp)
+		{
+			templateStore->deleteTemplate(as<TemplateUid>(temp[c_templateUidKey]));
+		});
+	const auto getTemplate =
+		[=](sol::table componentTable)
+		{
+			return findOrMakeTemplate(componentTable, templateStore, templateMetatable);
+		};
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table entity)
 		{
-			world->instantiate(getTemplate(entity, templateStore));
+			world->instantiate(getTemplate(entity));
 		},
 		[=](sol::table entity, sol::table pos)
 		{
-			world->instantiate(getTemplate(entity, templateStore), asVector2f(pos));
+			world->instantiate(getTemplate(entity), asVector2f(pos));
 		}
 	));
+
 	lua->set_function("exitGame", &World::stopRunning, world);
 }
 

@@ -1,12 +1,18 @@
 #include <Entity/TemplateStore.hh>
 
-std::pair<Template*, unsigned> TemplateStore::newTemplate()
+std::pair<Template*, TemplateUid> TemplateStore::newTemplate()
 {
-	const auto index = m_templates.size();
-	return { &m_templates.emplace_back(), index };
+	const TemplateUid uid = m_nextUid++;
+	return { &m_templates[uid], uid };
 }
 
-const Template& TemplateStore::getTemplate(unsigned uid) const
+const Template& TemplateStore::getTemplate(TemplateUid uid) const noexcept
 {
-	return m_templates[uid];
+	return m_templates.at(uid);
+}
+
+void TemplateStore::deleteTemplate(TemplateUid uid)
+{
+	const bool erased = m_templates.erase(uid);
+	assert(erased);
 }

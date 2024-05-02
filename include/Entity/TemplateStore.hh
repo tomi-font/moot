@@ -2,14 +2,20 @@
 
 #include <Entity/Template.hh>
 
+using TemplateUid = unsigned;
+
 class TemplateStore
 {
 public:
 
-	std::pair<Template*, unsigned> newTemplate();
-	const Template& getTemplate(unsigned uid) const;
+	std::pair<Template*, TemplateUid> newTemplate();
+
+	const Template& getTemplate(TemplateUid) const noexcept;
+
+	void deleteTemplate(TemplateUid);
 
 protected:
 
-	std::vector<Template> m_templates;
+	std::unordered_map<TemplateUid, Template> m_templates;
+	TemplateUid m_nextUid = 0;
 };
