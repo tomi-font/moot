@@ -33,6 +33,12 @@ static void registerComponents(sol::state* lua, sol::usertype<Entity>& et)
 	view["zoom"] = &CView::zoom;
 }
 
+struct TypeSafeComponentId
+{
+	std::underlying_type_t<ComponentId> value;
+	operator ComponentId() const { return static_cast<ComponentId>(value); }
+};
+
 void EntityFunctions::registerAll(sol::state* lua)
 {
 	// Entity Type
@@ -45,13 +51,13 @@ void EntityFunctions::registerAll(sol::state* lua)
 
 	for (const auto i : std::views::iota(0u, ComponentCount))
 	{
-		const auto cid = ComponentId(i);
+		const auto cid = TypeSafeComponentId(i);
 		ct[ComponentNames::get(cid)] = cid;
 	}
 
-	et["has"] = static_cast<bool(ComponentComposable::*)(ComponentId) const>(&Entity::has);
+	et["has"] = [](Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); };
 
-	et["add"] = [](Entity& entity, ComponentId cid, const sol::object& data)
+	et["add"] = [](Entity& entity, TypeSafeComponentId cid, const sol::object& data)
 	{
 		assert(cid < ComponentCount);
 		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cid));
@@ -59,5 +65,5 @@ void EntityFunctions::registerAll(sol::state* lua)
 		entity.add(parser(data));
 	};
 
-	et["remove"] = &Entity::remove;
+	et["remove"] = [](Entity& entity, TypeSafeComponentId cid) { entity.remove(cid); };
 }
