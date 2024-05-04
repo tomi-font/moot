@@ -58,9 +58,7 @@ void SRender::update(float) const
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 
-	const auto& cViews = m_groups[G::View].getAll<CView>();
-	assert(cViews.begin() != cViews.end());
-	for (CView& cView: cViews)
+	for (CView& cView: m_groups[G::View].getAll<CView>())
 	{
 		if (cView.hasChanged())
 			cView.update(m_window);

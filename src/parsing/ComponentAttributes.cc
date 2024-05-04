@@ -103,7 +103,7 @@ template<> ComponentVariant parser<CHudRender>(const sol::object& data)
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
 	assert(mapSize == 2 + sizeObj.valid());
-	const auto size = sizeObj.valid() ? asVector2f(map["size"]) : sf::Vector2f();
+	const auto size = sizeObj.valid() ? asVector2f(sizeObj) : sf::Vector2f();
 	return CHudRender(asVector2f(map["pos"]), size, asColor(map["color"]));
 }
 
@@ -122,11 +122,5 @@ static constexpr std::initializer_list<ParserPair> parserPairs =
 	parserPair<CName>,
 	parserPair<CHudRender>,
 };
-static_assert(parserPairs.size() == ComponentCount);
+static_assert(parserPairs.size() == ComponentCount - 1); // CCallback is not parsed here.
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers = parserPairs;
-
-void ComponentAttributes::parse(const std::pair<sol::object, sol::object>& component, Template* temp)
-{
-	const Parser parser = getParser(as<std::string_view>(component.first));
-	temp->add(parser(component.second));
-}

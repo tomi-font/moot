@@ -31,6 +31,12 @@ void World::updateEntities()
 	}
 	m_entitiesToRemove.clear();
 
+	// References to entities cannot be stored between frames.
+	// This is the moment there must not be any reference left because they are invalidated by removal and instantiation of entities.
+	assert(EntityContext::instanceCount() == 0);
+
+	std::unordered_set<Entity> instantiatedEntities;
+
 	for (const Template& temp : m_entitiesToInstantiate)
 	{
 		const ComponentComposition comp = temp.comp();
@@ -41,8 +47,20 @@ void World::updateEntities()
 			if (system->initializes(comp))
 				system->initialize(entity);
 		}
+		instantiatedEntities.insert(entity);
 	}
 	m_entitiesToInstantiate.clear();
+
+	for (const Entity& entity : instantiatedEntities)
+	{
+		if (CCallback* cCallback = entity.getOrNull<CCallback*>())
+		{
+			if (const auto& callback = cCallback->extract(CCallback::OnSpawn))
+			{
+				callback(entity);
+			}
+		}
+	}
 }
 
 void World::update()
@@ -55,9 +73,6 @@ void World::update()
 
 	// Then remove and instantiate the entities that are waiting for that.
 	updateEntities();
-
-	// References to entities cannot be stored between frames.
-	assert(EntityContext::instanceCount() == 0);
 
 	for (const auto& system : m_systems)
 	{

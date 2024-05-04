@@ -1,7 +1,7 @@
 #include <parsing/GlobalFunctions.hh>
 #include <Entity/Entity.hh>
 #include <Entity/TemplateStore.hh>
-#include <parsing/ComponentAttributes.hh>
+#include <parsing/TemplateAttributes.hh>
 #include <parsing/types.hh>
 #include <utility/Window.hh>
 
@@ -16,7 +16,7 @@ static const Template& findOrMakeTemplate(sol::table componentTable, TemplateSto
 	const auto [temp, uid] = templateStore->newTemplate();
 
 	for (const auto& component : componentTable)
-		ComponentAttributes::parse(component, temp);
+		TemplateAttributes::parse(component, temp);
 
 	uidObj = uid;
 	componentTable[sol::metatable_key] = templateMetatable;

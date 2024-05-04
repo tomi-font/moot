@@ -3,5 +3,5 @@
 
 ComponentNames::ComponentNames()
 {
-	static_assert(!hasDefaultInitializedElement(s_m_names));
+	static_assert(!hasDefaultInitializedElement(s_m_names, {CId<CCallback>}));
 }

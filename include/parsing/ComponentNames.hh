@@ -1,13 +1,22 @@
 #pragma once
 
+#include <utility/value.hh>
 #include <Component/Types.hh>
 
 class ComponentNames
 {
 public:
 
-	template<typename C> static consteval auto& get() { return s_m_names[CId<C>]; }
-	static constexpr auto& get(ComponentId cid) { return s_m_names[cid]; }
+	static constexpr auto& get(ComponentId cid)
+	{
+		const auto& value = s_m_names[cid];
+		assert(!isDefaultInitialized(value));
+		return value;
+	}
+	template<typename C> static consteval auto& get()
+	{
+		return get(CId<C>);
+	}
 
 private:
 
@@ -21,7 +30,7 @@ private:
 		[CId<CRigidbody>] = "Rigidbody",
 		[CId<CView>] = "View",
 		[CId<CName>] = "Name",
-		[CId<CHudRender>] = "HUD"
+		[CId<CHudRender>] = "HUD",
 	};
 	ComponentNames();
 };

@@ -10,9 +10,9 @@ public:
 
 	// Adds a (not already present) component.
 	void add(ComponentVariant&&);
-	template<typename C, typename...Args> void add(Args&&... args)
+	template<typename C, typename...Args> C* add(Args&&... args)
 	{
-		add(CId<C>, std::in_place_type<C>, std::forward<Args>(args)...);
+		return &std::get<C>(add(CId<C>, std::in_place_type<C>, std::forward<Args>(args)...));
 	}
 
 	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
@@ -34,11 +34,12 @@ public:
 
 private:
 
-	template<typename...Args> void add(ComponentId cid, Args&&... args)
+	template<typename...Args> ComponentVariant& add(ComponentId cid, Args&&... args)
 	{
 		m_comp += cid;
-		const bool added = m_components.try_emplace(cid, std::forward<Args>(args)...).second;
-		assert(added);
+		const auto& insertion = m_components.try_emplace(cid, std::forward<Args>(args)...);
+		assert(insertion.second);
+		return insertion.first->second;
 	}
 
 	// A map allows easily inserting mutable components in their sorting order without knowing in advance the final composition.

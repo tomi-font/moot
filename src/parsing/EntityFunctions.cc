@@ -54,7 +54,8 @@ void EntityFunctions::registerAll(sol::state* lua)
 	et["add"] = [](Entity& entity, ComponentId cid, const sol::object& data)
 	{
 		assert(cid < ComponentCount);
-		const auto parser = ComponentAttributes::getParser(ComponentNames::get(cid));
+		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cid));
+		assert(parser);
 		entity.add(parser(data));
 	};
 

@@ -12,9 +12,7 @@ public:
 
 	using Parser = ComponentVariant(*)(const sol::object&);
 
-	static Parser getParser(const std::string_view& name) { return s_m_parsers.at(name); }
-
-	static void parse(const std::pair<sol::object, sol::object>& component, Template*);
+	static Parser findParser(const std::string_view& name) { return s_m_parsers.contains(name) ? s_m_parsers.at(name) : nullptr; }
 
 private:
 

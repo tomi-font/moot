@@ -1,13 +1,22 @@
 #pragma once
 
+#include <utility/value.hh>
 #include <ranges>
 
-template<typename T, auto N> consteval bool hasDefaultInitializedElement(T (&array)[N])
+template<unsigned N> consteval bool hasDefaultInitializedElement(auto (&array)[N], std::initializer_list<unsigned> exceptions = {})
 {
-	for (auto i : std::views::iota(0u, N))
+	for (unsigned i : std::views::iota(0u, N))
 	{
-		if (array[i] == T())
-			return true;
+		if (isDefaultInitialized(array[i]))
+		{
+			for (auto exceptionIt = exceptions.begin();; ++exceptionIt)
+			{
+				if (exceptionIt == exceptions.end())
+					return true;
+				else if (*exceptionIt == i)
+					break;
+			}
+		}
 	}
 	return false;
 }

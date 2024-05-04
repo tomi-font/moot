@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Component/Composition.hh>
+#include <Component/CCallback.hh>
 #include <Component/CCollisionBox.hh>
 #include <Component/CInput.hh>
 #include <Component/CMove.hh>
@@ -21,7 +22,8 @@ using Components = std::tuple<
 	CRigidbody,
 	CView,
 	CName,
-	CHudRender>;
+	CHudRender,
+	CCallback>;
 
 // Gets a component's ID by using its class as the template.
 template<typename T> static constexpr ComponentComposition CId = static_cast<ComponentId>(tupleIndex<T, Components>::value);
