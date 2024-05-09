@@ -7,11 +7,14 @@ class ComponentNames
 {
 public:
 
+	static constexpr bool exists(ComponentId cid)
+	{
+		return !isDefaultInitialized(s_m_names[cid]);
+	}
 	static constexpr auto& get(ComponentId cid)
 	{
-		const auto& value = s_m_names[cid];
-		assert(!isDefaultInitialized(value));
-		return value;
+		assert(exists(cid));
+		return s_m_names[cid];
 	}
 	template<typename C> static consteval auto& get()
 	{

@@ -39,20 +39,20 @@ local player = {
 			 Event.KeyRelease(Key.D), Event.KeyRelease(Key.A)},
 			function(this)
 				move = isKeyPressed(Key.D) - isKeyPressed(Key.A)
-				this.move:setXMotion(move)
+				this:get(Component.Move):setXMotion(move)
 			end
 		},
 		{
 			{Event.KeyPress(Key.W), Event.KeyPress(Key.S)},
 			function(this, event)
 				dir = (event.key.code == Key.W) and 1 or -1
-				this.rigidbody:applyYForce(dir * 750)
+				this:get(Component.Rigidbody):applyYForce(dir * 750)
 			end
 		},
 		{
 			{Event.MouseWheelScroll},
 			function(this, event)
-				this.view:zoom(1 - event.mouseWheel.delta / 4)
+				this:get(Component.View):zoom(1 - event.mouseWheel.delta / 4)
 			end
 		}
 	}
@@ -84,7 +84,7 @@ local platformBuilder = {
 				if not platform then
 					return
 				end
-				local hud = platform.hud
+				local hud = platform:get(Component.HUD)
 				hud:resize(mapPixelToHud(event.mousePos) - hud.pos)
 			end
 		},
@@ -96,7 +96,7 @@ local platformBuilder = {
 					return
 				end
 
-				local pos = mapHudToWorld(platform.hud.pos)
+				local pos = mapHudToWorld(platform:get(Component.HUD).pos)
 				local size = mapPixelToWorld(event.mouseButton) - pos
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })

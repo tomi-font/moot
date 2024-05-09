@@ -2,36 +2,13 @@
 #include <Entity/Entity.hh>
 #include <parsing/ComponentAttributes.hh>
 #include <parsing/ComponentNames.hh>
+#include <parsing/types.hh>
+#include <utility/variant/indexToCompileTime.hh>
+#include <utility/variant/toPointerVariant.hh>
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
 
-template<typename C> static sol::usertype<C> registerComponent(sol::usertype<Entity>& et, sol::table& ct)
-{
-	constexpr auto& componentName = ComponentName<C>;
-
-	et[boost::algorithm::to_lower_copy(componentName)] = sol::property(&Entity::get<C*>);
-
-	return ct.new_usertype<C>(componentName);
-}
-
-static void registerComponents(sol::state* lua, sol::usertype<Entity>& et)
-{
-	// Component Type
-	auto ct = lua->create_table("CT");
-
-	auto hudRender = registerComponent<CHudRender>(et, ct);
-	hudRender["resize"] = &CHudRender::resize;
-	hudRender["pos"] = sol::property(&CHudRender::position);
-
-	auto move = registerComponent<CMove>(et, ct);
-	move["setXMotion"] = &CMove::setXMotion;
-
-	auto rigidbody = registerComponent<CRigidbody>(et, ct);
-	rigidbody["applyYForce"] = &CRigidbody::applyYForce;
-
-	auto view = registerComponent<CView>(et, ct);
-	view["zoom"] = &CView::zoom;
-}
+using ComponentPointerVariant = variantToPointerVariant<ComponentVariant>::type;
 
 struct TypeSafeComponentId
 {
@@ -39,23 +16,68 @@ struct TypeSafeComponentId
 	operator ComponentId() const { return static_cast<ComponentId>(value); }
 };
 
-void EntityFunctions::registerAll(sol::state* lua)
+static void registerComponentIds(sol::state* lua)
 {
-	// Entity Type
-	auto et = lua->new_usertype<Entity>("Entity");
-
-	registerComponents(lua, et);
-
-	// Component Table
-	auto ct = lua->create_table("Component");
+	auto componentTable = lua->create_table("Component");
 
 	for (const auto i : std::views::iota(0u, ComponentCount))
 	{
 		const auto cid = TypeSafeComponentId(i);
-		ct[ComponentNames::get(cid)] = cid;
+		if (ComponentNames::exists(cid))
+			componentTable[ComponentNames::get(cid)] = cid;
 	}
+}
 
-	et["has"] = [](Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); };
+template<typename C> static sol::usertype<C> registerComponent(sol::table& ct)
+{
+	return ct.new_usertype<C>(ComponentName<C>);
+}
+
+static void registerComponentTypes(sol::state* lua)
+{
+	// Component Type
+	auto ct = lua->create_table("CT");
+
+	auto hudRender = registerComponent<CHudRender>(ct);
+	hudRender["resize"] = &CHudRender::resize;
+	hudRender["pos"] = sol::property(&CHudRender::position);
+
+	auto move = registerComponent<CMove>(ct);
+	move["setXMotion"] = &CMove::setXMotion;
+
+	auto rigidbody = registerComponent<CRigidbody>(ct);
+	rigidbody["applyYForce"] = &CRigidbody::applyYForce;
+
+	auto view = registerComponent<CView>(ct);
+	view["zoom"] = &CView::zoom;
+
+	auto pos = registerComponent<CPosition>(ct);
+}
+
+void EntityFunctions::registerAll(sol::state* lua)
+{
+	registerComponentIds(lua);
+	registerComponentTypes(lua);
+
+	// Entity Type
+	auto et = lua->new_usertype<Entity>("ET");
+
+	et["has"] = [](const Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); };
+
+	et["get"] = [](const Entity& entity, TypeSafeComponentId cid, sol::this_state solState)
+	{
+		return variantIndexToCompileTime<ComponentPointerVariant>(cid,
+			[luaState = solState.lua_state(), entity](auto I)
+			{
+				using CP = std::variant_alternative_t<I, ComponentPointerVariant>;
+				CP const componentPtr = entity.get<CP>();
+				
+				if constexpr (I == CId<CPosition>)
+					return sol::make_object<sf::Vector2f*>(luaState, componentPtr);
+				else
+					return sol::make_object<CP>(luaState, componentPtr);
+			});
+	};
 
 	et["add"] = [](Entity& entity, TypeSafeComponentId cid, const sol::object& data)
 	{
