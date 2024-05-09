@@ -3,7 +3,6 @@
 #include <Entity/TemplateStore.hh>
 #include <parsing/TemplateAttributes.hh>
 #include <parsing/types.hh>
-#include <utility/Window.hh>
 
 static constexpr std::string_view c_templateUidKey = "uid";
 
@@ -52,16 +51,24 @@ void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, Templ
 
 void GlobalFunctions::registerPostPopulating(sol::state* lua, World* world)
 {
+	Window* const window = world->window();
+
 	lua->set_function("findEntity", &World::findEntity, world);
 	lua->set_function("isKeyPressed",
 		[](sf::Keyboard::Key key)
 		{
 			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
 		});
-	lua->set_function("mapHudToWorld", &Window::mapHudToWorld<sf::Vector2f>);
+	lua->set_function("mapHudToWorld", &Window::mapHudToWorld<sf::Vector2f>, window);
 	lua->set_function("mapPixelToHud", sol::overload(
-		&Window::mapPixelToHud<sf::Event::MouseButtonEvent>,
-		&Window::mapPixelToHud<sf::Event::MouseMoveEvent>
+		[window](const sf::Event::MouseButtonEvent& mouseButton)
+		{
+			return window->mapPixelToHud(mouseButton);
+		},
+		[window](const sf::Event::MouseMoveEvent& mouseMove)
+		{
+			return window->mapPixelToHud(mouseMove);
+		}
 	));
-	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld<sf::Event::MouseButtonEvent>);
+	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld<sf::Event::MouseButtonEvent>, window);
 }

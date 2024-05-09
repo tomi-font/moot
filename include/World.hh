@@ -5,22 +5,21 @@
 #include <Entity/Template.hh>
 #include <Event/Manager.hh>
 #include <System/System.hh>
+#include <Window.hh>
 #include <deque>
 #include <memory>
 #include <set>
 #include <unordered_set>
-#include <SFML/System/Clock.hpp>
 
 class World
 {
 public:
 
-	World(sf::RenderWindow*);
+	World(Window*);
 
 	bool isRunning() const { return m_running; }
 	void stopRunning() { m_running = false; }
 
-	void restartClock() { m_clock.restart(); }
 	void update();
 
 	void instantiate(const Template& temp);
@@ -35,6 +34,10 @@ public:
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
+	auto* window() const { return m_window; }
+
+	void restartClock() { m_clock.restart(); }
+
 private:
 
 	void updateEntitiesComponents();
@@ -46,9 +49,6 @@ private:
 	// Existing archetypes, where all the entities' components are.
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
 	std::deque<Archetype> m_archs;
-
-	// Measures the time elapsed between updates.
-	sf::Clock m_clock;
 
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
@@ -63,6 +63,12 @@ private:
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 
 	ComponentGroup m_namedEntities;
+
+	// The window this world is bound to.
+	Window* const m_window;
+
+	// Measures the time elapsed between updates.
+	sf::Clock m_clock;
 
 	bool m_running;
 };

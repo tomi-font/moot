@@ -1,14 +1,15 @@
 #include <System/System.hh>
-#include <utility/Window.hh>
-#include <cassert>
+#include <Entity/Entity.hh>
 
-System::System() : m_window(Window::window)
-{
-	assert(m_window);
-}
 
 System::~System()
 {
+}
+
+void System::setWindow(Window* window)
+{
+	assert(!m_window && window);
+	m_window = window;
 }
 
 void System::match(Archetype* arch)
