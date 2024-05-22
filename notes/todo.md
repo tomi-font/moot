@@ -8,7 +8,7 @@
 
 - Switch to using C++ modules.
 
-- Review how the ComponentGroups are created.
+- Review how the ComponentGroups are created/referred to.
 
 - Implement world properties.
 

@@ -16,13 +16,13 @@ SPhysics::SPhysics()
 {
 	m_groups.resize(G::COUNT);
 	m_groups[G::Dynamic] = { {CId<CMove>, CId<CRigidbody>}, {}, false };
-	m_groups[G::Collidable] = { CId<CCollisionBox> };
+	m_groups[G::Collidable] = { CId<CCollisionBox>, {}, true };
 }
 
-void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& pos) const
+void SPhysics::processInstantiatedEntity(const Entity& entity, unsigned groupNum) const
 {
-	*entity.get<CPosition*>() = pos;
-	broadcast({Event::EntityMoved, entity});
+	assert(groupNum == G::Collidable);
+	entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
 }
 
 static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
@@ -272,4 +272,10 @@ void SPhysics::update(float elapsedTime) const
 		}
 		// TODO: else assert
 	}
+}
+
+void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& pos) const
+{
+	*entity.get<CPosition*>() = pos;
+	broadcast({Event::EntityMoved, entity});
 }

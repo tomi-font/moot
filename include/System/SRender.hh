@@ -9,9 +9,11 @@ public:
 
 	SRender();
 
+private:
+
 	void listenToEvents() override;
 	void triggered(const Event&) override;
 
-	void initialize(const Entity&) const override;
+	void processInstantiatedEntity(const Entity&, unsigned) const override;
 	void update(float elapsedTime) const override;
 };

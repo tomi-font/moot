@@ -17,9 +17,8 @@ public:
 	// Appends the archetype to matching component groups.
 	void match(Archetype*);
 
-	bool initializes(ComponentComposition);
+	void processInstantiatedEntity(const Entity&) const;
 
-	virtual void initialize(const Entity&) const;
 	virtual void update(float elapsedTime) const = 0;
 
 protected:
@@ -28,4 +27,8 @@ protected:
 	std::vector<ComponentGroup>	m_groups;
 
 	Window* m_window;
+
+private:
+
+	virtual void processInstantiatedEntity(const Entity&, unsigned) const;
 };

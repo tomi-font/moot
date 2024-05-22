@@ -15,7 +15,7 @@ SRender::SRender()
 {
 	m_groups.resize(G::COUNT);
 	m_groups[G::View] = { CId<CView>, {}, true };
-	m_groups[G::WorldRendered] = { CId<CRender> };
+	m_groups[G::WorldRendered] = { CId<CRender>, {}, true };
 	m_groups[G::HudRendered] = { CId<CHudRender> };
 }
 
@@ -24,7 +24,7 @@ void SRender::listenToEvents()
 	listen(Event::EntityMoved);
 }
 
-static void updateViewCenter(const Entity& entity)
+static void updateViewPosition(const Entity& entity)
 {
 	sf::Vector2f pos = entity.get<CPosition>();
 
@@ -33,8 +33,13 @@ static void updateViewCenter(const Entity& entity)
 		// Center the view on the entity's visible center.
 		pos += entity.get<CRender>().getSize() / 2.f;
 	}
-	
+
 	entity.get<CView*>()->setCenter(pos);
+}
+
+static void updateRenderPosition(const Entity& entity)
+{
+	entity.get<CRender*>()->setPosition(entity.get<CPosition>());
 }
 
 void SRender::triggered(const Event& event)
@@ -42,16 +47,24 @@ void SRender::triggered(const Event& event)
 	assert(event.type == Event::EntityMoved);
 	const Entity entity = event.entity;
 
-	if (entity.has<CRender>())
-		entity.get<CRender*>()->setPosition(entity.get<CPosition>());
-
 	if (entity.has<CView>())
-		updateViewCenter(entity);
+		updateViewPosition(entity);
+
+	if (entity.has<CRender>())
+		updateRenderPosition(entity);
 }
 
-void SRender::initialize(const Entity& entity) const
+void SRender::processInstantiatedEntity(const Entity& entity, unsigned groupNum) const
 {
-	updateViewCenter(entity);
+	switch(groupNum)
+	{
+	case G::View:
+		updateViewPosition(entity);
+		break;
+	case G::WorldRendered:
+		updateRenderPosition(entity);
+		break;
+	}
 }
 
 void SRender::update(float) const

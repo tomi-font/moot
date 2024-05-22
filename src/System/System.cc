@@ -18,15 +18,14 @@ void System::match(Archetype* arch)
 		group.match(arch);
 }
 
-bool System::initializes(ComponentComposition comp)
+void System::processInstantiatedEntity(const Entity& entity) const
 {
 	for (const ComponentGroup& group : m_groups)
-		if (group.initializesEntities() && group.matches(comp))
-			return true;
-	return false;
+		if (group.initializesEntities() && group.matches(entity.comp()))
+			processInstantiatedEntity(entity, static_cast<unsigned>(&group - &m_groups[0]));
 }
 
-void System::initialize(const Entity&) const
+void System::processInstantiatedEntity(const Entity&, unsigned) const
 {
 	assert(false);
 }

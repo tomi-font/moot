@@ -43,10 +43,8 @@ void World::updateEntities()
 		const Entity entity = getArchetype(comp)->instantiate(temp);
 
 		for (const auto& system : m_systems)
-		{
-			if (system->initializes(comp))
-				system->initialize(entity);
-		}
+			system->processInstantiatedEntity(entity);
+
 		instantiatedEntities.insert(entity);
 	}
 	m_entitiesToInstantiate.clear();
@@ -55,9 +53,9 @@ void World::updateEntities()
 	{
 		if (CCallback* cCallback = entity.getOrNull<CCallback*>())
 		{
-			if (const auto& callback = cCallback->extract(CCallback::OnSpawn))
+			if (const auto& onSpawn = cCallback->extract(CCallback::OnSpawn))
 			{
-				callback(entity);
+				onSpawn(entity);
 			}
 		}
 	}
@@ -120,34 +118,23 @@ std::optional<Entity> World::findEntity(std::string_view name)
 	return {};
 }
 
-static void setComponentsPosition(Template* entity, const sf::Vector2f& pos)
+static void prepareForInstantiation(const Template& entity)
 {
-	if (entity->has<CCollisionBox>())
-		entity->get<CCollisionBox*>()->setPosition(pos);
-	
-	if (entity->has<CRender>())
-		entity->get<CRender*>()->setPosition(pos);
-}
-
-static void prepareForInstantiation(Template* entity)
-{
-	if (entity->has<CPosition>())
-		setComponentsPosition(entity, entity->get<CPosition>());
-	else
-		assert(entity->comp().hasNoneOf(CId<CCollisionBox> + CId<CRender> + CId<CView> + CId<CMove> + CId<CRigidbody>));
+	if (!entity.has<CPosition>())
+		assert(entity.comp().hasNoneOf(CId<CCollisionBox> + CId<CRender> + CId<CView> + CId<CMove> + CId<CRigidbody>));
 }
 
 void World::instantiate(const Template& temp)
 {
 	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
-	prepareForInstantiation(&entity);
+	prepareForInstantiation(entity);
 }
 
 void World::instantiate(const Template& temp, const sf::Vector2f& pos)
 {
 	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
 	entity.add<CPosition>(pos);
-	prepareForInstantiation(&entity);
+	prepareForInstantiation(entity);
 }
 
 void World::remove(EntityContext entity)
@@ -247,7 +234,7 @@ void World::updateEntitiesComponents()
 		for (auto& [cid, component] : m_componentsToAdd[entity])
 			temp.add(std::move(component));
 		
-		prepareForInstantiation(&temp);
+		prepareForInstantiation(temp);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();
