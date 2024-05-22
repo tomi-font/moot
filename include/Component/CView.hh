@@ -7,16 +7,17 @@ class CView
 {
 public:
 
-	// Constructs the view by its size and the area it is limited to show.
-	CView(const sf::Vector2f& size, const FloatRect& limits);
-
 	void setCenter(sf::Vector2f);
+	void setSize(const sf::Vector2f&);
 	void zoom(float factor);
+	void setLimits(const FloatRect&);
 
-	bool hasChanged() const { return m_hasChanged; }
 	void update(sf::RenderTarget*);
 
 private:
+
+	void processCenterChange();
+	void processSizeChange();
 
 	sf::View m_windowView;
 
@@ -24,6 +25,7 @@ private:
 	FloatRect m_limits;
 	// The theoretical center, in world coordinates, that this view would have if it weren't limited to a particular area.
 	sf::Vector2f m_theoreticalCenter;
-
-	bool m_hasChanged;
+ 
+	bool m_centerChanged;
+	bool m_sizeChanged = true;
 };

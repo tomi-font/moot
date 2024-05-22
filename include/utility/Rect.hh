@@ -6,14 +6,16 @@
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 struct Rect
 {
-	Rect() {}
+	Rect() { left = bottom = width = height = {}; }
 	Rect(const sf::Vector2<T>& pos, const sf::Vector2<T>& size) : left(pos.x), bottom(pos.y), width(size.x), height(size.y) {}
 	Rect(T left, T bottom, T right, T top) : Rect({left, bottom}, {right - left, top - bottom}) {}
 
 	sf::Vector2<T> position() const { return {left, bottom}; }
 	T right() const { return left + width; }
 	T top() const { return bottom + height; }
-	
+
+	sf::Vector2<T> size() const { return {width, height}; }
+
 	bool hasPositiveArea() const { return width > 0 && height > 0; }
 
 	auto& operator+=(const sf::Vector2<T>& move)

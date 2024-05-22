@@ -59,10 +59,7 @@ void SRender::update(float) const
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 
 	for (CView& cView: m_groups[G::View].getAll<CView>())
-	{
-		if (cView.hasChanged())
-			cView.update(m_window);
-	}
+		cView.update(m_window);
 
 	const sf::View& view = m_window->getView();
 	const sf::Vector2f& viewSize = view.getSize();
