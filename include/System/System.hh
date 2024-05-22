@@ -2,11 +2,12 @@
 
 #include <Component/Group.hh>
 #include <Event/User.hh>
+#include <Property/User.hh>
 
 class Archetype;
 class Window;
 
-class System : public EventUser
+class System : public EventUser, public PropertyUser, sf::NonCopyable
 {
 public:
 

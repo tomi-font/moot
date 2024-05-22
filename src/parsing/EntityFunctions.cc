@@ -50,6 +50,8 @@ static void registerComponentTypes(sol::state* lua)
 
 	auto view = registerComponent<CView>(ct);
 	view["zoom"] = &CView::zoom;
+	view["setSize"] = [](CView* cView, sol::object size) { cView->setSize(asVector2f(size)); };
+	view["setLimits"] = [](CView* cView, sol::object size) { cView->setLimits(asFloatRect(size)); };
 
 	auto pos = registerComponent<CPosition>(ct);
 }

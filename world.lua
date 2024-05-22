@@ -29,10 +29,7 @@ local player = {
 		size = {100, 100}
 	},
 	Rigidbody = {},
-	View = {
-		size = {800, 450},
-		limits = {{-800, 0}, {1600, 900}}
-	},
+	View = {},
 	Input = {
 		{
 			{Event.KeyPress(Key.D), Event.KeyPress(Key.A),
@@ -55,7 +52,17 @@ local player = {
 				this:get(Component.View):zoom(1 - event.mouseWheel.delta / 4)
 			end
 		}
-	}
+	},
+	onSpawn = function(this)
+		local windowSize = properties.windowSize
+		local aspectRatio = windowSize.x / windowSize.y
+		local pos = this:get(Component.Position)
+		local cView = this:get(Component.View)
+		local width = pos.y * aspectRatio
+	
+		cView:setSize({width, width / aspectRatio})
+		cView:setLimits({ {pos.x - width / 2, 0}, {width, width / aspectRatio} })
+	end
 }
 spawn(player)
 

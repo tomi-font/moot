@@ -2,14 +2,9 @@
 #include <Event/Manager.hh>
 #include <cassert>
 
-EventUser::EventUser(EventManager* em)
-{
-	setEventManager(em);
-}
-
 void EventUser::setEventManager(EventManager* em)
 {
-	assert(!m_eventManager);
+	assert(!m_eventManager && em);
 	m_eventManager = em;
 }
 

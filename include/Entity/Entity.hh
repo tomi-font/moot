@@ -44,8 +44,6 @@ public:
 			return nullptr;
 	}
 
-	World* world() const { return m_arch->world(); }
-
 	void add(ComponentVariant&& component)
 	{
 		world()->addComponentTo(this, std::move(component));
@@ -54,4 +52,8 @@ public:
 	{
 		world()->removeComponentFrom(this, cid);
 	}
+
+private:
+
+	World* world() const { return m_arch->world(); }
 };

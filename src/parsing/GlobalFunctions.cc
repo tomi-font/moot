@@ -25,6 +25,8 @@ static const Template& findOrMakeTemplate(sol::table componentTable, TemplateSto
 
 void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, TemplateStore* templateStore)
 {
+	lua->set_function("exitGame", &World::stopRunning, world);
+
 	const sol::table templateMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
 		[templateStore](const sol::table& temp)
 		{
@@ -45,8 +47,6 @@ void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, Templ
 			world->instantiate(getTemplate(entity), asVector2f(pos));
 		}
 	));
-
-	lua->set_function("exitGame", &World::stopRunning, world);
 }
 
 void GlobalFunctions::registerPostPopulating(sol::state* lua, World* world)
@@ -71,4 +71,17 @@ void GlobalFunctions::registerPostPopulating(sol::state* lua, World* world)
 		}
 	));
 	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld<sf::Event::MouseButtonEvent>, window);
+
+	lua->create_named_table("properties")[sol::metatable_key] = lua->create_table_with(
+		sol::meta_method::index, sol::property(
+			[world](sol::table, std::string_view name)
+			{
+				return world->propertyManager()->get(name);
+			}),
+		sol::meta_method::new_index, sol::property(
+			[world](sol::table, std::string_view name, const Property::Value& value)
+			{
+				world->propertyManager()->set(name, value);
+			})
+	);
 }

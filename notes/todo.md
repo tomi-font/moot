@@ -10,8 +10,6 @@
 
 - Review how the ComponentGroups are created/referred to.
 
-- Implement world properties.
-
 - Scale things according to real world values.
 
 - Process all the collisions in the order they happen.

@@ -8,5 +8,9 @@ public:
 
 	SInput();
 
+private:
+
+	void initializeProperties() override;
+
 	void update(float elapsedTime) const override;
 };

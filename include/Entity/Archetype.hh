@@ -13,16 +13,11 @@ class Template;
 class World;
 
 // Archetypes store components of entities that are the same, i.e. have exactly the same components.
-class Archetype : public ComponentComposable
+class Archetype : public ComponentComposable, sf::NonCopyable
 {
 public:
 
 	Archetype(ComponentComposition, World*);
-
-	// Currently Archetypes shall not be copied/moved to prevent pointer invalidation.
-	Archetype(const Archetype&) = delete;
-	Archetype(Archetype&&) = delete;
-	void operator=(const Archetype&) = delete;
 
 	World* world() const { return m_world; }
 

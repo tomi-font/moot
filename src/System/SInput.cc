@@ -16,6 +16,11 @@ SInput::SInput()
 	m_groups[G::Input] = { CId<CInput> };
 }
 
+void SInput::initializeProperties()
+{
+	registerPropertyGetter("windowSize", [this](){ return sf::Vector2f(m_window->getSize()); });
+}
+
 void SInput::update(float) const
 {
 	for (sf::Event event; m_window->pollEvent(event);)

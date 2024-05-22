@@ -20,6 +20,9 @@ World::World(Window* window) :
 
 		system->setEventManager(&m_eventManager);
 		system->listenToEvents();
+
+		system->setPropertyManager(&m_propertyManager);
+		system->initializeProperties();
 	}
 }
 

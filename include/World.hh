@@ -4,6 +4,7 @@
 #include <Entity/hash.hh>
 #include <Entity/Template.hh>
 #include <Event/Manager.hh>
+#include <Property/Manager.hh>
 #include <System/System.hh>
 #include <Window.hh>
 #include <deque>
@@ -11,7 +12,7 @@
 #include <set>
 #include <unordered_set>
 
-class World
+class World : sf::NonCopyable
 {
 public:
 
@@ -34,6 +35,7 @@ public:
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
+	auto* propertyManager() { return &m_propertyManager; }
 	auto* window() const { return m_window; }
 
 	void restartClock() { m_clock.restart(); }
@@ -54,6 +56,8 @@ private:
 	std::vector<std::unique_ptr<System>> m_systems;
 
 	EventManager m_eventManager;
+
+	PropertyManager m_propertyManager;
 
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.
