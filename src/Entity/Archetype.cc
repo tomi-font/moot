@@ -1,7 +1,7 @@
-#include <Component/Composable.hh>
-#include <Entity/Archetype.hh>
-#include <Entity/Template.hh>
-#include <utility/variant/indexToCompileTime.hh>
+#include <moot/Component/Composable.hh>
+#include <moot/Entity/Archetype.hh>
+#include <moot/Entity/Template.hh>
+#include <moot/utility/variant/indexToCompileTime.hh>
 
 Archetype::Archetype(ComponentComposition comp, World* world) :
 	ComponentComposable(comp),

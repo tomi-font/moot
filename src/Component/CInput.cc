@@ -1,4 +1,4 @@
-#include <Component/CInput.hh>
+#include <moot/Component/CInput.hh>
 #include <cassert>
 #include <cstring>
 

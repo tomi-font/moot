@@ -1,4 +1,5 @@
-#include <Entity/hash.hh>
+#include <moot/Entity/hash.hh>
+#include <cstdint>
 
 std::size_t std::hash<EntityContext>::operator()(const EntityContext& ec) const
 {

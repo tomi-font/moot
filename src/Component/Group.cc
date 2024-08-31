@@ -1,4 +1,4 @@
-#include <Component/Group.hh>
+#include <moot/Component/Group.hh>
 
 static_assert(sizeof(ComponentId) * 8 >= ComponentCount);
 static_assert(sizeof(ComponentComposition::Bits) * 8 >= ComponentCount);

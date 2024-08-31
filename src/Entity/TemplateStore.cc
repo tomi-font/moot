@@ -1,4 +1,4 @@
-#include <Entity/TemplateStore.hh>
+#include <moot/Entity/TemplateStore.hh>
 
 std::pair<Template*, TemplateUid> TemplateStore::newTemplate()
 {

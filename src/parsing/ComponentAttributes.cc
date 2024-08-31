@@ -1,7 +1,7 @@
-#include <parsing/ComponentAttributes.hh>
-#include <Entity/Entity.hh>
-#include <parsing/ComponentNames.hh>
-#include <parsing/types.hh>
+#include <moot/parsing/ComponentAttributes.hh>
+#include <moot/Entity/Entity.hh>
+#include <moot/parsing/ComponentNames.hh>
+#include <moot/parsing/types.hh>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
 

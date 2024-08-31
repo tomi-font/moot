@@ -1,8 +1,8 @@
-#include <parsing/Context.hh>
-#include <parsing/CallbackParameters.hh>
-#include <parsing/ComponentAttributes.hh>
-#include <parsing/EntityFunctions.hh>
-#include <parsing/GlobalFunctions.hh>
+#include <moot/parsing/Context.hh>
+#include <moot/parsing/CallbackParameters.hh>
+#include <moot/parsing/ComponentAttributes.hh>
+#include <moot/parsing/EntityFunctions.hh>
+#include <moot/parsing/GlobalFunctions.hh>
 
 ParsingContext::ParsingContext() : m_lua(*new sol::state)
 {

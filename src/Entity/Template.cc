@@ -1,5 +1,5 @@
-#include <Entity/Template.hh>
-#include <utility/variant/indexToCompileTime.hh>
+#include <moot/Entity/Template.hh>
+#include <moot/utility/variant/indexToCompileTime.hh>
 
 void Template::add(ComponentVariant&& component)
 {

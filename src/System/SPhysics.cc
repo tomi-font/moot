@@ -1,6 +1,6 @@
-#include <System/SPhysics.hh>
-#include <Entity/Entity.hh>
-#include <utility/Vector2.hh>
+#include <moot/System/SPhysics.hh>
+#include <moot/Entity/Entity.hh>
+#include <moot/utility/Vector2.hh>
 
 constexpr float c_gravitationalAcceleration = 999.80665f;
 

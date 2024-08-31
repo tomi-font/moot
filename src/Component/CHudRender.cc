@@ -1,4 +1,4 @@
-#include <Component/CHudRender.hh>
+#include <moot/Component/CHudRender.hh>
 
 CHudRender::CHudRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color) :
 	CRender(pos, size, color)

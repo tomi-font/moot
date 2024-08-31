@@ -1,5 +1,5 @@
-#include <System/SInput.hh>
-#include <Entity/Entity.hh>
+#include <moot/System/SInput.hh>
+#include <moot/Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 

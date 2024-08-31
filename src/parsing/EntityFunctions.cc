@@ -1,10 +1,10 @@
-#include <parsing/EntityFunctions.hh>
-#include <Entity/Entity.hh>
-#include <parsing/ComponentAttributes.hh>
-#include <parsing/ComponentNames.hh>
-#include <parsing/types.hh>
-#include <utility/variant/indexToCompileTime.hh>
-#include <utility/variant/toPointerVariant.hh>
+#include <moot/parsing/EntityFunctions.hh>
+#include <moot/Entity/Entity.hh>
+#include <moot/parsing/ComponentAttributes.hh>
+#include <moot/parsing/ComponentNames.hh>
+#include <moot/parsing/types.hh>
+#include <moot/utility/variant/indexToCompileTime.hh>
+#include <moot/utility/variant/toPointerVariant.hh>
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
 

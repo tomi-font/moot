@@ -1,4 +1,4 @@
-#include <Entity/Factory.hh>
+#include <moot/Entity/Factory.hh>
 
 EntityFactory::~EntityFactory()
 {

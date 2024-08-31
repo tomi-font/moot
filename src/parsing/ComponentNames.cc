@@ -1,5 +1,5 @@
-#include <parsing/ComponentNames.hh>
-#include <utility/array.hh>
+#include <moot/parsing/ComponentNames.hh>
+#include <moot/utility/array.hh>
 
 ComponentNames::ComponentNames()
 {

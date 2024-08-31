@@ -1,5 +1,5 @@
-#include <Event/User.hh>
-#include <Event/Manager.hh>
+#include <moot/Event/User.hh>
+#include <moot/Event/Manager.hh>
 #include <cassert>
 
 void EventUser::setEventManager(EventManager* em)

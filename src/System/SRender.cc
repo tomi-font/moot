@@ -1,5 +1,5 @@
-#include <System/SRender.hh>
-#include <Entity/Entity.hh>
+#include <moot/System/SRender.hh>
+#include <moot/Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 // Indices for this system's groups.

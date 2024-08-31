@@ -1,4 +1,4 @@
-#include <Game.hh>
+#include <moot/Game.hh>
 
 Game::Game() : m_world(&m_window)
 {

@@ -1,8 +1,8 @@
-#include <parsing/GlobalFunctions.hh>
-#include <Entity/Entity.hh>
-#include <Entity/TemplateStore.hh>
-#include <parsing/TemplateAttributes.hh>
-#include <parsing/types.hh>
+#include <moot/parsing/GlobalFunctions.hh>
+#include <moot/Entity/Entity.hh>
+#include <moot/Entity/TemplateStore.hh>
+#include <moot/parsing/TemplateAttributes.hh>
+#include <moot/parsing/types.hh>
 
 static constexpr std::string_view c_templateUidKey = "uid";
 

@@ -1,4 +1,4 @@
-#include <Property/User.hh>
+#include <moot/Property/User.hh>
 #include <cassert>
 
 void PropertyUser::setPropertyManager(PropertyManager* pm)

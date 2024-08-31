@@ -1,4 +1,4 @@
-#include <Component/CCallback.hh>
+#include <moot/Component/CCallback.hh>
 #include <cassert>
 
 void CCallback::add(Type type, Callback&& callback)

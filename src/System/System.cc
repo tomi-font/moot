@@ -1,5 +1,5 @@
-#include <System/System.hh>
-#include <Entity/Entity.hh>
+#include <moot/System/System.hh>
+#include <moot/Entity/Entity.hh>
 
 
 System::~System()

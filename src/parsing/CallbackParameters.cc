@@ -1,4 +1,4 @@
-#include <parsing/CallbackParameters.hh>
+#include <moot/parsing/CallbackParameters.hh>
 #include <SFML/Window/Event.hpp>
 
 template<typename T> static void registerVector2(sol::state* lua, const std::string& nameSuffix)

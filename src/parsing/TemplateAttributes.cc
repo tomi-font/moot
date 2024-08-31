@@ -1,7 +1,7 @@
-#include <parsing/TemplateAttributes.hh>
-#include <Entity/Entity.hh>
-#include <parsing/ComponentAttributes.hh>
-#include <parsing/types.hh>
+#include <moot/parsing/TemplateAttributes.hh>
+#include <moot/Entity/Entity.hh>
+#include <moot/parsing/ComponentAttributes.hh>
+#include <moot/parsing/types.hh>
 
 static const std::unordered_map<std::string_view, CCallback::Type> s_callbackTypes =
 {
