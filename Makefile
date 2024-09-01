@@ -1,4 +1,4 @@
-NAME := demo
+NAME := libmoot.so
 
 SRCDIR := src
 OBJDIR := .obj
@@ -25,7 +25,7 @@ DISABLED_WARNINGS := \
 	unsafe-buffer-usage \
 
 CXX := clang++
-CXXFLAGS := -std=gnu++26 -g -O0 -MMD -MP -I include -isystem lib -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
+CXXFLAGS := -fPIC -std=gnu++26 -g -O0 -MMD -MP -I include -isystem lib -Weverything $(addprefix -Wno-,$(DISABLED_WARNINGS))
 
 ifdef $(OS)
 	LDFLAGS := -LC:\MinGW\bin
@@ -33,7 +33,7 @@ endif
 LDLIBS := -lsfml-graphics -lsfml-window -lsfml-system -llua
 
 $(NAME): $(OBJ)
-	$(CXX) -o$@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o$@ $^ $(LDFLAGS) $(LDLIBS)
 
 -include $(OBJ:.o=.d)
 
