@@ -10,11 +10,11 @@ This:
 
 #### compiler
 
-- Clang (for `-Weverything`)
+- Clang
 
 #### libraries
 
 - Boost.Mp11
-- SFML 2.5.1 (graphics, window, system)
+- SFML 2.5.1
 - Lua 5.4.6
 - sol 3.3.0
