@@ -12,7 +12,7 @@
 #include <set>
 #include <unordered_set>
 
-class World : sf::NonCopyable
+class World : public EventUser, sf::NonCopyable
 {
 public:
 
@@ -41,6 +41,8 @@ public:
 	void restartClock() { m_clock.restart(); }
 
 private:
+
+	void triggered(const Event&) override;
 
 	void updateEntitiesComponents();
 	void updateEntities();

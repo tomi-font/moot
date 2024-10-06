@@ -25,12 +25,22 @@ void SInput::update(float) const
 {
 	for (sf::Event event; m_window->pollEvent(event);)
 	{
+		bool eventHasCallback = false;
+
 		for (Entity entity : m_groups[G::Input])
 		{
 			if (auto* callback = entity.get<CInput>().getCallback(event))
 			{
 				(*callback)(entity, event);
+				eventHasCallback = true;
 			}
+		}
+
+		if (!eventHasCallback
+		    && (event.type == sf::Event::Closed
+		        || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q)))
+		{
+			broadcast({.type = Event::GameClose});
 		}
 	}
 }

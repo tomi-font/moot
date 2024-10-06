@@ -24,6 +24,15 @@ World::World(Window* window) :
 		system->setPropertyManager(&m_propertyManager);
 		system->initializeProperties();
 	}
+
+	setEventManager(&m_eventManager);
+	listen(Event::GameClose);
+}
+
+void World::triggered(const Event& event)
+{
+	assert(event.type == Event::GameClose);
+	m_running = false;
 }
 
 void World::updateEntities()

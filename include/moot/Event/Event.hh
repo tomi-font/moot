@@ -6,9 +6,9 @@ struct Event
 {
 	enum Type
 	{
-		// Keep the enum values unassigned so that they are iterable.
 		EntityMoved,
-		COUNT
+		GameClose,
+		COUNT // Keep the enum values unassigned so that they are iterable.
 	};
 	const Type type;
 
