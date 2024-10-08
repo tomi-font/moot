@@ -11,7 +11,7 @@ class System : public EventUser, public PropertyUser, sf::NonCopyable
 {
 public:
 
-	virtual ~System();
+	virtual ~System() override;
 
 	void setWindow(Window*);
 

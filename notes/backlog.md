@@ -1,12 +1,8 @@
-- Replace manual bitfields with std::bitset.
-
 - Review how the ComponentGroups are created/referred to.
 
 - Scale things according to real world values.
 
 - Update SFML to 2.6.
-
-- Switch to CMake.
 
 - Switch to using C++ modules.
 
