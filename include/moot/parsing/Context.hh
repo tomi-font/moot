@@ -12,9 +12,8 @@ public:
 	ParsingContext();
 	~ParsingContext();
 
-	void registerPrePopulating(World*, TemplateStore*);
-	void registerPostPopulating(World*);
-	
+	void initialize(World*, TemplateStore*);
+
 	void process(const std::string& file);
 
 	void update();

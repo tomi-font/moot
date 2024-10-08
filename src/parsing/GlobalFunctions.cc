@@ -23,8 +23,10 @@ static const Template& findOrMakeTemplate(sol::table componentTable, TemplateSto
 	return *temp;
 }
 
-void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, TemplateStore* templateStore)
+void GlobalFunctions::registerAll(sol::state* lua, World* world, TemplateStore* templateStore)
 {
+	Window* const window = world->window();
+
 	lua->set_function("exitGame", &World::stopRunning, world);
 
 	const sol::table templateMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
@@ -47,11 +49,6 @@ void GlobalFunctions::registerPrePopulating(sol::state* lua, World* world, Templ
 			world->instantiate(getTemplate(entity), asVector2f(pos));
 		}
 	));
-}
-
-void GlobalFunctions::registerPostPopulating(sol::state* lua, World* world)
-{
-	Window* const window = world->window();
 
 	lua->set_function("findEntity", &World::findEntity, world);
 	lua->set_function("isKeyPressed",

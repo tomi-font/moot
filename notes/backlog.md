@@ -1,7 +1,5 @@
 - Review how the ComponentGroups are created/referred to.
 
-- Scale things according to real world values.
-
 - Update SFML to 2.6.
 
 - Switch to using C++ modules.
@@ -10,6 +8,8 @@
 	- criteria (top-down, platform)
 	- Either sort the entities in place.
 	- Or store all the vertices separately (where?).
+
+- Scale things according to real world values.
 
 - Implement own Event struct for input events.
 

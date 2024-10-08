@@ -7,8 +7,6 @@
 ParsingContext::ParsingContext() : m_lua(*new sol::state)
 {
 	m_lua.open_libraries(sol::lib::base);
-
-	registerUniversal();
 }
 
 ParsingContext::~ParsingContext()
@@ -22,30 +20,21 @@ ParsingContext::~ParsingContext()
 	assert(false);
 }
 
-void ParsingContext::registerUniversal()
+void ParsingContext::initialize(World* world, TemplateStore* templateStore)
 {
 	auto errorHandler = m_lua["errorHandler"];
 	errorHandler.set_function(luaErrorHandler);
 	sol::protected_function::set_default_handler(errorHandler);
 
 	ComponentAttributes::registerAll(&m_lua);
-}
-
-void ParsingContext::registerPrePopulating(World* world, TemplateStore* templateStore)
-{
-	GlobalFunctions::registerPrePopulating(&m_lua, world, templateStore);
+	GlobalFunctions::registerAll(&m_lua, world, templateStore);
+	EntityFunctions::registerAll(&m_lua);
+	CallbackParameters::registerAll(&m_lua);
 }
 
 void ParsingContext::process(const std::string& file)
 {
 	m_lua.script_file(file);
-}
-
-void ParsingContext::registerPostPopulating(World* world)
-{
-	GlobalFunctions::registerPostPopulating(&m_lua, world);
-	EntityFunctions::registerAll(&m_lua);
-	CallbackParameters::registerAll(&m_lua);
 }
 
 void ParsingContext::update()

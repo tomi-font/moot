@@ -2,8 +2,9 @@
 
 #include <moot/Entity/Archetype.hh>
 #include <moot/Entity/hash.hh>
-#include <moot/Entity/Template.hh>
+#include <moot/Entity/TemplateStore.hh>
 #include <moot/Event/Manager.hh>
+#include <moot/parsing/Context.hh>
 #include <moot/Property/Manager.hh>
 #include <moot/System/System.hh>
 #include <moot/Window.hh>
@@ -23,6 +24,8 @@ public:
 
 	void update();
 
+	void processScript(const std::string& path);
+
 	void instantiate(const Template& temp);
 	void instantiate(const Template&, const sf::Vector2f& pos);
 	void remove(EntityContext);
@@ -30,8 +33,7 @@ public:
 	void addComponentTo(EntityContext*, ComponentVariant&&);
 	void removeComponentFrom(EntityContext*, ComponentId);
 
-	// Finds an entity by its name.
-	std::optional<Entity> findEntity(std::string_view);
+	std::optional<Entity> findEntity(std::string_view name);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
@@ -47,6 +49,9 @@ private:
 	void updateEntitiesComponents();
 	void updateEntities();
 
+	// The ParsingContext must be destroyed after the entities so that it's still valid when components containing references get destroyed.
+	ParsingContext m_parsingContext;
+
 	Archetype* findArchetype(ComponentComposition);
 	Archetype* getArchetype(ComponentComposition);
 
@@ -60,6 +65,8 @@ private:
 	EventManager m_eventManager;
 
 	PropertyManager m_propertyManager;
+
+	TemplateStore m_templateStore;
 
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.

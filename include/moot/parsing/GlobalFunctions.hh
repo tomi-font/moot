@@ -9,6 +9,5 @@ class GlobalFunctions
 {
 public:
 
-	static void registerPrePopulating(sol::state*, World*, TemplateStore*);
-	static void registerPostPopulating(sol::state*, World*);
+	static void registerAll(sol::state*, World*, TemplateStore*);
 };
