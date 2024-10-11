@@ -1,7 +1,5 @@
 - Review how the ComponentGroups are created/referred to.
 
-- Update SFML to 2.6.
-
 - Switch to using C++ modules.
 
 - depth rendering

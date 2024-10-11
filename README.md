@@ -11,11 +11,11 @@ This:
 #### build tools
 
 - CMake >= 3.30
-- Clang (for `-Weverything` and `cxx_std_26` support)
+- Clang >= 17 (for `-Weverything` and `cxx_std_26` support)
 
 #### libraries
 
 - Boost.Mp11
-- SFML 2.5.1
+- SFML 2.6.1
 - Lua 5.4.6
 - sol 3.3.0
