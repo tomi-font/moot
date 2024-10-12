@@ -14,6 +14,5 @@ private:
 	void listenToEvents() override;
 	void triggered(const Event&) override;
 
-	void processInstantiatedEntity(const Entity&, unsigned) const override;
 	void update(float elapsedTime) const override;
 };

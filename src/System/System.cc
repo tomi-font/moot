@@ -1,6 +1,10 @@
 #include <moot/System/System.hh>
 #include <moot/Entity/Entity.hh>
 
+System::System(unsigned queryCount) :
+	m_queries(queryCount)
+{
+}
 
 System::~System()
 {
@@ -14,18 +18,12 @@ void System::setWindow(Window* window)
 
 void System::match(Archetype* arch)
 {
-	for (ComponentGroup& group : m_groups)
-		group.match(arch);
+	for (EntityQuery& query : m_queries)
+		query.match(arch);
 }
 
-void System::processInstantiatedEntity(const Entity& entity) const
+void System::initializeEntity(const Entity& entity) const
 {
-	for (const ComponentGroup& group : m_groups)
-		if (group.initializesEntities() && group.matches(entity.comp()))
-			processInstantiatedEntity(entity, static_cast<unsigned>(&group - &m_groups[0]));
-}
-
-void System::processInstantiatedEntity(const Entity&, unsigned) const
-{
-	assert(false);
+	for (const EntityQuery& query : m_queries)
+		query.initializeEntity(entity);
 }

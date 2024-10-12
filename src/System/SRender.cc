@@ -2,27 +2,14 @@
 #include <moot/Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-// Indices for this system's groups.
-enum G
+// Indices for this system's queries.
+enum Q
 {
 	View,
 	WorldRendered,
 	HudRendered,
 	COUNT
 };
-
-SRender::SRender()
-{
-	m_groups.resize(G::COUNT);
-	m_groups[G::View] = { CId<CView>, {}, true };
-	m_groups[G::WorldRendered] = { CId<CRender>, {}, true };
-	m_groups[G::HudRendered] = { CId<CHudRender> };
-}
-
-void SRender::listenToEvents()
-{
-	listen(Event::EntityMoved);
-}
 
 static void updateViewPosition(const Entity& entity)
 {
@@ -42,6 +29,20 @@ static void updateRenderPosition(const Entity& entity)
 	entity.get<CRender*>()->setPosition(entity.get<CPosition>());
 }
 
+SRender::SRender() :
+	System(Q::COUNT)
+{
+	m_queries.resize(Q::COUNT);
+	m_queries[Q::View] = { CId<CView>, {}, updateViewPosition };
+	m_queries[Q::WorldRendered] = { CId<CRender>, {}, updateRenderPosition };
+	m_queries[Q::HudRendered] = { CId<CHudRender> };
+}
+
+void SRender::listenToEvents()
+{
+	listen(Event::EntityMoved);
+}
+
 void SRender::triggered(const Event& event)
 {
 	assert(event.type == Event::EntityMoved);
@@ -54,24 +55,11 @@ void SRender::triggered(const Event& event)
 		updateRenderPosition(entity);
 }
 
-void SRender::processInstantiatedEntity(const Entity& entity, unsigned groupNum) const
-{
-	switch(groupNum)
-	{
-	case G::View:
-		updateViewPosition(entity);
-		break;
-	case G::WorldRendered:
-		updateRenderPosition(entity);
-		break;
-	}
-}
-
 void SRender::update(float) const
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 
-	for (CView& cView: m_groups[G::View].getAll<CView>())
+	for (CView& cView: m_queries[Q::View].getAll<CView>())
 		cView.update(m_window);
 
 	const sf::View& view = m_window->getView();
@@ -82,7 +70,7 @@ void SRender::update(float) const
 	yAxisTransform.translate(0, viewSize.y);
 	yAxisTransform.scale(1, -1);
 
-	for (Archetype* arch : m_groups[G::WorldRendered].archetypes())
+	for (Archetype* arch : m_queries[Q::WorldRendered].matchedArchetypes())
 	{
 		const auto& cRenders = arch->getAll<CRender>();
 
@@ -95,7 +83,7 @@ void SRender::update(float) const
 	hudTransform.combine(yAxisTransform);
 	hudTransform.scale(viewSize);
 
-	for (Archetype* arch : m_groups[G::HudRendered].archetypes())
+	for (Archetype* arch : m_queries[Q::HudRendered].matchedArchetypes())
 	{
 		const auto& cHudRenders = arch->getAll<CHudRender>();
 

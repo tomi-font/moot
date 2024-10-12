@@ -75,7 +75,7 @@ private:
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 
-	ComponentGroup m_namedEntities;
+	EntityQuery m_namedEntities;
 
 	// The window this world is bound to.
 	Window* const m_window;

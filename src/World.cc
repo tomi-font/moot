@@ -62,7 +62,7 @@ void World::updateEntities()
 		const Entity entity = getArchetype(comp)->instantiate(temp);
 
 		for (const auto& system : m_systems)
-			system->processInstantiatedEntity(entity);
+			system->initializeEntity(entity);
 
 		instantiatedEntities.insert(entity);
 	}

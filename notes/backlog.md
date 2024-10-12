@@ -1,5 +1,3 @@
-- Review how the ComponentGroups are created/referred to.
-
 - Switch to using C++ modules.
 
 - depth rendering
@@ -14,8 +12,7 @@
 - Logging with various verbosity levels/topics.
 - Custom asserts with messages.
 
-- Implement a ComponentGroup::getAllContiguous().
-- Extend ComponentGroup::getAll() to allow specifying several component types and be able to iterate over ~tuples, allowing one element to be an Entity. (See structured bindings.)
+- Extend EntityQuery::getAll() to allow specifying several component types and be able to iterate over ~tuples, allowing one element to be an Entity. (See structured bindings.)
 
 - Process all the collisions in the order they happen.
 - Foolproof the collisions when the move is bigger than the object.

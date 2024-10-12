@@ -4,25 +4,24 @@
 
 constexpr float c_gravitationalAcceleration = 999.80665f;
 
-// Indices for this system's groups.
-enum G
+// Indices for this system's queries.
+enum Q
 {
 	Dynamic, // Entities that might move, whether voluntarily or not.
 	Collidable,	// Entities that can be collided.
 	COUNT
 };
 
-SPhysics::SPhysics()
+SPhysics::SPhysics() :
+	System(Q::COUNT)
 {
-	m_groups.resize(G::COUNT);
-	m_groups[G::Dynamic] = { {CId<CMove>, CId<CRigidbody>}, {}, false };
-	m_groups[G::Collidable] = { CId<CCollisionBox>, {}, true };
-}
-
-void SPhysics::processInstantiatedEntity(const Entity& entity, unsigned groupNum) const
-{
-	assert(groupNum == G::Collidable);
-	entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
+	m_queries[Q::Dynamic] = { {CId<CMove>, CId<CRigidbody>} };
+	m_queries[Q::Collidable] = { CId<CCollisionBox>, {},
+		[](const Entity& entity)
+		{
+			entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
+		}
+	};
 }
 
 static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
@@ -174,7 +173,7 @@ struct Collision
 };
 
 static Collision getFirstCollision(const Entity& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,
-                                   const ComponentGroup& collidables,
+                                   const EntityQuery& collidables,
 								   const std::unordered_map<Entity, CollidableProvisional>& movingCollidables)
 {
 	struct Collision firstCollision;
@@ -212,7 +211,7 @@ void SPhysics::update(float elapsedTime) const
 {
 	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
 
-	for (Entity entity : m_groups[G::Dynamic])
+	for (Entity entity : m_queries[Q::Dynamic])
 	{
 		Vector2f velocity;
 
@@ -245,7 +244,7 @@ void SPhysics::update(float elapsedTime) const
 		CollidableProvisional& prov = movingCollidableIt->second;
 		CCollisionBox* cCol = entity.get<CCollisionBox*>();
 
-		while (Collision c = getFirstCollision(entity, prov, *cCol, m_groups[G::Collidable], movingCollidables))
+		while (Collision c = getFirstCollision(entity, prov, *cCol, m_queries[Q::Collidable], movingCollidables))
 		{
 			const Vector2i collidedOn = moveBackToFirstContactPoint(c.moveRatios, &prov.cCol, &prov.move, &c.otherProv.cCol, &c.otherProv.move);
 

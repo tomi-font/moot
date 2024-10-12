@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/Component/Group.hh>
+#include <moot/Entity/Query.hh>
 #include <moot/Event/User.hh>
 #include <moot/Property/User.hh>
 
@@ -15,21 +15,17 @@ public:
 
 	void setWindow(Window*);
 
-	// Appends the archetype to matching component groups.
 	void match(Archetype*);
 
-	void processInstantiatedEntity(const Entity&) const;
+	void initializeEntity(const Entity&) const;
 
 	virtual void update(float elapsedTime) const = 0;
 
 protected:
 
-	// Component groups of interest.
-	std::vector<ComponentGroup>	m_groups;
+	System(unsigned queryCount);
+
+	std::vector<EntityQuery> m_queries;
 
 	Window* m_window;
-
-private:
-
-	virtual void processInstantiatedEntity(const Entity&, unsigned) const;
 };

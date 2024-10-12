@@ -3,17 +3,18 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
-// Indices for this system's groups.
-enum G
+// Indices for this system's queries.
+enum Q
 {
 	Input,
 	COUNT
 };
 
-SInput::SInput()
+SInput::SInput() :
+	System(Q::COUNT)
 {
-	m_groups.resize(G::COUNT);
-	m_groups[G::Input] = { CId<CInput> };
+	m_queries.resize(Q::COUNT);
+	m_queries[Q::Input] = { CId<CInput> };
 }
 
 void SInput::initializeProperties()
@@ -27,7 +28,7 @@ void SInput::update(float) const
 	{
 		bool eventHasCallback = false;
 
-		for (Entity entity : m_groups[G::Input])
+		for (Entity entity : m_queries[Q::Input])
 		{
 			if (auto* callback = entity.get<CInput>().getCallback(event))
 			{
