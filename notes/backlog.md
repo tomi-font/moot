@@ -7,6 +7,10 @@
 
 - Scale things according to real world values.
 
+- Remove duplication of entity parameters (e.g. position, size) among its components?
+
+- Update to SFML 3.0 (and fix the empty window name).
+
 - Implement own Event struct for input events.
 
 - Logging with various verbosity levels/topics.
@@ -16,5 +20,3 @@
 
 - Process all the collisions in the order they happen.
 - Foolproof the collisions when the move is bigger than the object.
-
-- Remove duplication of entity parameters (e.g. position, size) among its components?

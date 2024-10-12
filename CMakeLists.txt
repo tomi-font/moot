@@ -5,7 +5,7 @@ add_library(moot STATIC)
 target_include_directories(moot PUBLIC include)
 target_include_directories(moot SYSTEM PUBLIC lib)
 
-target_compile_features(moot PRIVATE cxx_std_26)
+target_compile_features(moot PUBLIC cxx_std_26)
 
 # TODO: make private
 target_compile_options(moot PUBLIC

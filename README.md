@@ -8,14 +8,14 @@ This:
 
 ## dependencies
 
-#### build tools
+#### toolchain
 
 - CMake >= 3.30
 - Clang >= 17 (for `-Weverything` and `cxx_std_26` support)
 
 #### libraries
 
+- libc++ 18
 - Boost.Mp11
 - SFML 2.6.1
 - Lua 5.4.6
-- sol 3.3.0
