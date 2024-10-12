@@ -11,6 +11,7 @@ This:
 #### toolchain
 
 - CMake >= 3.30
+- Ninja >= 1.11
 - Clang >= 17 (for `-Weverything` and `cxx_std_26` support)
 
 #### libraries

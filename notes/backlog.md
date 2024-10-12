@@ -1,4 +1,4 @@
-- Switch to using C++ modules.
+- Fully migrate to C++ modules.
 
 - depth rendering
 	- criteria (top-down, platform)
