@@ -9,7 +9,8 @@
 
 - Remove duplication of entity parameters (e.g. position, size) among its components?
 
-- Update to SFML 3.0 (and fix the empty window name).
+- Update to SFML 3.0 (and fix the empty window name workaround made for libc++ 18).
+- Then update to libc++ 19 for `import std`.
 
 - Implement own Event struct for input events.
 
