@@ -41,7 +41,7 @@ void SInput::update(float) const
 		    && (event.type == sf::Event::Closed
 		        || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q)))
 		{
-			broadcast({.type = Event::GameClose});
+			broadcast({Event::GameClose});
 		}
 	}
 }
