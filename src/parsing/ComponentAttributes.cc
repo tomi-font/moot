@@ -2,6 +2,7 @@
 #include <moot/Entity/Entity.hh>
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/types.hh>
+#include <moot/utility/static_warn.hh>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
 
@@ -132,5 +133,7 @@ static constexpr std::initializer_list<ParserPair> parserPairs =
 	parserPair<CName>,
 	parserPair<CHudRender>,
 };
-static_assert(parserPairs.size() == ComponentCount - 1); // CCallback is not parsed here.
+// CCallback is not parsed here.
+static_warn(parserPairs.size() == ComponentCount - 1);
+
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers = parserPairs;

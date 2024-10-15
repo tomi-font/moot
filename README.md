@@ -17,6 +17,6 @@ This:
 #### libraries
 
 - libc++ 18
-- Boost.Mp11
+- Boost
 - SFML 2.6.1
 - Lua 5.4.6
