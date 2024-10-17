@@ -2,6 +2,7 @@
 
 #include <moot/Entity/Archetype.hh>
 #include <moot/Entity/hash.hh>
+#include <moot/Entity/Id.hh>
 #include <moot/Entity/TemplateStore.hh>
 #include <moot/Event/Manager.hh>
 #include <moot/parsing/Context.hh>
@@ -33,6 +34,7 @@ public:
 	void addComponentTo(EntityContext*, ComponentVariant&&);
 	void removeComponentFrom(EntityContext*, ComponentId);
 
+	EntityId getEntityId(const EntityContext& entity) const { return m_entityIds.at(entity); }
 	std::optional<Entity> findEntity(std::string_view name);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
@@ -59,6 +61,9 @@ private:
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
 	std::deque<Archetype> m_archs;
 
+	std::unordered_map<EntityContext, EntityId> m_entityIds;
+	EntityId m_nextEntityId;
+
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
 
@@ -72,6 +77,8 @@ private:
 	// Archetypes getting modified while the Systems are iterating through them.
 	std::vector<Template> m_entitiesToInstantiate;
 	std::set<EntityContext, std::greater<EntityContext>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
+
+	std::unordered_map<EntityId, Template> m_entitiesToUpdate;
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 

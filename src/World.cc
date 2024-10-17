@@ -5,6 +5,7 @@
 #include <SFML/Window/Event.hpp>
 
 World::World(Window* window) :
+	m_nextEntityId(),
 	m_systems(std::tuple_size_v<Systems>),
 	m_namedEntities(CId<CName>),
 	m_window(window),
@@ -47,19 +48,31 @@ void World::updateEntities()
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
 		entity.m_arch->remove(entity.m_idx);
+
+		const bool erased = m_entityIds.erase(entity);
+		assert(erased);
 	}
 	m_entitiesToRemove.clear();
 
+	for (const auto& [id, temp] : m_entitiesToUpdate)
+	{
+		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
+
+		m_entityIds[entity] = id;
+	}
+	m_entitiesToUpdate.clear();
+
 	// References to entities cannot be stored between frames.
-	// This is the moment there must not be any reference left because they are invalidated by removal and instantiation of entities.
-	assert(EntityContext::instanceCount() == 0);
+	// This is the moment there must not be any extra reference left because they are invalidated by removal and instantiation of entities.
+	assert(EntityContext::instanceCount() == m_entityIds.size());
 
 	std::unordered_set<Entity> instantiatedEntities;
 
 	for (const Template& temp : m_entitiesToInstantiate)
 	{
-		const ComponentComposition comp = temp.comp();
-		const Entity entity = getArchetype(comp)->instantiate(temp);
+		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
+
+		m_entityIds[entity] = m_nextEntityId++;
 
 		for (const auto& system : m_systems)
 			system->initializeEntity(entity);
@@ -227,14 +240,12 @@ void World::updateEntitiesComponents()
 	{
 		Archetype* origArch = entity.m_arch;
 		const ComponentComposition origComp = origArch->comp();
-	
-		// TODO: Do this without going through a Template, by appending directly to the new Archetype?
 
 		// Schedule the entity to be removed and its updated version to be added.
 		// The removal shall only happen in updateEntities() because it invalidates the indices of other entities.
 		// Note that this means that the entity will temporarily not exist, which is totally fine as long as nothing is expected from it during that time.
 		m_entitiesToRemove.insert(entity);
-		Template& temp = m_entitiesToInstantiate.emplace_back();
+		Template& temp = m_entitiesToUpdate[m_entityIds[entity]];
 
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	

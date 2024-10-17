@@ -44,6 +44,8 @@ public:
 			return nullptr;
 	}
 
+	EntityId getId() const { return world()->getEntityId(*this); }
+
 	void add(ComponentVariant&& component)
 	{
 		world()->addComponentTo(this, std::move(component));

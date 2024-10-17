@@ -87,7 +87,8 @@ void SRender::update(float) const
 	{
 		const auto& cHudRenders = arch->getAll<CHudRender>();
 
-		m_window->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
+		if (!cHudRenders.empty())
+			m_window->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
 	}
 
 	m_window->display();
