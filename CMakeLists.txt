@@ -32,6 +32,7 @@ target_sources(moot PUBLIC
 	FILE_SET sources_set
 	TYPE CXX_MODULES
 	FILES
+	src/parsing/ComponentNames.cc
 )
 
 target_sources(moot PRIVATE
@@ -57,7 +58,6 @@ target_sources(moot PRIVATE
 	src/System/System.cc
 	src/parsing/CallbackParameters.cc
 	src/parsing/ComponentAttributes.cc
-	src/parsing/ComponentNames.cc
 	src/parsing/Context.cc
 	src/parsing/EntityFunctions.cc
 	src/parsing/GlobalFunctions.cc

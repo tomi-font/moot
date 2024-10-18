@@ -1,4 +1,6 @@
-- Fully migrate to C++ modules.
+- Remove duplication of entity parameters (e.g. position, size) among its components.
+
+- Migrate to C++ modules.
 
 - depth rendering
 	- criteria (top-down, platform)
@@ -7,7 +9,6 @@
 
 - Scale things according to real world values.
 
-- Remove duplication of entity parameters (e.g. position, size) among its components?
 
 - Update to SFML 3.0 (and fix the empty window name workaround made for libc++ 18).
 - Then update to libc++ 19 for `import std`.
