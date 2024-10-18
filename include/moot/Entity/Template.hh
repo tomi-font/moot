@@ -3,6 +3,7 @@
 #include <moot/Component/Composable.hh>
 #include <moot/Component/Variant.hh>
 #include <map>
+#include <type_traits>
 
 class Template : public ComponentComposable
 {

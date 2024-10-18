@@ -10,6 +10,10 @@ set_target_properties(moot PROPERTIES
 	CXX_SCAN_FOR_MODULES ON
 )
 
+target_compile_options(moot PUBLIC
+	-fmodules # Needed for ccache to know modules are enabled.
+)
+
 # TODO: make private
 target_compile_options(moot PUBLIC
 	-Weverything
