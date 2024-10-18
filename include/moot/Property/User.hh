@@ -18,5 +18,5 @@ protected:
 
 private:
 
-	PropertyManager* m_propertyManager;
+	PropertyManager* m_propertyManager = nullptr;
 };
