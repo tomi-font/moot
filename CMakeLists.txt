@@ -45,6 +45,7 @@ target_sources(moot PRIVATE
 	src/Entity/Template.cc
 	src/Entity/TemplateStore.cc
 	src/Entity/hash.cc
+	src/Entity/Querier.cc
 	src/Entity/Query.cc
 	src/Event/Manager.cc
 	src/Event/User.cc

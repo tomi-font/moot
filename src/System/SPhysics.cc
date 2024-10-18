@@ -12,9 +12,9 @@ enum Q
 	COUNT
 };
 
-SPhysics::SPhysics() :
-	System(Q::COUNT)
+SPhysics::SPhysics()
 {
+	m_queries.resize(Q::COUNT);
 	m_queries[Q::Dynamic] = { {CId<CMove>, CId<CRigidbody>} };
 	m_queries[Q::Collidable] = { CId<CCollisionBox>, {},
 		[](const Entity& entity)

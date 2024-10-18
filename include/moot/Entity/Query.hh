@@ -7,20 +7,19 @@
 
 class EntityQuery
 {
-	using EntityInitFunction = std::function<void(const Entity&)>;
+	using EntityCallback = std::function<void(const Entity&)>;
 
 public:
 
 	EntityQuery() = default;
-	EntityQuery(ComponentComposition required, ComponentComposition forbidden = {}, EntityInitFunction entityInitFunc = {}) : EntityQuery({required}, forbidden, entityInitFunc) {}
-	EntityQuery(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden = {}, EntityInitFunction = {});
+	EntityQuery(ComponentComposition required, ComponentComposition forbidden = {}, EntityCallback entityAddedCallback = {}, EntityCallback entityRemovedCallback = {}) : EntityQuery({required}, forbidden, entityAddedCallback, entityRemovedCallback) {}
+	EntityQuery(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden = {}, EntityCallback entityAddedCallback = {}, EntityCallback entityRemovedCallback = {});
 
-	// Appends the given Archetype upon match.
 	void match(Archetype*);
-
-	void initializeEntity(const Entity& entity) const;
-
 	std::span<Archetype* const> matchedArchetypes() const { return m_matchedArchs; }
+
+	void entityAddedCallback(const Entity&) const;
+	void entityRemovedCallback(const Entity&) const;
 
 	ArchetypeIterator<EntityContext> begin() const { return { m_matchedArchs.begin() }; }
 	ArchetypeIterator<EntityContext> end() const { return { m_matchedArchs.end() }; }
@@ -39,5 +38,6 @@ private:
 	// Components whose presence is forbidden.
 	ComponentComposition m_forbidden;
 
-	EntityInitFunction m_entityInitFunc;
+	EntityCallback m_entityAddedCallback;
+	EntityCallback m_entityRemovedCallback;
 };

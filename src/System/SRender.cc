@@ -29,8 +29,7 @@ static void updateRenderPosition(const Entity& entity)
 	entity.get<CRender*>()->setPosition(entity.get<CPosition>());
 }
 
-SRender::SRender() :
-	System(Q::COUNT)
+SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
 	m_queries[Q::View] = { CId<CView>, {}, updateViewPosition };

@@ -4,10 +4,11 @@
 static_assert(sizeof(ComponentId) * 8 >= ComponentCount);
 static_assert(sizeof(ComponentComposition::Bits) * 8 >= ComponentCount);
 
-EntityQuery::EntityQuery(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden, EntityInitFunction entityInitFunc) :
+EntityQuery::EntityQuery(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden, EntityCallback entityAddedCallback, EntityCallback entityRemovedCallback) :
 	m_required(required),
 	m_forbidden(forbidden),
-	m_entityInitFunc(entityInitFunc)
+	m_entityAddedCallback(entityAddedCallback),
+	m_entityRemovedCallback(entityRemovedCallback)
 {
 	assert(!m_required.empty());
 	for (const ComponentComposition& requiredComp : m_required)
@@ -34,8 +35,14 @@ void EntityQuery::match(Archetype* arch)
 		m_matchedArchs.push_back(arch);
 }
 
-void EntityQuery::initializeEntity(const Entity& entity) const
+void EntityQuery::entityAddedCallback(const Entity& entity) const
 {
-	if (m_entityInitFunc && matches(entity.comp()))
-		m_entityInitFunc(entity);
+	if (m_entityAddedCallback && matches(entity.comp()))
+		m_entityAddedCallback(entity);
+}
+
+void EntityQuery::entityRemovedCallback(const Entity& entity) const
+{
+	if (m_entityRemovedCallback && matches(entity.comp()))
+		m_entityRemovedCallback(entity);
 }

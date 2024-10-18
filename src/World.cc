@@ -75,7 +75,7 @@ void World::updateEntities()
 		m_entityIds[entity] = m_nextEntityId++;
 
 		for (const auto& system : m_systems)
-			system->initializeEntity(entity);
+			system->entityAddedCallback(entity);
 
 		instantiatedEntities.insert(entity);
 	}

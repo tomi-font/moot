@@ -10,8 +10,7 @@ enum Q
 	COUNT
 };
 
-SInput::SInput() :
-	System(Q::COUNT)
+SInput::SInput()
 {
 	m_queries.resize(Q::COUNT);
 	m_queries[Q::Input] = { CId<CInput> };
