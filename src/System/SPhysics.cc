@@ -15,13 +15,13 @@ enum Q
 SPhysics::SPhysics()
 {
 	m_queries.resize(Q::COUNT);
-	m_queries[Q::Dynamic] = { {CId<CMove>, CId<CRigidbody>} };
-	m_queries[Q::Collidable] = { CId<CCollisionBox>, {},
-		[](const Entity& entity)
+	m_queries[Q::Dynamic] = {{ .required = {CId<CMove>, CId<CRigidbody>} }};
+	m_queries[Q::Collidable] = {{ .required = {CId<CCollisionBox>},
+		.entityAddedCallback = [](const Entity& entity)
 		{
 			entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
 		}
-	};
+	}};
 }
 
 static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,

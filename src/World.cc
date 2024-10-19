@@ -7,7 +7,7 @@
 World::World(Window* window) :
 	m_nextEntityId(),
 	m_systems(std::tuple_size_v<Systems>),
-	m_namedEntities(CId<CName>),
+	m_namedEntities({ .required = {CId<CName>} }),
 	m_window(window),
 	m_running(true)
 {

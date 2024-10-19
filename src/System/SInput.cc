@@ -13,7 +13,7 @@ enum Q
 SInput::SInput()
 {
 	m_queries.resize(Q::COUNT);
-	m_queries[Q::Input] = { CId<CInput> };
+	m_queries[Q::Input] = {{ .required = {CId<CInput>} }};
 }
 
 void SInput::initializeProperties()

@@ -8,12 +8,20 @@
 class EntityQuery
 {
 	using EntityCallback = std::function<void(const Entity&)>;
+	struct Parameters
+	{
+		// Components whose presence is required. Every different composition is an or; any one of them matching will fulfill the `required` criteria.
+		std::vector<ComponentComposition> required;
+		// Components whose presence is forbidden.
+		ComponentComposition forbidden;
+		EntityCallback entityAddedCallback;
+		EntityCallback entityRemovedCallback;
+	};
 
 public:
 
 	EntityQuery() = default;
-	EntityQuery(ComponentComposition required, ComponentComposition forbidden = {}, EntityCallback entityAddedCallback = {}, EntityCallback entityRemovedCallback = {}) : EntityQuery({required}, forbidden, entityAddedCallback, entityRemovedCallback) {}
-	EntityQuery(std::initializer_list<ComponentComposition> required, ComponentComposition forbidden = {}, EntityCallback entityAddedCallback = {}, EntityCallback entityRemovedCallback = {});
+	EntityQuery(Parameters&& args);
 
 	void match(Archetype*);
 	std::span<Archetype* const> matchedArchetypes() const { return m_matchedArchs; }
@@ -33,11 +41,5 @@ private:
 
 	std::vector<Archetype*> m_matchedArchs;
 
-	// Components whose presence is required. Every different composition is an or; any one of them matching will fulfill the required criteria.
-	std::vector<ComponentComposition> m_required;
-	// Components whose presence is forbidden.
-	ComponentComposition m_forbidden;
-
-	EntityCallback m_entityAddedCallback;
-	EntityCallback m_entityRemovedCallback;
+	Parameters m_params;
 };

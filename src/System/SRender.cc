@@ -32,9 +32,9 @@ static void updateRenderPosition(const Entity& entity)
 SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
-	m_queries[Q::View] = { CId<CView>, {}, updateViewPosition };
-	m_queries[Q::WorldRendered] = { CId<CRender>, {}, updateRenderPosition };
-	m_queries[Q::HudRendered] = { CId<CHudRender> };
+	m_queries[Q::View] = {{ .required = {CId<CView>}, .entityAddedCallback = updateViewPosition }};
+	m_queries[Q::WorldRendered] = {{ .required = {CId<CRender>}, .entityAddedCallback = updateRenderPosition }};
+	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 }
 
 void SRender::listenToEvents()
