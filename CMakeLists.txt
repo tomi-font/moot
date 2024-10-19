@@ -30,7 +30,7 @@ target_compile_options(moot PUBLIC
 	-Wno-c++20-extensions
 	-Wno-pre-c++20-compat-pedantic
 	-Wno-implicit-int-float-conversion
-	-Wno-missing-designated-field-initializers
+	-Wno-missing-field-initializers
 )
 
 target_sources(moot PUBLIC

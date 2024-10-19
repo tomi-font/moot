@@ -10,7 +10,7 @@ This:
 
 #### toolchain
 
-- Clang >= 17 (for C++ modules, `-Weverything` and `cxx_std_26` support)
+- Clang >= 18
 - Ninja >= 1.11
 - CMake >= 3.30
 
