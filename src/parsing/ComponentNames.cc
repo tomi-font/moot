@@ -41,7 +41,7 @@ private:
 
 	ComponentNames()
 	{
-		static_warn(!hasDefaultInitializedElement(s_m_names, {CId<CCallback>}));
+		static_warn(!hasDefaultInitializedElement(s_m_names, {CId<CEntity>, CId<CCallback>}));
 	}
 };
 

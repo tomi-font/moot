@@ -42,6 +42,7 @@ target_sources(moot PUBLIC
 
 target_sources(moot PRIVATE
 	src/Component/CCallback.cc
+	src/Component/CEntity.cc
 	src/Component/CHudRender.cc
 	src/Component/CMove.cc
 	src/Component/CRender.cc

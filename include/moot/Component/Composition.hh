@@ -33,7 +33,9 @@ public:
 		m_bits &= ~r.bits();
 	}
 
+	constexpr bool operator==(ComponentId cid) const { return ComponentId(*this) == cid; }
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
+
 	constexpr bool has(ComponentId cid) const
 	{
 		return m_bits & ComponentComposition(cid).bits();

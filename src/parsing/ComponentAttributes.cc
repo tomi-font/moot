@@ -133,7 +133,8 @@ static constexpr std::initializer_list<ParserPair> parserPairs =
 	parserPair<CName>,
 	parserPair<CHudRender>,
 };
+// CEntity is not made directly accessible.
 // CCallback is not parsed here.
-static_warn(parserPairs.size() == ComponentCount - 1);
+static_warn(parserPairs.size() == ComponentCount - 2);
 
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers = parserPairs;

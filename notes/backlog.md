@@ -1,3 +1,9 @@
+- Move ComponentComposable inheritance away from EntityContext?
+
+- Add mechanism to detect modified components.
+
+- Rename Template to something else?
+
 - Remove duplication of entity parameters (e.g. position, size) among its components.
 
 - Migrate to C++ modules.

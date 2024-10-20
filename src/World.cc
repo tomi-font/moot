@@ -5,7 +5,6 @@
 #include <SFML/Window/Event.hpp>
 
 World::World(Window* window) :
-	m_nextEntityId(),
 	m_systems(std::tuple_size_v<Systems>),
 	m_namedEntities({ .required = {CId<CName>} }),
 	m_window(window),
@@ -45,45 +44,54 @@ void World::processScript(const std::string& path)
 
 void World::updateEntities()
 {
+	std::vector<std::tuple<ComponentComposition, Template>> entitiesToChange;
+	entitiesToChange.reserve(m_entitiesToChange.size());
+
+	// First remove the entities. That invalidates references to other entities.
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		if (!m_entitiesToChange.contains(entity))
+		assert(entity.comp() == entity.m_arch->comp());
+
+		const auto findIt = m_entitiesToChange.find(entity);
+		if (findIt != m_entitiesToChange.end())
+		{
+			assert(entity.comp() == findIt->first.comp());
+
+			for (const auto& system: m_systems)
+				system->entityChangedRemovedCallback(entity, findIt->second.comp());
+			
+			entitiesToChange.emplace_back(entity.comp(), std::move(findIt->second));
+			m_entitiesToChange.erase(findIt);
+		}
+		else
 		{
 			for (const auto& system: m_systems)
 				system->entityRemovedCallback(entity);
-
-			const bool erased = m_entityIds.erase(entity);
-			assert(erased);
 		}
 
 		entity.m_arch->remove(entity.m_idx);
 	}
+	assert(m_entitiesToChange.empty());
 	m_entitiesToRemove.clear();
 
-	for (const auto& [oldEntity, temp] : m_entitiesToChange)
+	// References to entities cannot be stored between frames.
+	// This is the moment there must not be any extra reference left because they are invalidated by removal and modification of entities.
+	assert(EntityContext::instanceCount() == 0);
+
+	for (const auto& [oldComp, temp] : entitiesToChange)
 	{
 		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
 
-		const auto& nodeHandle = m_entityIds.extract(oldEntity);
-		assert(!nodeHandle.empty());
-		m_entityIds[entity] = nodeHandle.mapped();
-
 		for (const auto& system: m_systems)
-			system->entityChangedAddedCallback(entity, oldEntity.comp());
+			system->entityChangedAddedCallback(entity, oldComp);
 	}
-	m_entitiesToChange.clear();
-
-	// References to entities cannot be stored between frames.
-	// This is the moment there must not be any extra reference left because they are invalidated by removal and instantiation of entities.
-	assert(EntityContext::instanceCount() == m_entityIds.size());
+	entitiesToChange.clear();
 
 	std::unordered_set<Entity> instantiatedEntities;
 
 	for (const Template& temp : m_entitiesToInstantiate)
 	{
 		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
-
-		m_entityIds[entity] = m_nextEntityId++;
 
 		for (const auto& system : m_systems)
 			system->entityAddedCallback(entity);
@@ -163,23 +171,35 @@ std::optional<Entity> World::findEntity(std::string_view name)
 	return {};
 }
 
-static void prepareForInstantiation(const Template& entity)
+static void processEntityToBeAdded(const Template& entity)
 {
 	if (!entity.has<CPosition>())
 		assert(entity.comp().hasNoneOf(CId<CCollisionBox> + CId<CRender> + CId<CView> + CId<CMove> + CId<CRigidbody>));
 }
 
+static void processChangedEntity(const Template& entity)
+{
+	assert(entity.has<CEntity>());
+	processEntityToBeAdded(entity);
+}
+
+static void processInstantiatedEntity(Template* entity)
+{
+	entity->add<CEntity>();
+	processEntityToBeAdded(*entity);
+}
+
 void World::instantiate(const Template& temp)
 {
 	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
-	prepareForInstantiation(entity);
+	processInstantiatedEntity(&entity);
 }
 
 void World::instantiate(const Template& temp, const sf::Vector2f& pos)
 {
 	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
 	entity.add<CPosition>(pos);
-	prepareForInstantiation(entity);
+	processInstantiatedEntity(&entity);
 }
 
 void World::remove(EntityContext entity)
@@ -211,7 +231,7 @@ void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
 
 void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
 {
-	assert(entity->has(cid));
+	assert(cid != CId<CEntity>);
 	entity->m_comp -= cid;
 
 	EntityContext ec = *entity;
@@ -221,8 +241,7 @@ void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
 	
 	if (m_componentsToAdd.contains(ec))
 	{
-		const bool removed = m_componentsToAdd.at(ec).erase(cid);
-		if (removed)
+		if (m_componentsToAdd.at(ec).erase(cid))
 			return;
 	}
 	const bool removed = m_componentsToRemove[ec].insert(cid).second;
@@ -232,36 +251,31 @@ void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
 ComponentVariant* World::getStagedComponentOf(const EntityContext& entity, ComponentId cid)
 {
 	assert(entity.has(cid));
-	assert(m_componentsToAdd.contains(entity));
-	auto& components = m_componentsToAdd.at(entity);
-	
-	assert(components.contains(cid));
-	return &components.at(cid);
+	return &m_componentsToAdd.at(entity).at(cid);
 }
 
 void World::updateEntitiesComponents()
 {
 	std::unordered_set<EntityContext> entities;
-	for (const auto& [entity, components] : m_componentsToAdd)
+	for (const auto& [entity, _] : m_componentsToAdd)
 		entities.insert(entity);
-	for (const auto& [entity, components] : m_componentsToRemove)
+	for (const auto& [entity, _] : m_componentsToRemove)
 		entities.insert(entity);
 
-	for (const EntityContext& entity : entities)
+	for (EntityContext entity : entities)
 	{
-		Archetype* origArch = entity.m_arch;
-		const ComponentComposition origComp = origArch->comp();
+		Archetype* arch = entity.m_arch;
+		entity.m_comp = arch->comp();
 
-		// Schedule the entity to be removed and its updated version to be added.
-		// The removal shall only happen in updateEntities() because it invalidates the indices of other entities.
-		// Note that this means that the entity will temporarily not exist, which is totally fine as long as nothing is expected from it during that time.
+		// Schedule the entity to be removed and its changed version to be added.
+		// All the entities must be removed in a controlled order because the removal invalidates references to other entities.
 		m_entitiesToRemove.insert(entity);
 		Template& temp = m_entitiesToChange[entity];
 
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
 		// Start with the entity's original components minus those that are to be removed.
-		for (ComponentId cid : origComp)
+		for (ComponentId cid : entity.comp())
 		{
 			if (!componentsToRemove.contains(cid))
 			{
@@ -269,18 +283,15 @@ void World::updateEntitiesComponents()
 					[&](auto I)
 					{
 						using C = std::tuple_element_t<I, Components>;
-						temp.add<C>(*origArch->get<C>(entity.m_idx));
+						temp.add<C>(*arch->get<C>(entity.m_idx));
 					});
 			}
 		}
 		// And to them add the components to be added.
 		for (auto& [cid, component] : m_componentsToAdd[entity])
 			temp.add(std::move(component));
-		
-		prepareForInstantiation(temp);
 
-		for (const auto& system: m_systems)
-			system->entityChangedRemovedCallback(entity, temp.comp());
+		processChangedEntity(temp);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();

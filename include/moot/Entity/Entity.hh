@@ -44,7 +44,7 @@ public:
 			return nullptr;
 	}
 
-	EntityId getId() const { return world()->getEntityId(*this); }
+	EntityId getId() const { return get<CEntity>().id(); }
 
 	void add(ComponentVariant&& component)
 	{

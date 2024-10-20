@@ -34,7 +34,6 @@ public:
 	void addComponentTo(EntityContext*, ComponentVariant&&);
 	void removeComponentFrom(EntityContext*, ComponentId);
 
-	EntityId getEntityId(const EntityContext& entity) const { return m_entityIds.at(entity); }
 	std::optional<Entity> findEntity(std::string_view name);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
@@ -60,9 +59,6 @@ private:
 	// Existing archetypes, where all the entities' components are.
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
 	std::deque<Archetype> m_archs;
-
-	std::unordered_map<EntityContext, EntityId> m_entityIds;
-	EntityId m_nextEntityId;
 
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
