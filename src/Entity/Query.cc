@@ -31,15 +31,3 @@ void EntityQuery::match(Archetype* arch)
 	if (matches(arch->comp()))
 		m_matchedArchs.push_back(arch);
 }
-
-void EntityQuery::entityAddedCallback(const Entity& entity) const
-{
-	if (m_params.entityAddedCallback && matches(entity.comp()))
-		m_params.entityAddedCallback(entity);
-}
-
-void EntityQuery::entityRemovedCallback(const Entity& entity) const
-{
-	if (m_params.entityRemovedCallback && matches(entity.comp()))
-		m_params.entityRemovedCallback(entity);
-}

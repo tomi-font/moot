@@ -23,11 +23,13 @@ public:
 	EntityQuery() = default;
 	EntityQuery(Parameters&& args);
 
+	bool matches(ComponentComposition) const;
 	void match(Archetype*);
+
 	std::span<Archetype* const> matchedArchetypes() const { return m_matchedArchs; }
 
-	void entityAddedCallback(const Entity&) const;
-	void entityRemovedCallback(const Entity&) const;
+	auto& entityAddedCallback() const { return m_params.entityAddedCallback; }
+	auto& entityRemovedCallback() const { return m_params.entityRemovedCallback; }
 
 	ArchetypeIterator<EntityContext> begin() const { return { m_matchedArchs.begin() }; }
 	ArchetypeIterator<EntityContext> end() const { return { m_matchedArchs.end() }; }
@@ -36,8 +38,6 @@ public:
 	template<typename C> ArchetypeIterable<C> getAll() const { return { m_matchedArchs }; }
 
 private:
-
-	bool matches(ComponentComposition) const;
 
 	std::vector<Archetype*> m_matchedArchs;
 

@@ -10,6 +10,9 @@ public:
 
 	void entityAddedCallback(const Entity&) const;
 	void entityRemovedCallback(const Entity&) const;
+	
+	void entityChangedRemovedCallback(const Entity& oldEntity, ComponentComposition newComp) const;
+	void entityChangedAddedCallback(const Entity& newEntity, ComponentComposition oldComp) const;
 
 protected:
 

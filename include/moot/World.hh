@@ -78,7 +78,7 @@ private:
 	std::vector<Template> m_entitiesToInstantiate;
 	std::set<EntityContext, std::greater<EntityContext>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
 
-	std::unordered_map<EntityId, Template> m_entitiesToUpdate;
+	std::unordered_map<EntityContext, Template> m_entitiesToChange;
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 

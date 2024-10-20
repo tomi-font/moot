@@ -23,5 +23,5 @@ public:
 
 protected:
 
-	Window* m_window;
+	Window* m_window = nullptr;
 };

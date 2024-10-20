@@ -47,20 +47,31 @@ void World::updateEntities()
 {
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		entity.m_arch->remove(entity.m_idx);
+		if (!m_entitiesToChange.contains(entity))
+		{
+			for (const auto& system: m_systems)
+				system->entityRemovedCallback(entity);
 
-		const bool erased = m_entityIds.erase(entity);
-		assert(erased);
+			const bool erased = m_entityIds.erase(entity);
+			assert(erased);
+		}
+
+		entity.m_arch->remove(entity.m_idx);
 	}
 	m_entitiesToRemove.clear();
 
-	for (const auto& [id, temp] : m_entitiesToUpdate)
+	for (const auto& [oldEntity, temp] : m_entitiesToChange)
 	{
 		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
 
-		m_entityIds[entity] = id;
+		const auto& nodeHandle = m_entityIds.extract(oldEntity);
+		assert(!nodeHandle.empty());
+		m_entityIds[entity] = nodeHandle.mapped();
+
+		for (const auto& system: m_systems)
+			system->entityChangedAddedCallback(entity, oldEntity.comp());
 	}
-	m_entitiesToUpdate.clear();
+	m_entitiesToChange.clear();
 
 	// References to entities cannot be stored between frames.
 	// This is the moment there must not be any extra reference left because they are invalidated by removal and instantiation of entities.
@@ -245,7 +256,7 @@ void World::updateEntitiesComponents()
 		// The removal shall only happen in updateEntities() because it invalidates the indices of other entities.
 		// Note that this means that the entity will temporarily not exist, which is totally fine as long as nothing is expected from it during that time.
 		m_entitiesToRemove.insert(entity);
-		Template& temp = m_entitiesToUpdate[m_entityIds[entity]];
+		Template& temp = m_entitiesToChange[entity];
 
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
@@ -267,6 +278,9 @@ void World::updateEntitiesComponents()
 			temp.add(std::move(component));
 		
 		prepareForInstantiation(temp);
+
+		for (const auto& system: m_systems)
+			system->entityChangedRemovedCallback(entity, temp.comp());
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();
