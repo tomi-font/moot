@@ -18,8 +18,8 @@ spawn(quitControls)
 
 local player = {
 	Position = {0, 900},
-	Render = {
-		size = {100, 100},
+	ConvexPolygon = {
+		vertices = { {0, 0}, {100, 0}, {100, 100}, {0, 100} },
 		color = {0, 128, 0}
 	},
 	Move = {
@@ -59,7 +59,7 @@ local player = {
 		local pos = this:get(Component.Position)
 		local cView = this:get(Component.View)
 		local width = pos.y * aspectRatio
-	
+
 		cView:setSize({width, width / aspectRatio})
 		cView:setLimits({ {pos.x - width / 2, 0}, {width, width / aspectRatio} })
 	end
@@ -107,7 +107,8 @@ local platformBuilder = {
 				local size = mapPixelToWorld(event.mouseButton) - pos
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })
-				platform:add(Component.Render, { size = size, color = Color.Black })
+				platform:add(Component.ConvexPolygon, { vertices = { {0, 0}, {size.x, 0}, size, {0, size.y} },
+				                                        color = Color.Black })
 				platform:remove(Component.HUD)
 				platform:remove(Component.Name)
 			end

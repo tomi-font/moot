@@ -42,10 +42,10 @@ target_sources(moot PUBLIC
 
 target_sources(moot PRIVATE
 	src/Component/CCallback.cc
+	src/Component/CConvexPolygon.cc
 	src/Component/CEntity.cc
 	src/Component/CHudRender.cc
 	src/Component/CMove.cc
-	src/Component/CRender.cc
 	src/Component/CView.cc
 	src/Component/CInput.cc
 	src/Entity/Archetype.cc

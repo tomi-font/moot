@@ -29,7 +29,7 @@ private:
 	static constexpr const std::string s_m_names[ComponentCount] =
 	{
 		[CId<CPosition>] = "Position",
-		[CId<CRender>] = "Render",
+		[CId<CConvexPolygon>] = "ConvexPolygon",
 		[CId<CMove>] = "Move",
 		[CId<CInput>] = "Input",
 		[CId<CCollisionBox>] = "CollisionBox",

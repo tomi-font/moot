@@ -6,7 +6,8 @@
 
 - Remove duplication of entity parameters (e.g. position, size) among its components.
 
-- Migrate to C++ modules.
+- Migrate code not included in other headers to C++ modules.
+- Complete migration to C++ modules.
 
 - depth rendering
 	- criteria (top-down, platform)

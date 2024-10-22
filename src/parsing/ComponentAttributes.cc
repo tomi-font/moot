@@ -51,10 +51,15 @@ template<> ComponentVariant parser<CPosition>(const sol::object& data)
 	return CPosition(asVector2f(data));
 }
 
-template<> ComponentVariant parser<CRender>(const sol::object& data)
+template<> ComponentVariant parser<CConvexPolygon>(const sol::object& data)
 {
 	const auto& map = asLuaMap<2>(data);
-	return CRender(asVector2f(map["size"]), asColor(map["color"]));
+
+	std::vector<sf::Vector2f> vertices;
+	for (const auto& [_, value] : asLuaArray(map["vertices"]))
+		vertices.push_back(asVector2f(value));
+
+	return CConvexPolygon(std::move(vertices), asColor(map["color"]));
 }
 
 template<> ComponentVariant parser<CMove>(const sol::object& data)
@@ -124,7 +129,7 @@ template<typename C> static constexpr ParserPair parserPair = {ComponentName<C>,
 static constexpr std::initializer_list<ParserPair> parserPairs =
 {
 	parserPair<CPosition>,
-	parserPair<CRender>,
+	parserPair<CConvexPolygon>,
 	parserPair<CMove>,
 	parserPair<CInput>,
 	parserPair<CCollisionBox>,

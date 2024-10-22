@@ -174,7 +174,7 @@ std::optional<Entity> World::findEntity(std::string_view name)
 static void processEntityToBeAdded(const Template& entity)
 {
 	if (!entity.has<CPosition>())
-		assert(entity.comp().hasNoneOf(CId<CCollisionBox> + CId<CRender> + CId<CView> + CId<CMove> + CId<CRigidbody>));
+		assert(entity.comp().hasNoneOf(CId<CCollisionBox> + CId<CConvexPolygon> + CId<CView> + CId<CMove> + CId<CRigidbody>));
 }
 
 static void processChangedEntity(const Template& entity)
