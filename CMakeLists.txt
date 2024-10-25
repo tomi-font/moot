@@ -2,21 +2,20 @@ cmake_minimum_required(VERSION 3.30)
 
 add_library(moot STATIC)
 
-target_include_directories(moot PUBLIC include)
+target_include_directories(moot PRIVATE include)
 target_include_directories(moot SYSTEM PUBLIC lib)
+target_include_directories(moot SYSTEM INTERFACE include)
 
 target_compile_features(moot PUBLIC cxx_std_26)
 
-# TODO: make private
-target_compile_options(moot PUBLIC
+target_compile_options(moot PRIVATE
 	-Weverything
-	-Wno-c99-designator
 	-Wno-c++98-compat
+	-Wno-c99-designator
 	-Wno-unsafe-buffer-usage
 	-Wno-pre-c++14-compat
 	-Wno-switch-enum
 	-Wno-padded
-	-Wno-shadow-field-in-constructor
 	-Wno-exit-time-destructors
 	-Wno-global-constructors
 	-Wno-c++20-compat

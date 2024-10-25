@@ -8,7 +8,7 @@ struct Rect
 {
 	Rect() { left = bottom = width = height = {}; }
 	Rect(const sf::Vector2<T>& pos, const sf::Vector2<T>& size) : left(pos.x), bottom(pos.y), width(size.x), height(size.y) {}
-	Rect(T left, T bottom, T right, T top) : Rect({left, bottom}, {right - left, top - bottom}) {}
+	Rect(T leftEdge, T bottomEdge, T rightEdge, T topEdge) : Rect({leftEdge, bottomEdge}, {rightEdge - leftEdge, topEdge - bottomEdge}) {}
 
 	sf::Vector2<T> position() const { return {left, bottom}; }
 	T right() const { return left + width; }
