@@ -6,16 +6,12 @@
 
 - Remove duplication of entity parameters (e.g. position, size) among its components.
 
-- Migrate code not included in other headers to C++ modules.
-- Complete migration to C++ modules.
-
 - depth rendering
 	- criteria (top-down, platform)
 	- Either sort the entities in place.
 	- Or store all the vertices separately (where?).
 
 - Scale things according to real world values.
-
 
 - Update to SFML 3.0 (and fix the empty window name workaround made for libc++ 18).
 - Then update to libc++ 19 for `import std`.

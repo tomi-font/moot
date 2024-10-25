@@ -10,13 +10,12 @@ This:
 
 #### toolchain
 
-- Clang >= 18
-- Ninja >= 1.11
+- Clang (for `-Weverything`)
 - CMake >= 3.30
 
 #### libraries
 
-- libc++ 18
+- libc++
 - Boost
 - SFML 2.6.1
 - Lua 5.4.6

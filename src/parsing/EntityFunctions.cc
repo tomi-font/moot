@@ -1,12 +1,12 @@
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/parsing/ComponentAttributes.hh>
+#include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/types.hh>
 #include <moot/utility/variant/indexToCompileTime.hh>
 #include <moot/utility/variant/toPointerVariant.hh>
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
-import parsing.ComponentNames;
 
 using ComponentPointerVariant = variantToPointerVariant<ComponentVariant>::type;
 
