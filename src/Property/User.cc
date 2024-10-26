@@ -1,10 +1,10 @@
 #include <moot/Property/User.hh>
 #include <cassert>
 
-void PropertyUser::setPropertyManager(PropertyManager* pm)
+void PropertyUser::setProperties(Properties* properties)
 {
-	assert(!m_propertyManager && pm);
-	m_propertyManager = pm;
+	assert(!m_properties && properties);
+	m_properties = properties;
 }
 
 void PropertyUser::initializeProperties()

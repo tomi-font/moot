@@ -2,6 +2,9 @@
 #include <moot/Entity/Entity.hh>
 #include <SFML/Graphics/RenderWindow.hpp>
 
+// The name of the clear color property.
+static constexpr std::string ClearColor = "clearColor";
+
 // Indices for this system's queries.
 enum Q
 {
@@ -74,9 +77,14 @@ void SRender::triggered(const Event& event)
 		updateConvexPolygonPosition(entity, entity.get<CConvexPolygon>());
 }
 
+void SRender::initializeProperties()
+{
+	m_properties->set(ClearColor, sf::Color::Black);
+}
+
 void SRender::update(float)
 {
-	m_window->clear(sf::Color(0x80, 0x80, 0x80));
+	m_window->clear(m_properties->get<sf::Color>(ClearColor));
 
 	for (CView& cView: m_queries[Q::View].getAll<CView>())
 		cView.update(m_window);

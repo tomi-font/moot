@@ -1,3 +1,5 @@
+properties.clearColor = Color.Gray
+
 local ground = {
 	CollisionBox = {
 		size = {20000, 1}
@@ -5,16 +7,6 @@ local ground = {
 }
 local groundSize = ground.CollisionBox.size
 spawn(ground, {-groundSize[1] / 2, -groundSize[2]})
-
-local quitControls = {
-	Input = {
-		{
-			{Event.KeyPress(Key.Q), Event.WindowClose},
-			exitGame
-		}
-	},
-}
-spawn(quitControls)
 
 local player = {
 	Position = {0, 900},

@@ -10,7 +10,7 @@ This:
 
 #### toolchain
 
-- Clang (for `-Weverything`)
+- Clang
 - CMake >= 3.30
 
 #### libraries

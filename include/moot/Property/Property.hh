@@ -1,15 +1,14 @@
 #pragma once
 
 #include <functional>
-#include <string_view>
 #include <variant>
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/Color.hpp>
 
 struct Property
 {
-	using Identifier = std::string_view;
-
 	using Value = std::variant<
+		sf::Color,
 		sf::Vector2f
 	>;
 

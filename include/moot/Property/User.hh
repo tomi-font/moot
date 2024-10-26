@@ -1,12 +1,12 @@
 #pragma once
 
-#include <moot/Property/Manager.hh>
+#include <moot/Property/Properties.hh>
 
 class PropertyUser
 {
 public:
 
-	void setPropertyManager(PropertyManager*);
+	void setProperties(Properties*);
 
 	virtual void initializeProperties();
 
@@ -14,9 +14,5 @@ protected:
 
 	virtual ~PropertyUser() {}
 
-	void registerPropertyGetter(auto&&... args) { m_propertyManager->registerGetter(std::forward<decltype(args)>(args)...); }
-
-private:
-
-	PropertyManager* m_propertyManager = nullptr;
+	Properties* m_properties = nullptr;
 };

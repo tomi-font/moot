@@ -3,12 +3,13 @@
 #include <moot/Entity/TemplateStore.hh>
 #include <moot/parsing/TemplateAttributes.hh>
 #include <moot/parsing/types.hh>
+#include <moot/utility/variant/indexToCompileTime.hh>
 
-static constexpr std::string_view c_templateUidKey = "uid";
+static constexpr std::string_view TemplateUidKey = "uid";
 
 static const Template& findOrMakeTemplate(sol::table componentTable, TemplateStore* templateStore, const sol::table& templateMetatable)
 {
-	auto uidObj = componentTable[c_templateUidKey];
+	auto uidObj = componentTable[TemplateUidKey];
 	if (uidObj.valid())
 		return templateStore->getTemplate(as<TemplateUid>(uidObj));
 
@@ -32,7 +33,7 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world, TemplateStore* 
 	const sol::table templateMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
 		[templateStore](const sol::table& temp)
 		{
-			templateStore->deleteTemplate(as<TemplateUid>(temp[c_templateUidKey]));
+			templateStore->deleteTemplate(as<TemplateUid>(temp[TemplateUidKey]));
 		});
 	const auto getTemplate =
 		[=](sol::table componentTable)
@@ -71,14 +72,20 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world, TemplateStore* 
 
 	lua->create_named_table("properties")[sol::metatable_key] = lua->create_table_with(
 		sol::meta_method::index, sol::property(
-			[world](sol::table, std::string_view name)
+			[world](sol::table, const std::string& name)
 			{
-				return world->propertyManager()->get(name);
+				return world->properties()->get(name);
 			}),
 		sol::meta_method::new_index, sol::property(
-			[world](sol::table, std::string_view name, const Property::Value& value)
+			[world](sol::table, const std::string& name, const sol::object& value)
 			{
-				world->propertyManager()->set(name, value);
+				Properties* const properties = world->properties();
+				variantIndexToCompileTime<Property::Value>(properties->get(name).index(),
+					[&](auto I)
+					{
+						properties->set(name, asParsed<std::variant_alternative_t<I, Property::Value>>(value));
+					}
+				);
 			})
 	);
 }

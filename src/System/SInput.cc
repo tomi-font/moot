@@ -20,7 +20,7 @@ SInput::SInput() : m_pointedEntityId(InvalidEntityId)
 
 void SInput::initializeProperties()
 {
-	registerPropertyGetter("windowSize", [this](){ return sf::Vector2f(m_window->getSize()); });
+	m_properties->registerGetter("windowSize", [this](){ return sf::Vector2f(m_window->getSize()); });
 }
 
 void SInput::update(float)

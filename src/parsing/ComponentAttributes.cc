@@ -36,6 +36,7 @@ template<> void registerAttributeValues<sf::Color>(sol::state* lua)
 	auto colors = lua->create_table("Color");
 	
 	colors["Black"] = sf::Color::Black;
+	colors["Gray"] = sf::Color(128, 128, 128);
 }
 
 void ComponentAttributes::registerAll(sol::state* lua)
@@ -139,21 +140,21 @@ template<> ComponentVariant parser<CPointable>(const sol::object& data)
 	return std::move(cPointable);
 }
 
-using ParserPair = std::pair<const std::string_view, ComponentAttributes::Parser>;
+using ParserPairType = std::pair<const std::string_view, ComponentAttributes::Parser>;
 
-template<typename C> static constexpr ParserPair parserPair = {ComponentName<C>, parser<C>};
-static constexpr std::initializer_list<ParserPair> parserPairs =
+template<typename C> static constexpr ParserPairType ParserPair = {ComponentName<C>, parser<C>};
+static constexpr std::initializer_list<ParserPairType> parserPairs =
 {
-	parserPair<CPosition>,
-	parserPair<CConvexPolygon>,
-	parserPair<CMove>,
-	parserPair<CInput>,
-	parserPair<CCollisionBox>,
-	parserPair<CRigidbody>,
-	parserPair<CView>,
-	parserPair<CName>,
-	parserPair<CHudRender>,
-	parserPair<CPointable>,
+	ParserPair<CPosition>,
+	ParserPair<CConvexPolygon>,
+	ParserPair<CMove>,
+	ParserPair<CInput>,
+	ParserPair<CCollisionBox>,
+	ParserPair<CRigidbody>,
+	ParserPair<CView>,
+	ParserPair<CName>,
+	ParserPair<CHudRender>,
+	ParserPair<CPointable>,
 };
 // CEntity is not made directly accessible.
 // CCallback is not parsed here.

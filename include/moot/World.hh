@@ -6,7 +6,7 @@
 #include <moot/Entity/TemplateStore.hh>
 #include <moot/Event/Manager.hh>
 #include <moot/parsing/Context.hh>
-#include <moot/Property/Manager.hh>
+#include <moot/Property/Properties.hh>
 #include <moot/System/System.hh>
 #include <moot/Window.hh>
 #include <deque>
@@ -38,7 +38,7 @@ public:
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
-	auto* propertyManager() { return &m_propertyManager; }
+	auto* properties() { return &m_properties; }
 	auto* window() const { return m_window; }
 
 	void restartClock() { m_clock.restart(); }
@@ -65,7 +65,7 @@ private:
 
 	EventManager m_eventManager;
 
-	PropertyManager m_propertyManager;
+	Properties m_properties;
 
 	TemplateStore m_templateStore;
 
