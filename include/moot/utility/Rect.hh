@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/utility/math.hh>
-#include <SFML/System/Vector2.hpp>
+#include <moot/utility/Vector2.hh>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 struct Rect
@@ -14,9 +14,10 @@ struct Rect
 	T right() const { return left + width; }
 	T top() const { return bottom + height; }
 
-	sf::Vector2<T> size() const { return {width, height}; }
+	Vector2<T> size() const { return {width, height}; }
 
 	bool hasPositiveArea() const { return width > 0 && height > 0; }
+	bool isEmpty() const { return size().isZero(); }
 
 	auto& operator+=(const sf::Vector2<T>& move)
 	{

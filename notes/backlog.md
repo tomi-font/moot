@@ -1,6 +1,6 @@
 - Move ComponentComposable inheritance away from EntityContext?
 
-- Add mechanism to detect modified components.
+- Add mechanism to detect modified components (and update CView accordingly).
 
 - Rename Template to something else?
 

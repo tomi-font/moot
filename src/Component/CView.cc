@@ -9,14 +9,17 @@ void CView::processCenterChange()
 	sf::Vector2f center = m_theoreticalCenter;
 	const sf::Vector2f& viewSize = m_windowView.getSize();
 
-	center.x = std::min(
-		std::max(center.x, m_limits.left + viewSize.x / 2),
-		m_limits.left + m_limits.width - viewSize.x / 2
-	);
-	center.y = std::min(
-		std::max(center.y, m_limits.bottom + viewSize.y / 2),
-		m_limits.bottom + m_limits.height - viewSize.y / 2
-	);
+	if (!m_limits.isEmpty())
+	{
+		center.x = std::min(
+			std::max(center.x, m_limits.left + viewSize.x / 2),
+			m_limits.left + m_limits.width - viewSize.x / 2
+		);
+		center.y = std::min(
+			std::max(center.y, m_limits.bottom + viewSize.y / 2),
+			m_limits.bottom + m_limits.height - viewSize.y / 2
+		);
+	}
 
 	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
 	center.y *= -1;
@@ -36,18 +39,21 @@ void CView::processSizeChange()
 {
 	Vector2f viewSize = m_windowView.getSize();
 
-	// The ratio of the actual view size to the maximum size allowed.
-	const Vector2f actualToMaxRatio = viewSize / m_limits.size();
-	if (actualToMaxRatio.max() > 1)
+	if (!m_limits.isEmpty())
 	{
-		const auto aspectRatio = viewSize.x / viewSize.y;
+		// The ratio of the actual view size to the maximum size allowed.
+		const Vector2f actualToMaxRatio = viewSize / m_limits.size();
+		if (actualToMaxRatio.max() > 1)
+		{
+			const auto aspectRatio = viewSize.x / viewSize.y;
 
-		if (actualToMaxRatio.x > actualToMaxRatio.y)
-			viewSize = {m_limits.width, m_limits.width / aspectRatio};
-		else
-			viewSize = {m_limits.height * aspectRatio, m_limits.height};
-	
-		m_windowView.setSize(viewSize);
+			if (actualToMaxRatio.x > actualToMaxRatio.y)
+				viewSize = {m_limits.width, m_limits.width / aspectRatio};
+			else
+				viewSize = {m_limits.height * aspectRatio, m_limits.height};
+		
+			m_windowView.setSize(viewSize);
+		}
 	}
 	assert(viewSize.min() > 0);
 
