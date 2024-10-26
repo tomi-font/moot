@@ -169,7 +169,7 @@ struct Collision
 	Entity other;
 	CollidableProvisional otherProv;
 
-	operator bool() const { return other; }
+	operator bool() const { return other.isEmpty(); }
 };
 
 static Collision getFirstCollision(const Entity& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,

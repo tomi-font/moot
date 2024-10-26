@@ -13,10 +13,10 @@ class EntityContext : public ComponentComposable, InstanceCounter<EntityContext>
 
 public:
 
-	EntityContext() : m_arch(nullptr), m_idx(0) { assert(!*this); }
+	EntityContext() : m_arch(nullptr), m_idx(0) {}
 	EntityContext(ComponentComposition comp, Archetype* arch, unsigned index) : ComponentComposable(comp), m_arch(arch), m_idx(index) {}	
 
-	operator bool() const { return m_arch; }
+	bool isEmpty() const { return m_arch; }
 
 	// The component composition is not compared because it may differ between contexts of a same entity.
 	bool operator==(const EntityContext& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }
@@ -27,13 +27,6 @@ protected:
 
 	Archetype* m_arch;
 	unsigned m_idx;
-
-	void destroy()
-	{
-		m_arch = nullptr;
-		m_comp = {};
-		assert(!*this);
-	}
 
 private:
 

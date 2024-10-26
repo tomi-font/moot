@@ -14,6 +14,7 @@ public:
 	auto& color() const { return m_color; }
 
 	sf::Vector2f getCentroid() const;
+	bool contains(const sf::Vector2f& point) const;
 
 private:
 

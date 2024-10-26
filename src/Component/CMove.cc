@@ -1,5 +1,5 @@
 #include <moot/Component/CMove.hh>
-#include <moot/utility/math.hh>
+#include <moot/utility/math/base.hh>
 #include <cassert>
 
 void CMove::setXMotion(int direction)
