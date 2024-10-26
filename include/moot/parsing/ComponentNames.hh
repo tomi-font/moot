@@ -34,6 +34,7 @@ private:
 		[CId<CView>] = "View",
 		[CId<CName>] = "Name",
 		[CId<CHudRender>] = "HUD",
+		[CId<CPointable>] = "Pointable",
 	};
 	ComponentNames();
 };

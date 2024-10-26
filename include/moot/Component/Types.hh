@@ -8,6 +8,7 @@
 #include <moot/Component/CInput.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CName.hh>
+#include <moot/Component/CPointable.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
 #include <moot/Component/CHudRender.hh>
@@ -25,6 +26,7 @@ using Components = std::tuple<
 	CHudRender,
 	CCallback,
 	CConvexPolygon,
+	CPointable,
 	CEntity>;
 
 // Gets a component's ID by using its class as the template.

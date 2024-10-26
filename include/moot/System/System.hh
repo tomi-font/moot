@@ -19,7 +19,7 @@ public:
 
 	void setWindow(Window*);
 
-	virtual void update(float elapsedTime) const = 0;
+	virtual void update(float elapsedTime) = 0;
 
 protected:
 

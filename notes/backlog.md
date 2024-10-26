@@ -6,10 +6,13 @@
 
 - Remove duplication of entity parameters (e.g. position, size) among its components.
 
+- Extend EntityQuery::getAll() to allow specifying several component types and be able to iterate over ~tuples, allowing one element to be an Entity. (See structured bindings.)
+
 - depth rendering
 	- criteria (top-down, platform)
 	- Either sort the entities in place.
 	- Or store all the vertices separately (where?).
+	- Also influences pointables.
 
 - Scale things according to real world values.
 
@@ -20,8 +23,6 @@
 
 - Logging with various verbosity levels/topics.
 - Custom asserts with messages.
-
-- Extend EntityQuery::getAll() to allow specifying several component types and be able to iterate over ~tuples, allowing one element to be an Entity. (See structured bindings.)
 
 - Process all the collisions in the order they happen.
 - Foolproof the collisions when the move is bigger than the object.

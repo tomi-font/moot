@@ -123,6 +123,22 @@ template<> ComponentVariant parser<CHudRender>(const sol::object& data)
 	return CHudRender(asVector2f(map["pos"]), size, asColor(map["color"]));
 }
 
+template<> ComponentVariant parser<CPointable>(const sol::object& data)
+{
+	static const std::unordered_map<std::string_view, CPointable::EventType> s_eventTypes =
+	{
+		{"onPointerEntered", CPointable::EventType::PointerEntered},
+		{"onPointerLeft", CPointable::EventType::PointerLeft},
+	};
+	CPointable cPointable;
+	for (const auto& [key, value] : asLuaMap(data))
+	{
+		const CPointable::EventType et = s_eventTypes.at(as<std::string_view>(key));
+		cPointable.setCallback(et, as<sol::protected_function>(value));
+	}
+	return std::move(cPointable);
+}
+
 using ParserPair = std::pair<const std::string_view, ComponentAttributes::Parser>;
 
 template<typename C> static constexpr ParserPair parserPair = {ComponentName<C>, parser<C>};
@@ -137,6 +153,7 @@ static constexpr std::initializer_list<ParserPair> parserPairs =
 	parserPair<CView>,
 	parserPair<CName>,
 	parserPair<CHudRender>,
+	parserPair<CPointable>,
 };
 // CEntity is not made directly accessible.
 // CCallback is not parsed here.

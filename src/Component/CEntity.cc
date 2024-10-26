@@ -1,3 +1,3 @@
 #include <moot/Component/CEntity.hh>
 
-EntityId CEntity::s_m_nextId;
+EntityId CEntity::s_m_nextId = InvalidEntityId + 1;

@@ -175,6 +175,9 @@ static void processEntityToBeAdded(const Template& entity)
 {
 	if (!entity.has<CPosition>())
 		assert(entity.hasNoneOf(CId<CCollisionBox> + CId<CConvexPolygon> + CId<CView> + CId<CMove> + CId<CRigidbody>));
+
+	if (entity.has<CPointable>())
+		assert(entity.has<CConvexPolygon>());
 }
 
 static void processChangedEntity(const Template& entity)

@@ -74,7 +74,7 @@ void SRender::triggered(const Event& event)
 		updateConvexPolygonPosition(entity, entity.get<CConvexPolygon>());
 }
 
-void SRender::update(float) const
+void SRender::update(float)
 {
 	m_window->clear(sf::Color(0x80, 0x80, 0x80));
 

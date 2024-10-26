@@ -12,5 +12,9 @@ private:
 
 	void initializeProperties() override;
 
-	void update(float elapsedTime) const override;
+	void update(float elapsedTime) override;
+	void updatePointables();
+
+	sf::Vector2i m_mousePos;
+	EntityId m_pointedEntityId;
 };

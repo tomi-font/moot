@@ -15,7 +15,7 @@ private:
 	void listenToEvents() override;
 	void triggered(const Event&) override;
 
-	void update(float elapsedTime) const override;
+	void update(float elapsedTime) override;
 
 	void updateConvexPolygonPosition(const Entity&, const CConvexPolygon&);
 

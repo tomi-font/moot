@@ -10,7 +10,7 @@ public:
 
 private:
 
-	void update(float elapsedTime) const override;
+	void update(float elapsedTime) override;
 
 	void moveEntity(const Entity&, const sf::Vector2f&) const;
 };
