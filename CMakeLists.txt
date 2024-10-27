@@ -26,6 +26,7 @@ target_compile_options(moot PRIVATE
 	-Wno-pre-c++20-compat-pedantic
 	-Wno-implicit-int-float-conversion
 	-Wno-missing-field-initializers
+	-Wno-packed-non-pod
 )
 
 file(GLOB_RECURSE source_files src/*.cc)

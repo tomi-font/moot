@@ -1,6 +1,6 @@
 - Move ComponentComposable inheritance away from EntityContext?
 
-- Clean up CView and CPosition updates.
+- Clean up CView updates.
 
 - Rename Template to something else?
 

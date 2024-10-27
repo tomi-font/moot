@@ -233,7 +233,7 @@ void SPhysics::update(float elapsedTime)
 		if (entity.has<CCollisionBox>())
 			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>() + move));
 		else
-			moveEntity(entity, entity.get<CPosition>() + move);
+			entity.get<CPosition*>()->mut() += move;
 	}
 
 	for (auto movingCollidableIt = movingCollidables.begin();
@@ -267,14 +267,8 @@ void SPhysics::update(float elapsedTime)
 		if (prov.cCol.position() != cCol->position())
 		{
 			*cCol = prov.cCol;
-			moveEntity(entity, cCol->position());
+			*entity.get<CPosition*>() = cCol->position();
 		}
 		// TODO: else assert
 	}
-}
-
-void SPhysics::moveEntity(const Entity& entity, const sf::Vector2f& pos) const
-{
-	*entity.get<CPosition*>() = pos;
-	broadcast({Event::EntityMoved, entity});
 }

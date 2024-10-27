@@ -60,7 +60,7 @@ void SInput::updatePointables()
 	for (Entity entity : m_queries[Q::Pointables])
 	{
 		const bool wasPointed = (entity.getId() == prevPointedEntityId);
-		const bool isPointed = entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>());
+		const bool isPointed = entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
 
 		if (!wasPointed && isPointed)
 			entity.get<CPointable>().notify(CPointable::PointerEntered, entity);

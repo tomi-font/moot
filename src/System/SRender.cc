@@ -61,23 +61,6 @@ SRender::SRender()
 	}};
 }
 
-void SRender::listenToEvents()
-{
-	listen(Event::EntityMoved);
-}
-
-void SRender::triggered(const Event& event)
-{
-	assert(event.type == Event::EntityMoved);
-	const Entity entity = event.entity;
-
-	if (entity.has<CView>())
-		updateViewPosition(entity);
-
-	if (entity.has<CConvexPolygon>())
-		updateConvexPolygonPosition(entity, entity.get<CConvexPolygon>());
-}
-
 void SRender::initializeProperties()
 {
 	m_properties->set(ClearColor, sf::Color::Black);
@@ -88,9 +71,18 @@ void SRender::update(float)
 	for (Entity entity : m_queries[Q::ConvexPolygons])
 	{
 		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
+		const auto& cPosition = entity.get<CPosition>();
+
+		if (cPosition.hasChangedSince(m_lastUpdateTicks))
+			updateConvexPolygonPosition(entity, cConvexPolygon);
+
 		if (cConvexPolygon.color().hasChangedSince(m_lastUpdateTicks))
 			updateConvexPolygonColor(entity, cConvexPolygon);
 	}
+
+	for (Entity entity : m_queries[Q::View])
+		if (entity.get<CPosition>().hasChangedSince(m_lastUpdateTicks))
+			updateViewPosition(entity);
 
 	m_window->clear(m_properties->get<sf::Color>(ClearColor));
 

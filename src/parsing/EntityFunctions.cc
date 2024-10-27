@@ -78,7 +78,7 @@ void EntityFunctions::registerAll(sol::state* lua)
 				CP const componentPtr = entity.get<CP>();
 				
 				if constexpr (I == CId<CPosition>)
-					return sol::make_object<sf::Vector2f*>(luaState, componentPtr);
+					return sol::make_object<sf::Vector2f*>(luaState, &componentPtr->mut());
 				else
 					return sol::make_object<CP>(luaState, componentPtr);
 			});
