@@ -7,7 +7,7 @@ template<typename T> class [[gnu::packed]] TrackedValue
 {
 public:
 
-	explicit TrackedValue(T value) : m_lastChangeTicks(), m_value(std::move(value)) {}
+	explicit TrackedValue(T value = {}) : m_lastChangeTicks(), m_value(std::move(value)) {}
 
 	const T& val() const { return m_value; }
 	operator const T&() const { return m_value; }
@@ -19,7 +19,7 @@ public:
 	}
 	void operator=(T value) { mut() = std::move(value); }
 
-	bool hasChangedSince(GlobalClock::Ticks ticks) const { return m_lastChangeTicks > ticks;}
+	bool hasChangedSince(GlobalClock::Ticks ticks) const { return m_lastChangeTicks > ticks; }
 
 private:
 

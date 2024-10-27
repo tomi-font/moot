@@ -1,7 +1,5 @@
 - Move ComponentComposable inheritance away from EntityContext?
 
-- Clean up CView updates.
-
 - Rename Template to something else?
 
 - Remove duplication of entity parameters (e.g. position, size) among its components.

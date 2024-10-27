@@ -20,6 +20,8 @@ void System::setWindow(Window* window)
 void System::gameLoopUpdate(float elapsedTime)
 {
 	const GlobalClock::Ticks thisUpdateTicks = GlobalClock::ticksSinceStart();
+
 	update(elapsedTime);
+
 	m_lastUpdateTicks = thisUpdateTicks;
 }

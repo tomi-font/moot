@@ -8,6 +8,7 @@
 #include <cassert>
 #include <span>
 #include <vector>
+#include <SFML/System/NonCopyable.hpp>
 
 class Template;
 class World;

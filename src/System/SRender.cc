@@ -14,16 +14,6 @@ enum Q
 	COUNT
 };
 
-static void updateViewPosition(const Entity& entity)
-{
-	sf::Vector2f pos = entity.get<CPosition>();
-
-	if (entity.has<CConvexPolygon>())
-		pos += entity.get<CConvexPolygon>().getCentroid();
-
-	entity.get<CView*>()->setCenter(pos);
-}
-
 static unsigned getTriangleVertexCount(const CConvexPolygon& cConvexPolygon)
 {
 	return 3 * static_cast<unsigned>(cConvexPolygon.vertices().size() - 2);
@@ -32,7 +22,14 @@ static unsigned getTriangleVertexCount(const CConvexPolygon& cConvexPolygon)
 SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
-	m_queries[Q::View] = {{ .required = {CId<CView>}, .entityAddedCallback = updateViewPosition }};
+
+	m_queries[Q::View] = {{ .required = {CId<CView>},
+		.entityAddedCallback = [this](const Entity& entity)
+		{
+			updateView(entity);
+		}
+	}};
+
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 	
 	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>},
@@ -68,6 +65,15 @@ void SRender::initializeProperties()
 
 void SRender::update(float)
 {
+	for (Entity entity : m_queries[Q::View])
+	{
+		if (entity.get<CPosition>().hasChangedSince(m_lastUpdateTicks)
+		 || entity.get<CView>().size().hasChangedSince(m_lastUpdateTicks))
+		{
+			updateView(entity);
+		}
+	}
+
 	for (Entity entity : m_queries[Q::ConvexPolygons])
 	{
 		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
@@ -80,14 +86,8 @@ void SRender::update(float)
 			updateConvexPolygonColor(entity, cConvexPolygon);
 	}
 
-	for (Entity entity : m_queries[Q::View])
-		if (entity.get<CPosition>().hasChangedSince(m_lastUpdateTicks))
-			updateViewPosition(entity);
 
 	m_window->clear(m_properties->get<sf::Color>(ClearColor));
-
-	for (CView& cView: m_queries[Q::View].getAll<CView>())
-		cView.update(m_window);
 
 	const sf::View& view = m_window->getView();
 	const sf::Vector2f& viewSize = view.getSize();
@@ -114,6 +114,34 @@ void SRender::update(float)
 	}
 
 	m_window->display();
+}
+
+void SRender::updateView(const Entity& entity)
+{
+	sf::Vector2f center = entity.get<CPosition>();
+	const auto& cView = entity.get<CView>();
+	const sf::Vector2f& size = cView.size();
+
+	if (entity.has<CConvexPolygon>())
+		center += entity.get<CConvexPolygon>().getCentroid();
+
+	if (const FloatRect& limits = cView.limits(); !limits.isEmpty())
+	{
+		center.x = std::min(
+			std::max(center.x, limits.left + size.x / 2),
+			limits.left + limits.width - size.x / 2
+		);
+		center.y = std::min(
+			std::max(center.y, limits.bottom + size.y / 2),
+			limits.bottom + limits.height - size.y / 2
+		);
+	}
+
+	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
+	center.y *= -1;
+	center.y += size.y;
+
+	m_window->setView({center, size});
 }
 
 void SRender::updateConvexPolygonPosition(const Entity& entity, const CConvexPolygon& cConvexPolygon)

@@ -101,14 +101,15 @@ template<> ComponentVariant parser<CView>(const sol::object& data)
 	const auto& sizeObj = map["size"];
 	const auto& limitsObj = map["limits"];
 	assert(mapSize == sizeObj.valid() + limitsObj.valid());
-	CView cView;
+	Vector2f size;
+	FloatRect limits;
 
 	if (sizeObj.valid())
-		cView.setSize(asVector2f(sizeObj));
+		size = asVector2f(sizeObj);
 	if (limitsObj.valid())
-		cView.setLimits(asFloatRect(limitsObj));
+		limits = asFloatRect(limitsObj);
 
-	return cView;
+	return CView(size, limits);
 }
 
 template<> ComponentVariant parser<CName>(const sol::object& data)
