@@ -125,7 +125,7 @@ void World::update()
 
 	for (const auto& system : m_systems)
 	{
-		system->update(elapsedTime);
+		system->gameLoopUpdate(elapsedTime);
 	}
 	
 	m_parsingContext.update();

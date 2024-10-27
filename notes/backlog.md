@@ -1,6 +1,6 @@
 - Move ComponentComposable inheritance away from EntityContext?
 
-- Add mechanism to detect modified components (and update CView accordingly).
+- Clean up CView and CPosition updates.
 
 - Rename Template to something else?
 
@@ -17,7 +17,6 @@
 - Scale things according to real world values.
 
 - Update to SFML 3.0 (and fix the empty window name workaround made for libc++ 18).
-- Then update to libc++ 19 for `import std`.
 
 - Implement own Event struct for input events.
 

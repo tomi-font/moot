@@ -2,6 +2,7 @@
 
 #include <moot/Entity/Querier.hh>
 #include <moot/Event/User.hh>
+#include <moot/Global/Clock.hh>
 #include <moot/Property/User.hh>
 
 class Archetype;
@@ -19,9 +20,16 @@ public:
 
 	void setWindow(Window*);
 
-	virtual void update(float elapsedTime) = 0;
+	void gameLoopUpdate(float elapsedTime);
 
 protected:
 
-	Window* m_window = nullptr;
+	System();
+
+	GlobalClock::Ticks m_lastUpdateTicks;
+	Window* m_window;
+
+private:
+
+	virtual void update(float elapsedTime) = 0;
 };

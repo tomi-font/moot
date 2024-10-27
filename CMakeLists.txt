@@ -8,14 +8,17 @@ target_include_directories(moot SYSTEM INTERFACE include)
 
 target_compile_features(moot PUBLIC cxx_std_26)
 
+target_compile_options(moot PUBLIC
+	-Wno-c++98-compat
+	-Wno-pre-c++14-compat
+	-Wno-padded
+)
+
 target_compile_options(moot PRIVATE
 	-Weverything
-	-Wno-c++98-compat
 	-Wno-c99-designator
 	-Wno-unsafe-buffer-usage
-	-Wno-pre-c++14-compat
 	-Wno-switch-enum
-	-Wno-padded
 	-Wno-exit-time-destructors
 	-Wno-global-constructors
 	-Wno-c++20-compat
