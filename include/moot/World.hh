@@ -50,6 +50,9 @@ private:
 	void updateEntitiesComponents();
 	void updateEntities();
 
+	// The TemplateStore is destroyed after the ParsingContext to allow templates defined as globals.
+	TemplateStore m_templateStore;
+
 	// The ParsingContext must be destroyed after the entities so that it's still valid when components containing references get destroyed.
 	ParsingContext m_parsingContext;
 
@@ -66,8 +69,6 @@ private:
 	EventManager m_eventManager;
 
 	Properties m_properties;
-
-	TemplateStore m_templateStore;
 
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.

@@ -43,8 +43,9 @@ SRender::SRender()
 
 			const bool inserted = m_worldVerticesIndices.emplace(entityId, static_cast<unsigned>(m_worldVertices.size())).second;
 			assert(inserted);
-			m_worldVertices.resize(m_worldVertices.size() + getTriangleVertexCount(cConvexPolygon), sf::Vertex({}, cConvexPolygon.color()));
-			
+			m_worldVertices.resize(m_worldVertices.size() + getTriangleVertexCount(cConvexPolygon),
+			                       sf::Vertex({}, cConvexPolygon.color()));
+
 			constexpr std::size_t c_maxVertexCount = std::numeric_limits<decltype(m_worldVerticesIndices)::mapped_type>::max();
 			assert(m_worldVertices.size() < c_maxVertexCount);
 			
@@ -84,6 +85,13 @@ void SRender::initializeProperties()
 
 void SRender::update(float)
 {
+	for (Entity entity : m_queries[Q::ConvexPolygons])
+	{
+		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
+		if (cConvexPolygon.color().hasChangedSince(m_lastUpdateTicks))
+			updateConvexPolygonColor(entity, cConvexPolygon);
+	}
+
 	m_window->clear(m_properties->get<sf::Color>(ClearColor));
 
 	for (CView& cView: m_queries[Q::View].getAll<CView>())
@@ -119,14 +127,23 @@ void SRender::update(float)
 void SRender::updateConvexPolygonPosition(const Entity& entity, const CConvexPolygon& cConvexPolygon)
 {
 	const std::vector<sf::Vector2f>& polygonVertices = cConvexPolygon.vertices();
+	const auto baseIndex = m_worldVerticesIndices.at(entity.getId());
 	const sf::Vector2f pos = entity.get<CPosition>();
 
 	for (unsigned i = 2; i != polygonVertices.size(); ++i)
 	{
-		sf::Vertex* const triangleVertices = &m_worldVertices[3 * (i - 2) + m_worldVerticesIndices.at(entity.getId())];
+		sf::Vertex* const triangleVertices = &m_worldVertices[baseIndex + 3 * (i - 2)];
 
-		triangleVertices[0] = {pos + polygonVertices[0], cConvexPolygon.color()};
-		triangleVertices[1] = {pos + polygonVertices[i - 1], cConvexPolygon.color()};
-		triangleVertices[2] = {pos + polygonVertices[i], cConvexPolygon.color()};
+		triangleVertices[0].position = pos + polygonVertices[0];
+		triangleVertices[1].position = pos + polygonVertices[i - 1];
+		triangleVertices[2].position = pos + polygonVertices[i];
 	}
+}
+
+void SRender::updateConvexPolygonColor(const Entity& entity, const CConvexPolygon& cConvexPolygon)
+{
+	const auto baseIndex = m_worldVerticesIndices.at(entity.getId());
+
+	for (unsigned i = getTriangleVertexCount(cConvexPolygon); i--;)
+		m_worldVertices[baseIndex + i].color = cConvexPolygon.color();
 }

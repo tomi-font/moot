@@ -1,5 +1,6 @@
 #pragma once
 
+#include <moot/TrackedValue.hh>
 #include <vector>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -13,11 +14,13 @@ public:
 	auto& vertices() const { return m_vertices; }
 	auto& color() const { return m_color; }
 
+	void setColor(sf::Color color) { m_color = color; }
+
 	sf::Vector2f getCentroid() const;
 	bool contains(const sf::Vector2f& point) const;
 
 private:
 
 	std::vector<sf::Vector2f> m_vertices;
-	sf::Color m_color;
+	TrackedValue<sf::Color> m_color;
 };

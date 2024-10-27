@@ -53,7 +53,10 @@ static void registerComponentTypes(sol::state* lua)
 	view["setSize"] = [](CView* cView, sol::object size) { cView->setSize(asVector2f(size)); };
 	view["setLimits"] = [](CView* cView, sol::object size) { cView->setLimits(asFloatRect(size)); };
 
-	auto pos = registerComponent<CPosition>(ct);
+	auto position = registerComponent<CPosition>(ct);
+
+	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
+	convexPolygon["color"] = sol::property(&CConvexPolygon::setColor);
 }
 
 void EntityFunctions::registerAll(sol::state* lua)

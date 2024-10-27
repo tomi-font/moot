@@ -37,6 +37,7 @@ template<> void registerAttributeValues<sf::Color>(sol::state* lua)
 	
 	colors["Black"] = sf::Color::Black;
 	colors["Gray"] = sf::Color(128, 128, 128);
+	colors["Green"] = sf::Color::Green;
 }
 
 void ComponentAttributes::registerAll(sol::state* lua)
