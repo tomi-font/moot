@@ -15,6 +15,6 @@ private:
 	void update(float elapsedTime) override;
 	void updatePointables();
 
-	sf::Vector2i m_mousePos;
+	std::optional<sf::Vector2i> m_mousePos;
 	EntityId m_pointedEntityId;
 };

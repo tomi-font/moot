@@ -11,7 +11,8 @@ enum Q
 	COUNT
 };
 
-SInput::SInput() : m_pointedEntityId(InvalidEntityId)
+SInput::SInput() :
+	m_pointedEntityId()
 {
 	m_queries.resize(Q::COUNT);
 	m_queries[Q::Input] = {{ .required = {CId<CInput>} }};
@@ -27,8 +28,18 @@ void SInput::update(float)
 {
 	for (sf::Event event; m_window->pollEvent(event);)
 	{
-		if (event.type == sf::Event::MouseMoved)
+		switch (event.type)
+		{
+		case sf::Event::MouseEntered:
+			m_mousePos = sf::Mouse::getPosition(*m_window);
+			break;
+		case sf::Event::MouseLeft:
+			m_mousePos.reset();
+			break;
+		case sf::Event::MouseMoved:
 			m_mousePos = {event.mouseMove.x, event.mouseMove.y};
+			break;
+		}
 
 		bool eventHasCallback = false;
 
@@ -53,14 +64,15 @@ void SInput::update(float)
 
 void SInput::updatePointables()
 {
-	const sf::Vector2f mouseWorldPos = m_window->mapPixelToWorld(m_mousePos);
+	const sf::Vector2f mouseWorldPos = m_mousePos ? m_window->mapPixelToWorld(*m_mousePos) : sf::Vector2f();
 	const EntityId prevPointedEntityId = m_pointedEntityId;
-	m_pointedEntityId = InvalidEntityId;
+	m_pointedEntityId = {};
 
 	for (Entity entity : m_queries[Q::Pointables])
 	{
 		const bool wasPointed = (entity.getId() == prevPointedEntityId);
-		const bool isPointed = entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
+		const bool isPointed = !m_pointedEntityId && m_mousePos
+		                    && entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
 
 		if (!wasPointed && isPointed)
 			entity.get<CPointable>().notify(CPointable::PointerEntered, entity);

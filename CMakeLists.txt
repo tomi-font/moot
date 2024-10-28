@@ -27,6 +27,8 @@ target_compile_options(moot PRIVATE
 	-Wno-implicit-int-float-conversion
 	-Wno-missing-field-initializers
 	-Wno-packed-non-pod
+	-Wno-switch
+	-Wno-switch-default
 )
 
 file(GLOB_RECURSE source_files src/*.cc)
