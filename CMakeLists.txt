@@ -8,27 +8,38 @@ target_include_directories(moot SYSTEM INTERFACE include)
 
 target_compile_features(moot PUBLIC cxx_std_26)
 
-target_compile_options(moot PUBLIC
-	-Wno-c++98-compat
-	-Wno-pre-c++14-compat
-	-Wno-padded
+# For clangd to not show warnings in header files.
+set(PUBLIC_DISABLED_WARNINGS
+	c++98-compat
+	padded
+	pre-c++14-compat
 )
+list(TRANSFORM PUBLIC_DISABLED_WARNINGS PREPEND "-Wno-")
+
+target_compile_options(moot PUBLIC
+	${PUBLIC_DISABLED_WARNINGS}
+)
+
+set(PRIVATE_DISABLED_WARNINGS
+	c99-designator
+	c++20-compat
+	c++20-extensions
+	exit-time-destructors
+	global-constructors
+	implicit-int-float-conversion
+	missing-field-initializers
+	packed-non-pod
+	pre-c++20-compat-pedantic
+	switch
+	switch-default
+	switch-enum
+	unsafe-buffer-usage
+)
+list(TRANSFORM PRIVATE_DISABLED_WARNINGS PREPEND "-Wno-")
 
 target_compile_options(moot PRIVATE
 	-Weverything
-	-Wno-c99-designator
-	-Wno-unsafe-buffer-usage
-	-Wno-switch-enum
-	-Wno-exit-time-destructors
-	-Wno-global-constructors
-	-Wno-c++20-compat
-	-Wno-c++20-extensions
-	-Wno-pre-c++20-compat-pedantic
-	-Wno-implicit-int-float-conversion
-	-Wno-missing-field-initializers
-	-Wno-packed-non-pod
-	-Wno-switch
-	-Wno-switch-default
+	${PRIVATE_DISABLED_WARNINGS}
 )
 
 file(GLOB_RECURSE source_files src/*.cc)
