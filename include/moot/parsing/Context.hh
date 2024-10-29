@@ -2,7 +2,6 @@
 
 #include <sol/forward.hpp>
 
-class PrototypeStore;
 class World;
 
 class ParsingContext
@@ -12,7 +11,7 @@ public:
 	ParsingContext();
 	~ParsingContext();
 
-	void initialize(World*, PrototypeStore*);
+	void initialize(World*);
 
 	void process(const std::string& file);
 

@@ -20,14 +20,14 @@ ParsingContext::~ParsingContext()
 	assert(false);
 }
 
-void ParsingContext::initialize(World* world, PrototypeStore* prototypeStore)
+void ParsingContext::initialize(World* world)
 {
 	auto errorHandler = m_lua["errorHandler"];
 	errorHandler.set_function(luaErrorHandler);
 	sol::protected_function::set_default_handler(errorHandler);
 
 	ComponentAttributes::registerAll(&m_lua);
-	GlobalFunctions::registerAll(&m_lua, world, prototypeStore);
+	GlobalFunctions::registerAll(&m_lua, world);
 	EntityFunctions::registerAll(&m_lua);
 	CallbackParameters::registerAll(&m_lua);
 }

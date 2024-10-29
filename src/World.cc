@@ -28,7 +28,7 @@ World::World(Window* window) :
 	setEventManager(&m_eventManager);
 	listen(Event::GameClose);
 
-	m_parsingContext.initialize(this, &m_prototypeStore);
+	m_parsingContext.initialize(this);
 }
 
 void World::triggered(const Event& event)
@@ -203,6 +203,16 @@ void World::instantiate(const Prototype& proto, const sf::Vector2f& pos)
 	Prototype& entity = m_entitiesToInstantiate.emplace_back(proto);
 	entity.add<CPosition>(pos);
 	processInstantiatedEntity(&entity);
+}
+
+void World::instantiate(const std::string& protoName)
+{
+	instantiate(m_prototypeStore.getPrototype(protoName));
+}
+
+void World::instantiate(const std::string& protoName, const sf::Vector2f& pos)
+{
+	instantiate(m_prototypeStore.getPrototype(protoName), pos);
 }
 
 void World::remove(EntityContext entity)

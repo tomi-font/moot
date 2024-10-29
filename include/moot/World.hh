@@ -29,8 +29,12 @@ public:
 
 	void processScript(const std::string& path);
 
-	void instantiate(const Prototype& proto);
+	auto* prototypeStore() { return &m_prototypeStore; }
+
+	void instantiate(const Prototype&);
 	void instantiate(const Prototype&, const sf::Vector2f& pos);
+	void instantiate(const std::string& protoName);
+	void instantiate(const std::string& protoName, const sf::Vector2f& pos);
 	void remove(EntityContext);
 
 	void addComponentTo(Entity*, ComponentVariant&&);
@@ -52,14 +56,13 @@ private:
 	void updateEntitiesComponents();
 	void updateEntities();
 
-	// The PrototypeStore is destroyed after the ParsingContext to allow prototypes defined as globals.
-	PrototypeStore m_prototypeStore;
-
-	// The ParsingContext must be destroyed after the entities so that it's still valid when components containing references get destroyed.
-	ParsingContext m_parsingContext;
-
 	Archetype* findArchetype(ComponentComposition);
 	Archetype* getArchetype(ComponentComposition);
+
+	// The ParsingContext must be destroyed last so that it's still valid when components containing references get destroyed.
+	ParsingContext m_parsingContext;
+
+	PrototypeStore m_prototypeStore;
 
 	// Existing archetypes, where all the entities' components are.
 	// Pointers to Archetypes are stored, so they shall not be invalidated.

@@ -1,21 +1,26 @@
 #pragma once
 
 #include <moot/Entity/Prototype.hh>
+#include <SFML/System/NonCopyable.hpp>
 
 using PrototypeUid = unsigned;
 
-class PrototypeStore
+class PrototypeStore : sf::NonCopyable
 {
 public:
 
 	std::pair<Prototype*, PrototypeUid> newPrototype();
+	Prototype* newPrototype(std::string&& name);
 
-	const Prototype& getPrototype(PrototypeUid) const noexcept;
+	const Prototype& getPrototype(PrototypeUid uid) const { return m_numberedPrototypes.at(uid); }
+	const Prototype& getPrototype(const std::string& name) const { return m_namedPrototypes.at(name); }
 
 	void deletePrototype(PrototypeUid);
 
 protected:
 
-	std::unordered_map<PrototypeUid, Prototype> m_prototypes;
+	std::unordered_map<PrototypeUid, Prototype> m_numberedPrototypes;
 	PrototypeUid m_nextUid = 0;
+
+	std::unordered_map<std::string, Prototype> m_namedPrototypes;
 };

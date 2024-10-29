@@ -7,50 +7,70 @@
 
 static constexpr std::string_view PrototypeUidKey = "uid";
 
-static const Prototype& findOrMakePrototype(sol::table componentTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
+static void parsePrototype(sol::table protoTable, Prototype* proto)
 {
-	auto uidObj = componentTable[PrototypeUidKey];
+	for (const auto& attr : protoTable)
+		PrototypeAttributes::parse(attr, proto);
+}
+
+static const Prototype& findOrMakePrototype(sol::table protoTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
+{
+	auto uidObj = protoTable[PrototypeUidKey];
 	if (uidObj.valid())
 		return prototypeStore->getPrototype(as<PrototypeUid>(uidObj));
 
 	const auto [proto, uid] = prototypeStore->newPrototype();
 
-	for (const auto& component : componentTable)
-		PrototypeAttributes::parse(component, proto);
+	parsePrototype(protoTable, proto);
 
 	uidObj = uid;
-	componentTable[sol::metatable_key] = prototypeMetatable;
+	protoTable[sol::metatable_key] = prototypeMetatable;
 
 	return *proto;
 }
 
-void GlobalFunctions::registerAll(sol::state* lua, World* world, PrototypeStore* prototypeStore)
+void GlobalFunctions::registerAll(sol::state* lua, World* world)
 {
+	PrototypeStore* const prototypeStore = world->prototypeStore();
 	Window* const window = world->window();
 
-	lua->set_function("exitGame", &World::stopRunning, world);
+	lua->set_function("register",
+		[prototypeStore](std::string name, sol::table protoTable)
+		{
+			parsePrototype(protoTable, prototypeStore->newPrototype(std::move(name)));
+		}
+	);
 
 	const sol::table prototypeMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
-		[prototypeStore](const sol::table& proto)
+		[prototypeStore](const sol::table& protoTable)
 		{
-			prototypeStore->deletePrototype(as<PrototypeUid>(proto[PrototypeUidKey]));
+			prototypeStore->deletePrototype(as<PrototypeUid>(protoTable[PrototypeUidKey]));
 		});
 	const auto getPrototype =
-		[=](sol::table componentTable)
+		[=](sol::table protoTable)
 		{
-			return findOrMakePrototype(componentTable, prototypeStore, prototypeMetatable);
+			return findOrMakePrototype(protoTable, prototypeStore, prototypeMetatable);
 		};
 	lua->set_function("spawn", sol::overload(
-		[=](sol::table entity)
+		[=](sol::table protoTable)
 		{
-			world->instantiate(getPrototype(entity));
+			world->instantiate(getPrototype(protoTable));
 		},
-		[=](sol::table entity, sol::table pos)
+		[=](sol::table protoTable, const sol::object& pos)
 		{
-			world->instantiate(getPrototype(entity), asVector2f(pos));
+			world->instantiate(getPrototype(protoTable), asVector2f(pos));
+		},
+		[world](const std::string& protoName)
+		{
+			world->instantiate(protoName);
+		},
+		[world](const std::string& protoName, const sol::object& pos)
+		{
+			world->instantiate(protoName, asVector2f(pos));
 		}
 	));
 
+	lua->set_function("exitGame", &World::stopRunning, world);
 	lua->set_function("findEntity", &World::findEntity, world);
 	lua->set_function("isKeyPressed",
 		[](sf::Keyboard::Key key)
