@@ -2,12 +2,12 @@
 
 #include <sol/sol.hpp>
 
-class TemplateStore;
+class PrototypeStore;
 class World;
 
 class GlobalFunctions
 {
 public:
 
-	static void registerAll(sol::state*, World*, TemplateStore*);
+	static void registerAll(sol::state*, World*, PrototypeStore*);
 };

@@ -10,7 +10,7 @@
 #include <vector>
 #include <SFML/System/NonCopyable.hpp>
 
-class Template;
+class Prototype;
 class World;
 
 // Archetypes store components of entities that are the same, i.e. have exactly the same components.
@@ -40,7 +40,7 @@ public:
 	// Returns the component of the requested type found at the given idex.
 	template<typename C> C* get(unsigned index) { return &getAll<C>()[index]; }
 
-	EntityContext instantiate(const Template&);
+	EntityContext instantiate(const Prototype&);
 	// Removes the entity at the given index.
 	void remove(unsigned);
 

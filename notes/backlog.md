@@ -1,7 +1,5 @@
 - Move ComponentComposable inheritance away from EntityContext?
 
-- Rename Template to something else?
-
 - Remove duplication of entity parameters (e.g. position, size) among its components.
 
 - Extend EntityQuery::getAll() to allow specifying several component types and be able to iterate over ~tuples, allowing one element to be an Entity. (See structured bindings.)

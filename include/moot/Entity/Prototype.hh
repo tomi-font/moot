@@ -5,7 +5,7 @@
 #include <map>
 #include <type_traits>
 
-class Template : public ComponentComposable
+class Prototype : public ComponentComposable
 {
 public:
 

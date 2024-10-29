@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/Entity/Template.hh>
+#include <moot/Entity/Prototype.hh>
 #include <unordered_map>
 #include <sol/sol.hpp>
 

@@ -28,7 +28,7 @@ World::World(Window* window) :
 	setEventManager(&m_eventManager);
 	listen(Event::GameClose);
 
-	m_parsingContext.initialize(this, &m_templateStore);
+	m_parsingContext.initialize(this, &m_prototypeStore);
 }
 
 void World::triggered(const Event& event)
@@ -44,7 +44,7 @@ void World::processScript(const std::string& path)
 
 void World::updateEntities()
 {
-	std::vector<std::tuple<ComponentComposition, Template>> entitiesToChange;
+	std::vector<std::tuple<ComponentComposition, Prototype>> entitiesToChange;
 	entitiesToChange.reserve(m_entitiesToChange.size());
 
 	// First remove the entities. That invalidates references to other entities.
@@ -78,9 +78,9 @@ void World::updateEntities()
 	// This is the moment there must not be any extra reference left because they are invalidated by removal and modification of entities.
 	assert(EntityContext::instanceCount() == 0);
 
-	for (const auto& [oldComp, temp] : entitiesToChange)
+	for (const auto& [oldComp, proto] : entitiesToChange)
 	{
-		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
+		const Entity entity = getArchetype(proto.comp())->instantiate(proto);
 
 		for (const auto& system: m_systems)
 			system->entityChangedAddedCallback(entity, oldComp);
@@ -89,9 +89,9 @@ void World::updateEntities()
 
 	std::unordered_set<Entity> instantiatedEntities;
 
-	for (const Template& temp : m_entitiesToInstantiate)
+	for (const Prototype& proto : m_entitiesToInstantiate)
 	{
-		const Entity entity = getArchetype(temp.comp())->instantiate(temp);
+		const Entity entity = getArchetype(proto.comp())->instantiate(proto);
 
 		for (const auto& system : m_systems)
 			system->entityAddedCallback(entity);
@@ -171,7 +171,7 @@ std::optional<Entity> World::findEntity(std::string_view name)
 	return {};
 }
 
-static void processEntityToBeAdded(const Template& entity)
+static void processEntityToBeAdded(const Prototype& entity)
 {
 	if (!entity.has<CPosition>())
 		assert(entity.hasNoneOf(CId<CCollisionBox> + CId<CConvexPolygon> + CId<CView> + CId<CMove> + CId<CRigidbody>));
@@ -180,27 +180,27 @@ static void processEntityToBeAdded(const Template& entity)
 		assert(entity.has<CConvexPolygon>());
 }
 
-static void processChangedEntity(const Template& entity)
+static void processChangedEntity(const Prototype& entity)
 {
 	assert(entity.has<CEntity>());
 	processEntityToBeAdded(entity);
 }
 
-static void processInstantiatedEntity(Template* entity)
+static void processInstantiatedEntity(Prototype* entity)
 {
 	entity->add<CEntity>();
 	processEntityToBeAdded(*entity);
 }
 
-void World::instantiate(const Template& temp)
+void World::instantiate(const Prototype& proto)
 {
-	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
+	Prototype& entity = m_entitiesToInstantiate.emplace_back(proto);
 	processInstantiatedEntity(&entity);
 }
 
-void World::instantiate(const Template& temp, const sf::Vector2f& pos)
+void World::instantiate(const Prototype& proto, const sf::Vector2f& pos)
 {
-	Template& entity = m_entitiesToInstantiate.emplace_back(temp);
+	Prototype& entity = m_entitiesToInstantiate.emplace_back(proto);
 	entity.add<CPosition>(pos);
 	processInstantiatedEntity(&entity);
 }
@@ -273,7 +273,7 @@ void World::updateEntitiesComponents()
 		// Schedule the entity to be removed and its changed version to be added.
 		// All the entities must be removed in a controlled order because the removal invalidates references to other entities.
 		m_entitiesToRemove.insert(entity);
-		Template& temp = m_entitiesToChange[entity];
+		Prototype& proto = m_entitiesToChange[entity];
 
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
@@ -286,15 +286,15 @@ void World::updateEntitiesComponents()
 					[&](auto I)
 					{
 						using C = std::tuple_element_t<I, Components>;
-						temp.add<C>(*arch->get<C>(entity.m_idx));
+						proto.add<C>(*arch->get<C>(entity.m_idx));
 					});
 			}
 		}
 		// And to them add the components to be added.
 		for (auto& [cid, component] : m_componentsToAdd[entity])
-			temp.add(std::move(component));
+			proto.add(std::move(component));
 
-		processChangedEntity(temp);
+		processChangedEntity(proto);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();

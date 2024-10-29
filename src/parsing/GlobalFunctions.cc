@@ -1,53 +1,53 @@
 #include <moot/parsing/GlobalFunctions.hh>
 #include <moot/Entity/Entity.hh>
-#include <moot/Entity/TemplateStore.hh>
-#include <moot/parsing/TemplateAttributes.hh>
+#include <moot/Entity/PrototypeStore.hh>
+#include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/parsing/types.hh>
 #include <moot/utility/variant/indexToCompileTime.hh>
 
-static constexpr std::string_view TemplateUidKey = "uid";
+static constexpr std::string_view PrototypeUidKey = "uid";
 
-static const Template& findOrMakeTemplate(sol::table componentTable, TemplateStore* templateStore, const sol::table& templateMetatable)
+static const Prototype& findOrMakePrototype(sol::table componentTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
 {
-	auto uidObj = componentTable[TemplateUidKey];
+	auto uidObj = componentTable[PrototypeUidKey];
 	if (uidObj.valid())
-		return templateStore->getTemplate(as<TemplateUid>(uidObj));
+		return prototypeStore->getPrototype(as<PrototypeUid>(uidObj));
 
-	const auto [temp, uid] = templateStore->newTemplate();
+	const auto [proto, uid] = prototypeStore->newPrototype();
 
 	for (const auto& component : componentTable)
-		TemplateAttributes::parse(component, temp);
+		PrototypeAttributes::parse(component, proto);
 
 	uidObj = uid;
-	componentTable[sol::metatable_key] = templateMetatable;
+	componentTable[sol::metatable_key] = prototypeMetatable;
 
-	return *temp;
+	return *proto;
 }
 
-void GlobalFunctions::registerAll(sol::state* lua, World* world, TemplateStore* templateStore)
+void GlobalFunctions::registerAll(sol::state* lua, World* world, PrototypeStore* prototypeStore)
 {
 	Window* const window = world->window();
 
 	lua->set_function("exitGame", &World::stopRunning, world);
 
-	const sol::table templateMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
-		[templateStore](const sol::table& temp)
+	const sol::table prototypeMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
+		[prototypeStore](const sol::table& proto)
 		{
-			templateStore->deleteTemplate(as<TemplateUid>(temp[TemplateUidKey]));
+			prototypeStore->deletePrototype(as<PrototypeUid>(proto[PrototypeUidKey]));
 		});
-	const auto getTemplate =
+	const auto getPrototype =
 		[=](sol::table componentTable)
 		{
-			return findOrMakeTemplate(componentTable, templateStore, templateMetatable);
+			return findOrMakePrototype(componentTable, prototypeStore, prototypeMetatable);
 		};
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table entity)
 		{
-			world->instantiate(getTemplate(entity));
+			world->instantiate(getPrototype(entity));
 		},
 		[=](sol::table entity, sol::table pos)
 		{
-			world->instantiate(getTemplate(entity), asVector2f(pos));
+			world->instantiate(getPrototype(entity), asVector2f(pos));
 		}
 	));
 

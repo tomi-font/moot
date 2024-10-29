@@ -1,6 +1,6 @@
 #include <moot/Component/Composable.hh>
 #include <moot/Entity/Archetype.hh>
-#include <moot/Entity/Template.hh>
+#include <moot/Entity/Prototype.hh>
 #include <moot/utility/variant/indexToCompileTime.hh>
 
 Archetype::Archetype(ComponentComposition comp, World* world) :
@@ -23,16 +23,16 @@ Archetype::Archetype(ComponentComposition comp, World* world) :
 	}
 }
 
-EntityContext Archetype::instantiate(const Template& entity)
+EntityContext Archetype::instantiate(const Prototype& entity)
 {
 	assert(entity.comp() == m_comp);
 	ComponentComposition componentsLeft = m_comp;
 
-	// Instantiate a new entity by appending all of the template's components.
+	// Instantiate a new entity by appending all of the prototype's components.
 	unsigned i = 0;
 	for (const auto& [cid, component] : entity.m_components)
 	{
-		// Ensure that the template's components are stored in the expected order (ascending index).
+		// Ensure that the prototype's components are stored in the expected order (ascending index).
 		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
 		componentsLeft -= cid;
 

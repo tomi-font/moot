@@ -1,4 +1,4 @@
-#include <moot/parsing/TemplateAttributes.hh>
+#include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/parsing/ComponentAttributes.hh>
 #include <moot/parsing/types.hh>
@@ -8,17 +8,17 @@ static const std::unordered_map<std::string_view, CCallback::Type> s_callbackTyp
 	{"onSpawn", CCallback::OnSpawn},
 };
 
-void TemplateAttributes::parse(const std::pair<sol::object, sol::object>& attribute, Template* temp)
+void PrototypeAttributes::parse(const std::pair<sol::object, sol::object>& attribute, Prototype* proto)
 {
 	const auto& name = as<std::string_view>(attribute.first);
 	
 	if (const auto& parser = ComponentAttributes::findParser(name))
 	{
-		temp->add(parser(attribute.second));
+		proto->add(parser(attribute.second));
 	}
 	else
 	{
-		CCallback* cCallback = temp->has<CCallback>() ? temp->get<CCallback*>() : temp->add<CCallback>();
+		CCallback* cCallback = proto->has<CCallback>() ? proto->get<CCallback*>() : proto->add<CCallback>();
 		cCallback->add(s_callbackTypes.at(name), as<CCallback::Callback>(attribute.second));
 	}
 }

@@ -3,7 +3,7 @@
 #include <moot/Entity/Archetype.hh>
 #include <moot/Entity/hash.hh>
 #include <moot/Entity/Id.hh>
-#include <moot/Entity/TemplateStore.hh>
+#include <moot/Entity/PrototypeStore.hh>
 #include <moot/Event/Manager.hh>
 #include <moot/parsing/Context.hh>
 #include <moot/Property/Properties.hh>
@@ -27,8 +27,8 @@ public:
 
 	void processScript(const std::string& path);
 
-	void instantiate(const Template& temp);
-	void instantiate(const Template&, const sf::Vector2f& pos);
+	void instantiate(const Prototype& proto);
+	void instantiate(const Prototype&, const sf::Vector2f& pos);
 	void remove(EntityContext);
 
 	void addComponentTo(EntityContext*, ComponentVariant&&);
@@ -50,8 +50,8 @@ private:
 	void updateEntitiesComponents();
 	void updateEntities();
 
-	// The TemplateStore is destroyed after the ParsingContext to allow templates defined as globals.
-	TemplateStore m_templateStore;
+	// The PrototypeStore is destroyed after the ParsingContext to allow prototypes defined as globals.
+	PrototypeStore m_prototypeStore;
 
 	// The ParsingContext must be destroyed after the entities so that it's still valid when components containing references get destroyed.
 	ParsingContext m_parsingContext;
@@ -72,10 +72,10 @@ private:
 
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.
-	std::vector<Template> m_entitiesToInstantiate;
+	std::vector<Prototype> m_entitiesToInstantiate;
 	std::set<EntityContext, std::greater<EntityContext>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
 
-	std::unordered_map<EntityContext, Template> m_entitiesToChange;
+	std::unordered_map<EntityContext, Prototype> m_entitiesToChange;
 	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
 	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 
