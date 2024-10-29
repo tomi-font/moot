@@ -9,10 +9,12 @@ template<typename T> struct Vector2 : sf::Vector2<T>
 
 	bool isZero() const { return *this == sf::Vector2<T>(); }
 	bool isNotZero() const { return !isZero(); }
+	bool isMoreThanZero() const { return min() > 0; }
 
 	T min() const { return std::min(this->x, this->y); }
 	T max() const { return std::max(this->x, this->y); }
 };
+template<typename T> Vector2(sf::Vector2<T>) -> Vector2<T>;
 
 using Vector2f = Vector2<float>;
 using Vector2i = Vector2<int>;

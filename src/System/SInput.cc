@@ -64,6 +64,7 @@ void SInput::update(float)
 
 void SInput::updatePointables()
 {
+	const bool viewIsNotEmpty = Vector2(m_window->getView().getSize()).isMoreThanZero();
 	const sf::Vector2f mouseWorldPos = m_mousePos ? m_window->mapPixelToWorld(*m_mousePos) : sf::Vector2f();
 	const EntityId prevPointedEntityId = m_pointedEntityId;
 	m_pointedEntityId = {};
@@ -71,7 +72,7 @@ void SInput::updatePointables()
 	for (Entity entity : m_queries[Q::Pointables])
 	{
 		const bool wasPointed = (entity.getId() == prevPointedEntityId);
-		const bool isPointed = !m_pointedEntityId && m_mousePos
+		const bool isPointed = !m_pointedEntityId && m_mousePos && viewIsNotEmpty
 		                    && entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
 
 		if (!wasPointed && isPointed)
