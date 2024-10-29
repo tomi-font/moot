@@ -50,17 +50,17 @@ void World::updateEntities()
 	// First remove the entities. That invalidates references to other entities.
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		assert(entity.comp() == entity.m_arch->comp());
+		// assert(entity.comp() == entity.m_arch->comp());
 
 		const auto findIt = m_entitiesToChange.find(entity);
 		if (findIt != m_entitiesToChange.end())
 		{
-			assert(entity.comp() == findIt->first.comp());
+			// assert(entity.comp() == findIt->first.comp());
 
 			for (const auto& system: m_systems)
 				system->entityChangedRemovedCallback(entity, findIt->second.comp());
 			
-			entitiesToChange.emplace_back(entity.comp(), std::move(findIt->second));
+			entitiesToChange.emplace_back(entity.m_arch->comp(), std::move(findIt->second));
 			m_entitiesToChange.erase(findIt);
 		}
 		else
@@ -212,14 +212,11 @@ void World::remove(EntityContext entity)
 	m_entitiesToRemove.insert(entity);
 }
 
-void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
+void World::addComponentTo(Entity* entity, ComponentVariant&& component)
 {	
 	const ComponentId cid = CVId(component);
-	entity->m_comp += cid;
 
 	EntityContext ec = *entity;
-	// Clear the composition to make sure it doesn't get used as it would fall out of date.
-	ec.m_comp = {};
 	assert(!m_entitiesToRemove.contains(ec));
 
 	if (m_componentsToRemove.contains(ec))
@@ -232,14 +229,11 @@ void World::addComponentTo(EntityContext* entity, ComponentVariant&& component)
 	assert(added);
 }
 
-void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
+void World::removeComponentFrom(Entity* entity, ComponentId cid)
 {
 	assert(cid != CId<CEntity>);
-	entity->m_comp -= cid;
 
 	EntityContext ec = *entity;
-	// Clear the composition to make sure it doesn't get used as it would fall out of date.
-	ec.m_comp = {};
 	assert(!m_entitiesToRemove.contains(ec));
 	
 	if (m_componentsToAdd.contains(ec))
@@ -253,7 +247,6 @@ void World::removeComponentFrom(EntityContext* entity, ComponentId cid)
 
 ComponentVariant* World::getStagedComponentOf(const EntityContext& entity, ComponentId cid)
 {
-	assert(entity.has(cid));
 	return &m_componentsToAdd.at(entity).at(cid);
 }
 
@@ -267,8 +260,7 @@ void World::updateEntitiesComponents()
 
 	for (EntityContext entity : entities)
 	{
-		Archetype* arch = entity.m_arch;
-		entity.m_comp = arch->comp();
+		Archetype* const arch = entity.m_arch;
 
 		// Schedule the entity to be removed and its changed version to be added.
 		// All the entities must be removed in a controlled order because the removal invalidates references to other entities.
@@ -278,7 +270,7 @@ void World::updateEntitiesComponents()
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
 		// Start with the entity's original components minus those that are to be removed.
-		for (ComponentId cid : entity.comp())
+		for (ComponentId cid : arch->comp())
 		{
 			if (!componentsToRemove.contains(cid))
 			{

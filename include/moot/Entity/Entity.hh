@@ -3,12 +3,12 @@
 #include <moot/World.hh>
 
 // Handle to an entity that allows manipulating it.
-class Entity : public EntityContext
+class Entity : public EntityContext, public ComponentComposable
 {
 public:
 
 	Entity() {}
-	Entity(const EntityContext& ec) : EntityContext(ec) {}
+	Entity(const EntityContext& ec) : EntityContext(ec), ComponentComposable(m_arch->comp()) {}
 
 	// Returns a const reference to the requested component.
 	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
@@ -49,10 +49,12 @@ public:
 	void add(ComponentVariant&& component)
 	{
 		world()->addComponentTo(this, std::move(component));
+		m_comp += CVId(component);
 	}
 	void remove(ComponentId cid)
 	{
 		world()->removeComponentFrom(this, cid);
+		m_comp -= cid;
 	}
 
 private:

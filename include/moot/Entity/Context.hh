@@ -5,8 +5,8 @@
 
 class Archetype;
 
-// An entity context holds a temporary pointer to an entity as well as its component composition.
-class EntityContext : public ComponentComposable, InstanceCounter<EntityContext>
+// An entity context holds a temporary pointer to an entity.
+class EntityContext : InstanceCounter<EntityContext>
 {
 	friend class World;
 	friend struct std::hash<EntityContext>;
@@ -14,7 +14,7 @@ class EntityContext : public ComponentComposable, InstanceCounter<EntityContext>
 public:
 
 	EntityContext() : m_arch(nullptr), m_idx(0) {}
-	EntityContext(ComponentComposition comp, Archetype* arch, unsigned index) : ComponentComposable(comp), m_arch(arch), m_idx(index) {}	
+	EntityContext(Archetype* arch, unsigned index) : m_arch(arch), m_idx(index) {}	
 
 	bool isEmpty() const { return m_arch; }
 

@@ -14,6 +14,8 @@
 #include <set>
 #include <unordered_set>
 
+class Entity;
+
 class World : public EventUser, sf::NonCopyable
 {
 public:
@@ -31,8 +33,8 @@ public:
 	void instantiate(const Prototype&, const sf::Vector2f& pos);
 	void remove(EntityContext);
 
-	void addComponentTo(EntityContext*, ComponentVariant&&);
-	void removeComponentFrom(EntityContext*, ComponentId);
+	void addComponentTo(Entity*, ComponentVariant&&);
+	void removeComponentFrom(Entity*, ComponentId);
 
 	std::optional<Entity> findEntity(std::string_view name);
 

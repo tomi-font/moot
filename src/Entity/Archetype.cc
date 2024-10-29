@@ -50,7 +50,7 @@ EntityContext Archetype::instantiate(const Prototype& entity)
 	
 	const auto index = m_entityCount;
 	++m_entityCount;
-	return {m_comp, this, index};
+	return {this, index};
 }
 
 void Archetype::remove(const unsigned index)
