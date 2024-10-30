@@ -57,7 +57,7 @@ template<> ComponentVariant parser<CConvexPolygon>(const sol::object& data)
 {
 	const auto& map = asLuaMap<2>(data);
 
-	std::vector<sf::Vector2f> vertices;
+	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
 		vertices.push_back(asVector2f(value));
 

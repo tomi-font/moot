@@ -146,7 +146,7 @@ void SRender::updateView(const Entity& entity)
 
 void SRender::updateConvexPolygonPosition(const Entity& entity, const CConvexPolygon& cConvexPolygon)
 {
-	const std::vector<sf::Vector2f>& polygonVertices = cConvexPolygon.vertices();
+	const auto& polygonVertices = cConvexPolygon.vertices();
 	const auto baseIndex = m_worldVerticesIndices.at(entity.getId());
 	const sf::Vector2f pos = entity.get<CPosition>();
 
