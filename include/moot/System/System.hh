@@ -20,7 +20,7 @@ public:
 
 	void setWindow(Window*);
 
-	void gameLoopUpdate(float elapsedTime);
+	void performUpdate();
 
 protected:
 
@@ -36,5 +36,5 @@ private:
 	GlobalClock::Ticks m_lastUpdateTicks;
 	Window* m_window;
 
-	virtual void update(float elapsedTime) = 0;
+	virtual void update() = 0;
 };

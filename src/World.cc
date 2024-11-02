@@ -114,7 +114,7 @@ void World::updateEntities()
 
 void World::update()
 {
-	const float elapsedTime = m_clock.restart().asSeconds();
+	m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
 
 	// First remove and add existing entities' components.
 	// References to them get invalidated when removing entities.
@@ -125,7 +125,7 @@ void World::update()
 
 	for (const auto& system : m_systems)
 	{
-		system->gameLoopUpdate(elapsedTime);
+		system->performUpdate();
 	}
 	
 	m_parsingContext.update();

@@ -10,5 +10,5 @@ public:
 
 private:
 
-	void update(float elapsedTime) override;
+	void update() override;
 };

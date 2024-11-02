@@ -9,8 +9,11 @@ struct Property
 {
 	using Value = std::variant<
 		Color,
+		float,
 		sf::Vector2f
 	>;
 
 	using Getter = std::function<Property::Value()>;
+
+	static const std::string ElapsedTime;
 };

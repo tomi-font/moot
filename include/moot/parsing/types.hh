@@ -99,7 +99,7 @@ inline Color asColor(const sol::object& var)
 		return as<Color>(var);
 }
 
-template<typename T> static inline T asParsed(const sol::object& var);
+template<typename T> static inline T asParsed(const sol::object& var) { return as<T>(var); }
 template<> inline sf::Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
 template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
 

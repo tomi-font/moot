@@ -207,8 +207,9 @@ static Collision getFirstCollision(const Entity& entity, const CollidableProvisi
 	return firstCollision;
 }
 
-void SPhysics::update(float elapsedTime)
+void SPhysics::update()
 {
+	const float elapsedTime = m_properties->get<float>(Property::ElapsedTime);
 	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
 
 	for (Entity entity : m_queries[Q::Dynamic])

@@ -99,7 +99,7 @@ void SRender::initializeProperties()
 	m_properties->set(ClearColor, sf::Color::Black);
 }
 
-void SRender::update(float)
+void SRender::update()
 {
 	for (Entity entity : m_queries[Q::View])
 	{

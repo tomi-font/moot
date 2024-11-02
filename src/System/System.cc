@@ -17,11 +17,11 @@ void System::setWindow(Window* window)
 	m_window = window;
 }
 
-void System::gameLoopUpdate(float elapsedTime)
+void System::performUpdate()
 {
 	const GlobalClock::Ticks thisUpdateTicks = GlobalClock::ticksSinceStart();
 
-	update(elapsedTime);
+	update();
 
 	m_lastUpdateTicks = thisUpdateTicks;
 }

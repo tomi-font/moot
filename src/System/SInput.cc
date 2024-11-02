@@ -24,7 +24,7 @@ void SInput::initializeProperties()
 	m_properties->registerGetter("windowSize", [this](){ return sf::Vector2f(window()->getSize()); });
 }
 
-void SInput::update(float)
+void SInput::update()
 {
 	for (sf::Event event; window()->pollEvent(event);)
 	{

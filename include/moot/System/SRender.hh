@@ -15,7 +15,7 @@ private:
 
 	void initializeProperties() override;
 
-	void update(float elapsedTime) override;
+	void update() override;
 
 	void updateView(const Entity&);
 	void updateConvexPolygonFillColor(const Entity&, const CConvexPolygon&);
