@@ -1,5 +1,6 @@
 #pragma once
 
+#include <moot/utility/Color.hh>
 #include <moot/utility/Rect.hh>
 #include <SFML/Graphics/Color.hpp>
 #include <sol/sol.hpp>
@@ -87,17 +88,22 @@ template<typename T> Rect<T> asRect(const sol::object& var)
 }
 static inline auto asFloatRect(const sol::object& var) { return asRect<float>(var); }
 
-inline sf::Color asColor(const sol::object& var)
+inline Color asColor(const sol::object& var)
 {
 	if (var.get_type() == sol::type::table)
 	{
-		const auto& colorComponents = asArray<decltype(sf::Color::r), 3>(var);
+		const auto& colorComponents = asArray<decltype(Color::r), 3>(var);
 		return {colorComponents[0], colorComponents[1], colorComponents[2]};
 	}
 	else
-		return as<sf::Color>(var);
+		return as<Color>(var);
 }
 
-template<typename T> static T asParsed(const sol::object& var);
+template<typename T> static inline T asParsed(const sol::object& var);
 template<> inline sf::Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
-template<> inline sf::Color asParsed(const sol::object& var) { return asColor(var); }
+template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
+
+template<typename T> static inline T asParsedOr(const sol::object& var, T orVal = {})
+{
+	return var.valid() ? asParsed<T>(var) : orVal;
+}

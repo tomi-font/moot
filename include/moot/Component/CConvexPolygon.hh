@@ -1,21 +1,22 @@
 #pragma once
 
 #include <moot/TrackedValue.hh>
+#include <moot/utility/Color.hh>
 #include <moot/utility/Vector2.hh>
 #include <vector>
-#include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Vector2.hpp>
 
 class CConvexPolygon
 {
 public:
 
-	CConvexPolygon(std::vector<Vector2f> vertices, sf::Color color);
+	CConvexPolygon(std::vector<Vector2f> vertices, Color fillColor, Color outlineColor);
 
 	auto& vertices() const { return m_vertices; }
-	auto& color() const { return m_color; }
+	auto& fillColor() const { return m_fillColor; }
+	auto& outlineColor() const { return m_outlineColor; }
 
-	void setColor(sf::Color color) { m_color = color; }
+	void setFillColor(Color color) { m_fillColor = color; }
 
 	Vector2f getCentroid() const;
 	bool contains(const sf::Vector2f& point) const;
@@ -23,5 +24,6 @@ public:
 private:
 
 	std::vector<Vector2f> m_vertices;
-	TrackedValue<sf::Color> m_color;
+	TrackedValue<Color> m_fillColor;
+	Color m_outlineColor;
 };

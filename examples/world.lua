@@ -12,7 +12,7 @@ local player = {
 	Position = {0, 900},
 	ConvexPolygon = {
 		vertices = { {0, 0}, {100, 0}, {100, 100}, {0, 100} },
-		color = {0, 128, 0}
+		fillColor = {0, 128, 0}
 	},
 	Move = {
 		speed = 1000
@@ -100,7 +100,7 @@ local platformBuilder = {
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })
 				platform:add(Component.ConvexPolygon, { vertices = { {0, 0}, {size.x, 0}, size, {0, size.y} },
-				                                        color = Color.Black })
+				                                        fillColor = Color.Black })
 				platform:remove(Component.HUD)
 				platform:remove(Component.Name)
 			end

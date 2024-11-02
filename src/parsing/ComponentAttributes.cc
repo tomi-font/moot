@@ -31,19 +31,20 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	);
 }
 
-template<> void registerAttributeValues<sf::Color>(sol::state* lua)
+template<> void registerAttributeValues<Color>(sol::state* lua)
 {
 	auto colors = lua->create_table("Color");
 	
-	colors["Black"] = sf::Color::Black;
-	colors["Gray"] = sf::Color(128, 128, 128);
-	colors["Green"] = sf::Color::Green;
+	colors["Black"] = Color(sf::Color::Black);
+	colors["ForestGreen"] = Color(0, 110, 51);
+	colors["Gray"] = Color(128, 128, 128);
+	colors["None"] = Color();
 }
 
 void ComponentAttributes::registerAll(sol::state* lua)
 {
 	registerAttributeValues<CInput>(lua);
-	registerAttributeValues<sf::Color>(lua);
+	registerAttributeValues<Color>(lua);
 }
 
 template<typename C> static ComponentVariant parser(const sol::object&);
@@ -55,13 +56,16 @@ template<> ComponentVariant parser<CPosition>(const sol::object& data)
 
 template<> ComponentVariant parser<CConvexPolygon>(const sol::object& data)
 {
-	const auto& map = asLuaMap<2>(data);
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& fillColorObj = map["fillColor"];
+	const auto& outlineColorObj = map["outlineColor"];
+	assert(mapSize == 1 + fillColorObj.valid() + outlineColorObj.valid());
 
 	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
 		vertices.push_back(asVector2f(value));
 
-	return CConvexPolygon(std::move(vertices), asColor(map["color"]));
+	return CConvexPolygon(std::move(vertices), asParsedOr<Color>(fillColorObj), asParsedOr<Color>(outlineColorObj));
 }
 
 template<> ComponentVariant parser<CMove>(const sol::object& data)

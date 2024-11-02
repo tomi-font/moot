@@ -1,14 +1,14 @@
 #pragma once
 
+#include <moot/utility/Color.hh>
 #include <functional>
 #include <variant>
 #include <SFML/System/Vector2.hpp>
-#include <SFML/Graphics/Color.hpp>
 
 struct Property
 {
 	using Value = std::variant<
-		sf::Color,
+		Color,
 		sf::Vector2f
 	>;
 

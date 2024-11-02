@@ -26,10 +26,14 @@ protected:
 
 	System();
 
-	GlobalClock::Ticks m_lastUpdateTicks;
+	template<typename T> constexpr bool
+	hasChangedSinceLastUpdate(const TrackedValue<T>& tv) { return tv.hasChangedSince(m_lastUpdateTicks); }
+
 	Window* m_window;
 
 private:
+
+	GlobalClock::Ticks m_lastUpdateTicks;
 
 	virtual void update(float elapsedTime) = 0;
 };

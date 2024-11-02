@@ -9,6 +9,7 @@ class SRender : public System
 public:
 
 	SRender();
+	~SRender() override;
 
 private:
 
@@ -17,9 +18,7 @@ private:
 	void update(float elapsedTime) override;
 
 	void updateView(const Entity&);
-	void updateConvexPolygonPosition(const Entity&, const CConvexPolygon&);
-	void updateConvexPolygonColor(const Entity&, const CConvexPolygon&);
+	void updateConvexPolygonFillColor(const Entity&, const CConvexPolygon&);
 
-	std::vector<sf::Vertex> m_worldVertices;
-	std::unordered_map<EntityId, unsigned> m_worldVerticesIndices;
+	std::unordered_map<EntityId, struct Drawable> m_drawables;
 };

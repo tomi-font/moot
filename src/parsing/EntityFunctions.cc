@@ -56,7 +56,7 @@ static void registerComponentTypes(sol::state* lua)
 	auto position = registerComponent<CPosition>(ct);
 
 	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
-	convexPolygon["color"] = sol::property(&CConvexPolygon::setColor);
+	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
 }
 
 void EntityFunctions::registerAll(sol::state* lua)

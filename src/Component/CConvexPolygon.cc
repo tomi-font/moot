@@ -2,9 +2,10 @@
 #include <moot/utility/math/geometry.hh>
 #include <cassert>
 
-CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, sf::Color color) :
+CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, Color fillColor, Color outlineColor) :
 	m_vertices(std::move(vertices)),
-	m_color(color)
+	m_fillColor(fillColor),
+	m_outlineColor(outlineColor)
 {
 	assert(m_vertices.size() >= 3);
 #ifndef NDEBUG
