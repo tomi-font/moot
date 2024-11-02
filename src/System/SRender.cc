@@ -10,8 +10,7 @@ struct Drawable
 	std::map<sf::PrimitiveType, std::ranges::iota_view<unsigned, unsigned>, std::greater<>> vertexViews;
 };
 
-// The name of the clear color property.
-static constexpr std::string ClearColor = "clearColor";
+static const std::string ClearColor = "clearColor";
 
 // Indices for this system's queries.
 enum Q

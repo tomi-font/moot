@@ -10,5 +10,7 @@ public:
 
 private:
 
+	void initializeProperties() override;
+
 	void update() override;
 };

@@ -1,4 +1,5 @@
 properties.clearColor = Color.Gray
+properties.gravitationalAcceleration = 999.80665
 
 local ground = {
 	CollisionBox = {

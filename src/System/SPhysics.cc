@@ -2,7 +2,7 @@
 #include <moot/Entity/Entity.hh>
 #include <moot/utility/Vector2.hh>
 
-constexpr float c_gravitationalAcceleration = 999.80665f;
+static const std::string GravitationalAcceleration = "gravitationalAcceleration";
 
 // Indices for this system's queries.
 enum Q
@@ -22,6 +22,11 @@ SPhysics::SPhysics()
 			entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
 		}
 	}};
+}
+
+void SPhysics::initializeProperties()
+{
+	m_properties->set(GravitationalAcceleration, 0.f);
 }
 
 static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
@@ -210,6 +215,7 @@ static Collision getFirstCollision(const Entity& entity, const CollidableProvisi
 void SPhysics::update()
 {
 	const float elapsedTime = m_properties->get<float>(Property::ElapsedTime);
+	const float gravitationalAcceleration = m_properties->get<float>(GravitationalAcceleration);
 	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
 
 	for (Entity entity : m_queries[Q::Dynamic])
@@ -222,7 +228,7 @@ void SPhysics::update()
 		if (entity.has<CRigidbody>())
 		{
 			CRigidbody* cRigidbody = entity.get<CRigidbody*>();
-			cRigidbody->applyYForce(-c_gravitationalAcceleration * elapsedTime);
+			cRigidbody->applyYForce(-gravitationalAcceleration * elapsedTime);
 			velocity += cRigidbody->velocity();
 		}
 
