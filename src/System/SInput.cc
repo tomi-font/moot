@@ -21,17 +21,17 @@ SInput::SInput() :
 
 void SInput::initializeProperties()
 {
-	m_properties->registerGetter("windowSize", [this](){ return sf::Vector2f(m_window->getSize()); });
+	m_properties->registerGetter("windowSize", [this](){ return sf::Vector2f(window()->getSize()); });
 }
 
 void SInput::update(float)
 {
-	for (sf::Event event; m_window->pollEvent(event);)
+	for (sf::Event event; window()->pollEvent(event);)
 	{
 		switch (event.type)
 		{
 		case sf::Event::MouseEntered:
-			m_mousePos = sf::Mouse::getPosition(*m_window);
+			m_mousePos = sf::Mouse::getPosition(*window());
 			break;
 		case sf::Event::MouseLeft:
 			m_mousePos.reset();
@@ -64,8 +64,8 @@ void SInput::update(float)
 
 void SInput::updatePointables()
 {
-	const bool viewIsNotEmpty = Vector2(m_window->getView().getSize()).isMoreThanZero();
-	const sf::Vector2f mouseWorldPos = m_mousePos ? m_window->mapPixelToWorld(*m_mousePos) : sf::Vector2f();
+	const bool viewIsNotEmpty = Vector2(window()->getView().getSize()).isMoreThanZero();
+	const sf::Vector2f mouseWorldPos = m_mousePos ? window()->mapPixelToWorld(*m_mousePos) : sf::Vector2f();
 	const EntityId prevPointedEntityId = m_pointedEntityId;
 	m_pointedEntityId = {};
 

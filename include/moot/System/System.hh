@@ -29,11 +29,12 @@ protected:
 	template<typename T> constexpr bool
 	hasChangedSinceLastUpdate(const TrackedValue<T>& tv) { return tv.hasChangedSince(m_lastUpdateTicks); }
 
-	Window* m_window;
+	Window* window() const { return m_window; }
 
 private:
 
 	GlobalClock::Ticks m_lastUpdateTicks;
+	Window* m_window;
 
 	virtual void update(float elapsedTime) = 0;
 };

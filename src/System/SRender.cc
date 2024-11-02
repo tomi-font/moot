@@ -125,9 +125,9 @@ void SRender::update(float)
 		}
 	}
 
-	m_window->clear(m_properties->get<Color>(ClearColor));
+	window()->clear(m_properties->get<Color>(ClearColor));
 
-	const sf::View& view = m_window->getView();
+	const sf::View& view = window()->getView();
 	const sf::Vector2f& viewSize = view.getSize();
 
 	// Render the entities with the Y axis flipped so that the Y coordinates grow upwards.
@@ -138,7 +138,7 @@ void SRender::update(float)
 	for (const auto& [_, drawable] : m_drawables)
 	{
 		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
-			m_window->draw(drawable.vertices.data() + vertexView.front(), vertexView.size(), vertexType, worldTransform);
+			window()->draw(drawable.vertices.data() + vertexView.front(), vertexView.size(), vertexType, worldTransform);
 	}
 
 	// Render the HUD so that it always appears at the same place on screen.
@@ -152,10 +152,10 @@ void SRender::update(float)
 		const auto& cHudRenders = arch->getAll<CHudRender>();
 
 		if (!cHudRenders.empty())
-			m_window->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
+			window()->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
 	}
 
-	m_window->display();
+	window()->display();
 }
 
 void SRender::updateView(const Entity& entity)
@@ -183,7 +183,7 @@ void SRender::updateView(const Entity& entity)
 	center.y *= -1;
 	center.y += size.y;
 
-	m_window->setView({center, size});
+	window()->setView({center, size});
 }
 
 void SRender::updateConvexPolygonFillColor(const Entity& entity, const CConvexPolygon& cConvexPolygon)
