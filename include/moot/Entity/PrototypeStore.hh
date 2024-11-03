@@ -14,6 +14,7 @@ public:
 
 	const Prototype& getPrototype(PrototypeUid uid) const { return m_numberedPrototypes.at(uid); }
 	const Prototype& getPrototype(const std::string& name) const { return m_namedPrototypes.at(name); }
+	const Prototype* findPrototype(const std::string& name) const;
 
 	void deletePrototype(PrototypeUid);
 
