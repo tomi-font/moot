@@ -1,6 +1,7 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/utility/math/geometry.hh>
 #include <cassert>
+#include <span>
 
 CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, Color fillColor, Color outlineColor) :
 	m_vertices(std::move(vertices)),
@@ -27,6 +28,20 @@ Vector2f CConvexPolygon::getCentroid() const
 		centroid += vertex / vertexCount;
 
 	return centroid;
+}
+
+FloatRect CConvexPolygon::getBoundingBox() const
+{
+	Vector2f minCoord, maxCoord;
+	minCoord = maxCoord = m_vertices.front();
+	for (const auto& vertex : std::span(m_vertices.begin() + 1, m_vertices.end()))
+	{
+		minCoord.x = std::min(vertex.x, minCoord.x);
+		minCoord.y = std::min(vertex.y, minCoord.y);
+		maxCoord.x = std::max(vertex.x, maxCoord.x);
+		maxCoord.y = std::max(vertex.y, maxCoord.y);
+	}
+	return {minCoord, maxCoord - minCoord};
 }
 
 bool CConvexPolygon::contains(const sf::Vector2f& point) const
