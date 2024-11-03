@@ -10,6 +10,7 @@ struct Property
 	using Value = std::variant<
 		Color,
 		float,
+		sf::Vector2u,
 		sf::Vector2f
 	>;
 

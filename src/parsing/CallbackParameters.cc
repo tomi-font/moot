@@ -16,6 +16,7 @@ template<typename T> static void registerVector2(sol::state* lua, const std::str
 void CallbackParameters::registerAll(sol::state* lua)
 {
 	registerVector2<float>(lua, "f");
+	registerVector2<unsigned>(lua, "u");
 
 	lua->new_usertype<sf::Event>("sf.Event",
 		"key", &sf::Event::key,

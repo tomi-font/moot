@@ -23,13 +23,17 @@ using Vector2u = Vector2<unsigned>;
 
 namespace sf
 {
+	template<typename T, typename U> auto operator*(const sf::Vector2<T>& left, const sf::Vector2<U>& right)
+	{
+		return sf::Vector2(left.x * right.x, left.x * right.y);
+	}
 	template<typename T> sf::Vector2<T> operator/(const sf::Vector2<T>& left, const sf::Vector2<T>& right)
 	{
 		return {left.x / right.x, left.y / right.y};
 	}
-
-	template<typename T, typename U> sf::Vector2<T> operator*(U left, const sf::Vector2<T>& right)
+	template<typename T, typename U, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+	auto operator*(T left, const sf::Vector2<U>& right)
 	{
-		return {left * right.x, left * right.y};
+		return sf::Vector2(left * right.x, left * right.y);
 	}
 }
