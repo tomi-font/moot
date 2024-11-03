@@ -28,18 +28,13 @@ World::World(Window* window) :
 	setEventManager(&m_eventManager);
 	listen(Event::GameClose);
 
-	m_parsingContext.initialize(this);
+	initializeScriptContext(this);
 }
 
 void World::triggered(const Event& event)
 {
 	assert(event.type == Event::GameClose);
 	m_running = false;
-}
-
-void World::processScript(const std::string& path)
-{
-	m_parsingContext.process(path);
 }
 
 void World::updateEntities()
@@ -128,7 +123,7 @@ void World::update()
 		system->performUpdate();
 	}
 	
-	m_parsingContext.update();
+	updateScriptContext();
 }
 
 Archetype* World::findArchetype(ComponentComposition comp)

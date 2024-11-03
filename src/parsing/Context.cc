@@ -20,7 +20,7 @@ ParsingContext::~ParsingContext()
 	assert(false);
 }
 
-void ParsingContext::initialize(World* world)
+void ParsingContext::initializeScriptContext(World* world)
 {
 	auto errorHandler = m_lua["errorHandler"];
 	errorHandler.set_function(luaErrorHandler);
@@ -32,13 +32,18 @@ void ParsingContext::initialize(World* world)
 	CallbackParameters::registerAll(&m_lua);
 }
 
-void ParsingContext::process(const std::string& file)
-{
-	m_lua.script_file(file);
-}
-
-void ParsingContext::update()
+void ParsingContext::updateScriptContext()
 {
 	// Force the garbage collection between frames to make sure that Entity references do not remain.
 	m_lua.collect_garbage();
+}
+
+void ParsingContext::setScriptSearchPath(std::filesystem::path path)
+{
+	m_searchPath = std::move(path);
+}
+
+void ParsingContext::processScript(const std::filesystem::path& filePath)
+{
+	m_lua.script_file(m_searchPath / filePath);
 }

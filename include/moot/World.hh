@@ -16,7 +16,10 @@
 
 class Entity;
 
-class World : public EventUser, sf::NonCopyable
+class World :
+	public ParsingContext,
+	EventUser,
+	sf::NonCopyable
 {
 public:
 
@@ -26,8 +29,6 @@ public:
 	void stopRunning() { m_running = false; }
 
 	void update();
-
-	void processScript(const std::string& path);
 
 	auto* prototypeStore() { return &m_prototypeStore; }
 
@@ -58,9 +59,6 @@ private:
 
 	Archetype* findArchetype(ComponentComposition);
 	Archetype* getArchetype(ComponentComposition);
-
-	// The ParsingContext must be destroyed last so that it's still valid when components containing references get destroyed.
-	ParsingContext m_parsingContext;
 
 	PrototypeStore m_prototypeStore;
 

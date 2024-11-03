@@ -1,25 +1,30 @@
 #pragma once
 
-#include <sol/forward.hpp>
+#include <filesystem>
 
+namespace sol { class state; }
 class World;
 
 class ParsingContext
 {
 public:
 
+	void setScriptSearchPath(std::filesystem::path);
+
+	void processScript(const std::filesystem::path&);
+
+protected:
+
 	ParsingContext();
 	~ParsingContext();
 
-	void initialize(World*);
+	void initializeScriptContext(World*);
 
-	void process(const std::string& file);
-
-	void update();
+	void updateScriptContext();
 
 private:
 
-	void registerUniversal();
-
 	sol::state& m_lua;
+
+	std::filesystem::path m_searchPath;
 };
