@@ -19,7 +19,7 @@ SPhysics::SPhysics()
 	m_queries[Q::Collidable] = {{ .required = {CId<CCollisionBox>},
 		.entityAddedCallback = [](const Entity& entity)
 		{
-			entity.get<CCollisionBox*>()->setPosition(entity.get<CPosition>());
+			entity.get<CCollisionBox*>()->bottomLeft = entity.get<CPosition>().val();
 		}
 	}};
 }
@@ -271,10 +271,10 @@ void SPhysics::update()
 				assert(c.otherProv.move.isZero());
 		}
 
-		if (prov.cCol.position() != cCol->position())
+		if (prov.cCol.bottomLeft != cCol->bottomLeft)
 		{
 			*cCol = prov.cCol;
-			*entity.get<CPosition*>() = cCol->position();
+			*entity.get<CPosition*>() = cCol->bottomLeft;
 		}
 		// TODO: else assert
 	}

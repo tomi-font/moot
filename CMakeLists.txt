@@ -26,8 +26,10 @@ set(PRIVATE_DISABLED_WARNINGS
 	c++20-extensions
 	exit-time-destructors
 	global-constructors
+	gnu-anonymous-struct
 	implicit-int-float-conversion
 	missing-field-initializers
+	nested-anon-types
 	packed-non-pod
 	pre-c++20-compat-pedantic
 	switch

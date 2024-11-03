@@ -9,7 +9,7 @@ void CView::calculateNewSize()
 	if (!m_limits.isEmpty())
 	{
 		// The ratio of the actual view size to the maximum size allowed.
-		const Vector2f actualToMaxRatio = viewSize / m_limits.size();
+		const Vector2f actualToMaxRatio = viewSize / m_limits.size;
 		if (actualToMaxRatio.max() > 1)
 		{
 			const auto aspectRatio = viewSize.x / viewSize.y;
