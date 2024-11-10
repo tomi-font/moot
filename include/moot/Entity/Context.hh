@@ -16,7 +16,7 @@ public:
 	EntityContext() : m_arch(nullptr), m_idx(0) {}
 	EntityContext(Archetype* arch, unsigned index) : m_arch(arch), m_idx(index) {}	
 
-	bool isEmpty() const { return m_arch; }
+	bool isEmpty() const { return !m_arch; }
 
 	// The component composition is not compared because it may differ between contexts of a same entity.
 	bool operator==(const EntityContext& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }

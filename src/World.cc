@@ -156,17 +156,50 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	return arch;
 }
 
+Entity World::upToDateCompo(Entity entity) const
+{
+	const auto addedComponentsIt = m_componentsToAdd.find(entity);
+	if (addedComponentsIt != m_componentsToAdd.end())
+		for (const auto& [cid, _] : addedComponentsIt->second)
+			entity.m_comp += cid;
+
+	const auto removedComponentsIt = m_componentsToRemove.find(entity);
+	if (removedComponentsIt != m_componentsToRemove.end())
+		for (const ComponentId cid : removedComponentsIt->second)
+			entity.m_comp -= cid;
+	
+	return entity;
+}
+
+Entity World::findEntity(EntityId eId)
+{
+	// TODO: entity ID cache
+	for (Archetype& arch : m_archs)
+	{
+		const auto& entityComponents = arch.getAll<CEntity>();
+		for (const CEntity& cEntity : entityComponents)
+		{
+			if (cEntity.id() == eId)
+			{
+				const unsigned index = static_cast<unsigned>(&cEntity - entityComponents.data());
+				return upToDateCompo(EntityContext(&arch, index));
+			}
+		}
+	}
+	return {};
+}
+
 std::optional<Entity> World::findEntity(std::string_view name)
 {
 	for (Entity entity : m_namedEntities)
 	{
 		if (entity.get<CName>() == name)
-			return entity;
+			return upToDateCompo(entity);
 	}
 	return {};
 }
 
-static void processEntityToBeAdded(const Prototype& entity)
+static void checkEntity(const Prototype& entity)
 {
 	if (!entity.has<CPosition>())
 		assert(entity.hasNoneOf(CId<CCollisionBox> + CId<CConvexPolygon> + CId<CView> + CId<CMove> + CId<CRigidbody>));
@@ -175,39 +208,59 @@ static void processEntityToBeAdded(const Prototype& entity)
 		assert(entity.has<CConvexPolygon>());
 }
 
-static void processChangedEntity(const Prototype& entity)
+static void checkChangedEntity(const Prototype& entity)
 {
 	assert(entity.has<CEntity>());
-	processEntityToBeAdded(entity);
+	checkEntity(entity);
 }
 
-static void processInstantiatedEntity(Prototype* entity)
+static void checkSpawnedEntity(const Prototype& entity)
 {
-	entity->add<CEntity>();
-	processEntityToBeAdded(*entity);
+	assert(!entity.has<CChildren>());
+	assert(!entity.has<CParent>());
+	checkEntity(entity);
 }
 
-void World::instantiate(const Prototype& proto)
+EntityId World::spawn(Prototype* entity, std::optional<sf::Vector2f> pos)
 {
-	Prototype& entity = m_entitiesToInstantiate.emplace_back(proto);
-	processInstantiatedEntity(&entity);
+	if (pos)
+		entity->add<CPosition>(*pos);
+
+	const EntityId eId = entity->add<CEntity>()->id();
+
+	checkSpawnedEntity(*entity);
+
+	return eId;
 }
 
-void World::instantiate(const Prototype& proto, const sf::Vector2f& pos)
+void World::spawnChildOf(Entity* parent, const Prototype& childProto, std::optional<sf::Vector2f> pos)
 {
-	Prototype& entity = m_entitiesToInstantiate.emplace_back(proto);
-	entity.add<CPosition>(pos);
-	processInstantiatedEntity(&entity);
+	Prototype& child = m_entitiesToInstantiate.emplace_back(childProto);
+	const EntityId childEId = spawn(&child, pos);
+	child.add<CParent>(parent->getId());
+
+	CChildren* const cChildren = parent->has<CChildren>() ? parent->get<CChildren*>() : parent->add<CChildren>();
+	cChildren->add(childEId);
 }
 
-void World::instantiate(const std::string& protoName)
+void World::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::optional<sf::Vector2f> pos)
 {
-	instantiate(m_prototypeStore.getPrototype(protoName));
-}
+	assert(findEntity(parentEid).isEmpty());
 
-void World::instantiate(const std::string& protoName, const sf::Vector2f& pos)
-{
-	instantiate(m_prototypeStore.getPrototype(protoName), pos);
+	Prototype& child = m_entitiesToInstantiate.emplace_back(childProto);
+	const EntityId childEId = spawn(&child, pos);
+	child.add<CParent>(parentEid);
+
+	for (Prototype& proto : m_entitiesToInstantiate)
+	{
+		if (proto.get<CEntity>().id() == parentEid)
+		{
+			CChildren* const cChildren = proto.has<CChildren>() ? proto.get<CChildren*>() : proto.add<CChildren>();
+			cChildren->add(childEId);
+			return;
+		}
+	}
+	assert(false);
 }
 
 void World::remove(EntityContext entity)
@@ -217,12 +270,11 @@ void World::remove(EntityContext entity)
 	m_entitiesToRemove.insert(entity);
 }
 
-void World::addComponentTo(Entity* entity, ComponentVariant&& component)
+ComponentVariant* World::addComponentTo(const EntityContext& ec, ComponentVariant&& component)
 {	
 	const ComponentId cid = CVId(component);
 
-	EntityContext ec = *entity;
-	assert(!m_entitiesToRemove.contains(ec));
+	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
 
 	if (m_componentsToRemove.contains(ec))
 	{
@@ -230,16 +282,15 @@ void World::addComponentTo(Entity* entity, ComponentVariant&& component)
 		assert(!m_componentsToRemove.at(ec).contains(cid));
 	}
 	
-	const bool added = m_componentsToAdd[ec].emplace(cid, std::move(component)).second;
-	assert(added);
+	const auto& insertionPair = m_componentsToAdd[ec].emplace(cid, std::move(component));
+	assert(insertionPair.second);
+	return &insertionPair.first->second;
 }
 
-void World::removeComponentFrom(Entity* entity, ComponentId cid)
+void World::removeComponentFrom(const EntityContext& ec, ComponentId cid)
 {
 	assert(cid != CId<CEntity>);
-
-	EntityContext ec = *entity;
-	assert(!m_entitiesToRemove.contains(ec));
+	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
 	
 	if (m_componentsToAdd.contains(ec))
 	{
@@ -291,7 +342,7 @@ void World::updateEntitiesComponents()
 		for (auto& [cid, component] : m_componentsToAdd[entity])
 			proto.add(std::move(component));
 
-		processChangedEntity(proto);
+		checkChangedEntity(proto);
 	}
 	m_componentsToAdd.clear();
 	m_componentsToRemove.clear();

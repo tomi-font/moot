@@ -32,16 +32,24 @@ public:
 
 	auto* prototypeStore() { return &m_prototypeStore; }
 
-	void instantiate(const Prototype&);
-	void instantiate(const Prototype&, const sf::Vector2f& pos);
-	void instantiate(const std::string& protoName);
-	void instantiate(const std::string& protoName, const sf::Vector2f& pos);
+	Entity findEntity(EntityId eId);
+	std::optional<Entity> findEntity(std::string_view name);
+
+	decltype(auto) spawn(const std::string& protoName, std::optional<sf::Vector2f> pos = {})
+	{
+		return spawn(&m_entitiesToInstantiate.emplace_back(m_prototypeStore.getPrototype(protoName)), pos);
+	}
+	decltype(auto) spawn(const Prototype& proto, std::optional<sf::Vector2f> pos = {})
+	{
+		return spawn(&m_entitiesToInstantiate.emplace_back(proto), pos);
+	}
+	void spawnChildOf(Entity* parent, const Prototype&, std::optional<sf::Vector2f> pos = {});
+	void spawnChildOf(EntityId parentEId, const Prototype&, std::optional<sf::Vector2f> pos = {});
+
 	void remove(EntityContext);
 
-	void addComponentTo(Entity*, ComponentVariant&&);
-	void removeComponentFrom(Entity*, ComponentId);
-
-	std::optional<Entity> findEntity(std::string_view name);
+	ComponentVariant* addComponentTo(const EntityContext&, ComponentVariant&&);
+	void removeComponentFrom(const EntityContext&, ComponentId);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 
@@ -59,6 +67,10 @@ private:
 
 	Archetype* findArchetype(ComponentComposition);
 	Archetype* getArchetype(ComponentComposition);
+
+	Entity upToDateCompo(Entity) const;
+
+	EntityId spawn(Prototype*, std::optional<sf::Vector2f> pos);
 
 	PrototypeStore m_prototypeStore;
 

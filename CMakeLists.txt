@@ -11,6 +11,8 @@ target_compile_features(moot PUBLIC cxx_std_26)
 # For clangd to not show warnings in header files.
 set(PUBLIC_DISABLED_WARNINGS
 	c++98-compat
+	gnu-anonymous-struct
+	nested-anon-types
 	padded
 	pre-c++14-compat
 )
@@ -26,10 +28,8 @@ set(PRIVATE_DISABLED_WARNINGS
 	c++20-extensions
 	exit-time-destructors
 	global-constructors
-	gnu-anonymous-struct
 	implicit-int-float-conversion
 	missing-field-initializers
-	nested-anon-types
 	packed-non-pod
 	pre-c++20-compat-pedantic
 	switch

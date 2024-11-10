@@ -4,5 +4,5 @@
 
 ComponentNames::ComponentNames()
 {
-	static_warn(!hasDefaultInitializedElement(s_m_names, {CId<CCallback>, CId<CEntity>}));
+	static_warn(!hasDefaultInitializedElement(s_m_names, {CId<CCallback>, CId<CEntity>, CId<CChildren>, CId<CParent>}));
 }

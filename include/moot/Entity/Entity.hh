@@ -5,6 +5,8 @@
 // Handle to an entity that allows manipulating it.
 class Entity : public EntityContext, public ComponentComposable
 {
+	friend World;
+
 public:
 
 	Entity() {}
@@ -29,6 +31,7 @@ public:
 		}
 		catch (const std::bad_variant_access&)
 		{
+			assert(!isEmpty());
 			// The requested component was just added and is still in the staging phase.
 			return &std::get<C>(*world()->getStagedComponentOf(*this, CId<C>));
 		}
@@ -40,24 +43,29 @@ public:
 		using C = std::remove_pointer_t<CP>;
 		if (has<C>())
 			return get<CP>();
-		else
-			return nullptr;
+		assert(!isEmpty());
+		return nullptr;
 	}
 
 	EntityId getId() const { return get<CEntity>().id(); }
 
-	void add(ComponentVariant&& component)
+	template<typename C> C* add()
 	{
-		world()->addComponentTo(this, std::move(component));
-		m_comp += CVId(component);
-	}
-	void remove(ComponentId cid)
-	{
-		world()->removeComponentFrom(this, cid);
-		m_comp -= cid;
+		m_comp += CId<C>;
+		return &std::get<C>(*world()->addComponentTo(*this, C()));
 	}
 
-private:
+	void add(ComponentVariant&& component)
+	{
+		m_comp += CVId(component);
+		world()->addComponentTo(*this, std::move(component));
+	}
+
+	void remove(ComponentId cid)
+	{
+		m_comp -= cid;
+		world()->removeComponentFrom(*this, cid);
+	}
 
 	World* world() const { return m_arch->world(); }
 };

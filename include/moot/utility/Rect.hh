@@ -1,6 +1,5 @@
 #pragma once
 
-#include <moot/utility/math/base.hh>
 #include <moot/utility/Vector2.hh>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>

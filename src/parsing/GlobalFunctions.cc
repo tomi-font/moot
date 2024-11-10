@@ -54,24 +54,24 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table protoTable)
 		{
-			world->instantiate(getPrototype(protoTable));
+			world->spawn(getPrototype(protoTable));
 		},
 		[=](sol::table protoTable, const sol::object& pos)
 		{
-			world->instantiate(getPrototype(protoTable), asVector2f(pos));
+			world->spawn(getPrototype(protoTable), asVector2f(pos));
 		},
 		[world](const std::string& protoName)
 		{
-			world->instantiate(protoName);
+			world->spawn(protoName);
 		},
 		[world](const std::string& protoName, const sol::object& pos)
 		{
-			world->instantiate(protoName, asVector2f(pos));
+			world->spawn(protoName, asVector2f(pos));
 		}
 	));
 
 	lua->set_function("exitGame", &World::stopRunning, world);
-	lua->set_function("findEntity", &World::findEntity, world);
+	lua->set_function("findEntity", static_cast<std::optional<Entity> (World::*)(std::string_view)>(&World::findEntity), world);
 	lua->set_function("isKeyPressed",
 		[](sf::Keyboard::Key key)
 		{

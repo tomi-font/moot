@@ -1,5 +1,6 @@
 #include <moot/System/SPhysics.hh>
 #include <moot/Entity/Entity.hh>
+#include <moot/utility/math/base.hh>
 #include <moot/utility/Vector2.hh>
 
 static const std::string GravitationalAcceleration = "gravitationalAcceleration";
