@@ -97,7 +97,7 @@ void World::updateEntities()
 
 	for (const Entity& entity : instantiatedEntities)
 	{
-		if (CCallback* cCallback = entity.getOrNull<CCallback*>())
+		if (CCallback* cCallback = entity.find<CCallback*>())
 		{
 			if (const auto& onSpawn = cCallback->extract(CCallback::OnSpawn))
 			{

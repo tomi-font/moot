@@ -30,18 +30,14 @@ Vector2f CConvexPolygon::getCentroid() const
 	return centroid;
 }
 
-FloatRect CConvexPolygon::getBoundingBox() const
+BoundCoords CConvexPolygon::getBoundingCoordinates() const 
 {
-	Vector2f minCoord, maxCoord;
-	minCoord = maxCoord = m_vertices.front();
+	BoundCoords boundCoords = {m_vertices.front()};
+
 	for (const auto& vertex : std::span(m_vertices.begin() + 1, m_vertices.end()))
-	{
-		minCoord.x = std::min(vertex.x, minCoord.x);
-		minCoord.y = std::min(vertex.y, minCoord.y);
-		maxCoord.x = std::max(vertex.x, maxCoord.x);
-		maxCoord.y = std::max(vertex.y, maxCoord.y);
-	}
-	return {minCoord, maxCoord - minCoord};
+		boundCoords.incorporate(vertex);
+
+	return boundCoords;
 }
 
 bool CConvexPolygon::contains(const sf::Vector2f& point) const

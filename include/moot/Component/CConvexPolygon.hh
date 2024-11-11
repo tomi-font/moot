@@ -2,10 +2,9 @@
 
 #include <moot/TrackedValue.hh>
 #include <moot/utility/Color.hh>
+#include <moot/utility/BoundCoords.hh>
 #include <moot/utility/Rect.hh>
-#include <moot/utility/Vector2.hh>
 #include <vector>
-#include <SFML/System/Vector2.hpp>
 
 class CConvexPolygon
 {
@@ -20,7 +19,8 @@ public:
 	void setFillColor(Color color) { m_fillColor = color; }
 
 	Vector2f getCentroid() const;
-	FloatRect getBoundingBox() const;
+	BoundCoords getBoundingCoordinates() const;
+	FloatRect getBoundingBox() const { return getBoundingCoordinates().toRect(); }
 	bool contains(const sf::Vector2f& point) const;
 
 private:

@@ -1,4 +1,5 @@
 #include <moot/parsing/CallbackParameters.hh>
+#include <moot/utility/Rect.hh>
 #include <moot/utility/Vector2.hh>
 #include <SFML/Window/Event.hpp>
 
@@ -14,10 +15,21 @@ template<typename T> static void registerVector2(sol::state* lua, const std::str
 	);
 }
 
+template<typename T> static void registerRect(sol::state* lua, const std::string& nameSuffix)
+{
+	using R = Rect<T>;
+
+	lua->new_usertype<R>("mt.Rect." + nameSuffix,
+		"size", &R::size
+	);
+}
+
 void CallbackParameters::registerAll(sol::state* lua)
 {
 	registerVector2<float>(lua, "f");
 	registerVector2<unsigned>(lua, "u");
+
+	registerRect<float>(lua, "f");
 
 	lua->new_usertype<sf::Event>("sf.Event",
 		"key", &sf::Event::key,

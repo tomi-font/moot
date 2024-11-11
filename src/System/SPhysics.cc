@@ -257,7 +257,7 @@ void SPhysics::update()
 			const Vector2i collidedOn = moveBackToFirstContactPoint(c.moveRatios, &prov.cCol, &prov.move, &c.otherProv.cCol, &c.otherProv.move);
 
 			if (entity.has<CRigidbody>())
-				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), c.other.getOrNull<CRigidbody*>());
+				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), c.other.find<CRigidbody*>());
 			
 			adjustMoveAfterCollision(collidedOn, prov.cCol, &prov.move, c.otherProv.cCol, &c.otherProv.move);
 

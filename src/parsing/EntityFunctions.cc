@@ -1,5 +1,6 @@
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/Entity/Entity.hh>
+#include <moot/Entity/utility.hh>
 #include <moot/parsing/ComponentAttributes.hh>
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/types.hh>
@@ -59,17 +60,11 @@ static void registerComponentTypes(sol::state* lua)
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
 }
 
-void EntityFunctions::registerAll(sol::state* lua)
+static void registerEntityComponentFunctions(sol::usertype<Entity>* et)
 {
-	registerComponentIds(lua);
-	registerComponentTypes(lua);
+	et->set("has", [](const Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); });
 
-	// Entity Type
-	auto et = lua->new_usertype<Entity>("ET");
-
-	et["has"] = [](const Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); };
-
-	et["get"] = [](const Entity& entity, TypeSafeComponentId cid, sol::this_state solState)
+	et->set("get", [](const Entity& entity, TypeSafeComponentId cid, sol::this_state solState)
 	{
 		return variantIndexToCompileTime<ComponentPointerVariant>(cid,
 			[luaState = solState.lua_state(), entity](auto I)
@@ -82,15 +77,30 @@ void EntityFunctions::registerAll(sol::state* lua)
 				else
 					return sol::make_object<CP>(luaState, componentPtr);
 			});
-	};
+	});
 
-	et["add"] = [](Entity& entity, TypeSafeComponentId cid, const sol::object& data)
+	et->set("add", [](Entity* entity, TypeSafeComponentId cid, const sol::object& data)
 	{
 		assert(cid < ComponentCount);
 		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cid));
 		assert(parser);
-		entity.add(parser(data));
-	};
+		entity->add(parser(data));
+	});
 
-	et["remove"] = [](Entity& entity, TypeSafeComponentId cid) { entity.remove(cid); };
+	et->set("remove", [](Entity* entity, TypeSafeComponentId cid) { entity->remove(cid); });
+}
+
+static void registerEntityUtilityFunctions(sol::usertype<Entity>* et)
+{
+	et->set("getBoundingBox", getEntityBoundingBox);
+}
+
+void EntityFunctions::registerAll(sol::state* lua)
+{
+	registerComponentIds(lua);
+	registerComponentTypes(lua);
+
+	auto entityType = lua->new_usertype<Entity>("ET");
+	registerEntityComponentFunctions(&entityType);
+	registerEntityUtilityFunctions(&entityType);
 }

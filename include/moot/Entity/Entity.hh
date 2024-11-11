@@ -38,7 +38,7 @@ public:
 	}
 
 	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
-	CP getOrNull() const
+	CP find() const
 	{
 		using C = std::remove_pointer_t<CP>;
 		if (has<C>())
