@@ -1,18 +1,18 @@
 #pragma once
 
 #include <moot/utility/Color.hh>
+#include <moot/utility/Vector2.hh>
 #include <functional>
 #include <string>
 #include <variant>
-#include <SFML/System/Vector2.hpp>
 
 struct Property
 {
 	using Value = std::variant<
 		Color,
 		float,
-		sf::Vector2u,
-		sf::Vector2f
+		Vector2u,
+		Vector2f
 	>;
 
 	using Getter = std::function<Property::Value()>;

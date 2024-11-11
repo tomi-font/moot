@@ -21,6 +21,16 @@ using Vector2f = Vector2<float>;
 using Vector2i = Vector2<int>;
 using Vector2u = Vector2<unsigned>;
 
+template<typename T> Vector2<T> operator+(const Vector2<T>& left, const Vector2<T>& right)
+{
+	return {left.x + right.x, left.y + right.y};
+}
+
+template<typename T> Vector2<T> operator-(const Vector2<T>& left, const Vector2<T>& right)
+{
+	return {left.x - right.x, left.y - right.y};
+}
+
 namespace sf
 {
 	template<typename T, typename U> auto operator*(const sf::Vector2<T>& left, const sf::Vector2<U>& right)

@@ -21,7 +21,7 @@ SInput::SInput() :
 
 void SInput::initializeProperties()
 {
-	m_properties->registerGetter("windowSize", [this](){ return sf::Vector2f(window()->getSize()); });
+	m_properties->registerGetter("windowSize", [this](){ return Vector2f(window()->getSize()); });
 }
 
 void SInput::update()

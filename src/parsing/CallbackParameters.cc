@@ -1,15 +1,16 @@
 #include <moot/parsing/CallbackParameters.hh>
+#include <moot/utility/Vector2.hh>
 #include <SFML/Window/Event.hpp>
 
 template<typename T> static void registerVector2(sol::state* lua, const std::string& nameSuffix)
 {
-	using V = sf::Vector2<T>;
+	using V = Vector2<T>;
 
-	lua->new_usertype<V>("sf.Vector2" + nameSuffix,
+	lua->new_usertype<V>("mt.Vector2." + nameSuffix,
 		"x", &V::x,
 		"y", &V::y,
-		sol::meta_method::addition, static_cast<V(*)(const V&, const V&)>(&sf::operator+),
-		sol::meta_method::subtraction, static_cast<V(*)(const V&, const V&)>(&sf::operator-)
+		sol::meta_method::addition, static_cast<V(*)(const V&, const V&)>(&operator+),
+		sol::meta_method::subtraction, static_cast<V(*)(const V&, const V&)>(&operator-)
 	);
 }
 

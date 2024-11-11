@@ -69,7 +69,7 @@ template<typename T> std::vector<T> asArray(const sol::object& var)
 	return vector;
 }
 
-template<typename T> sf::Vector2<T> asVector2(const sol::object& var)
+template<typename T> Vector2<T> asVector2(const sol::object& var)
 {
 	if (var.get_type() == sol::type::table)
 	{
@@ -77,7 +77,7 @@ template<typename T> sf::Vector2<T> asVector2(const sol::object& var)
 		return {array[0], array[1]};
 	}
 	else
-		return as<sf::Vector2<T>>(var);
+		return as<Vector2<T>>(var);
 }
 static inline auto asVector2f(const sol::object& var) {	return asVector2<float>(var); }
 
@@ -100,7 +100,7 @@ inline Color asColor(const sol::object& var)
 }
 
 template<typename T> static inline T asParsed(const sol::object& var) { return as<T>(var); }
-template<> inline sf::Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
+template<> inline Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
 template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
 
 template<typename T> static inline T asParsedOr(const sol::object& var, T orVal = {})

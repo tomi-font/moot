@@ -11,7 +11,7 @@ CHudRender::CHudRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Co
 		vertex.color = color;
 }
 
-void CHudRender::resize(const sf::Vector2f& size)
+void CHudRender::resize(const Vector2f& size)
 {
 	m_vertices[2].position = m_vertices[0].position + size;
 

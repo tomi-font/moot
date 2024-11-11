@@ -77,7 +77,7 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 		{
 			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
 		});
-	lua->set_function("mapHudToWorld", &Window::mapHudToWorld<sf::Vector2f>, window);
+	lua->set_function("mapHudToWorld", &Window::mapHudToWorld<Vector2f>, window);
 	lua->set_function("mapPixelToHud", sol::overload(
 		[window](const sf::Event::MouseButtonEvent& mouseButton)
 		{

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <moot/utility/Vector2.hh>
 #include <array>
 #include <SFML/Graphics/Vertex.hpp>
 
@@ -10,9 +11,9 @@ public:
 	CHudRender(const sf::Vector2f& pos, const sf::Vector2f& size, sf::Color color);
 	
 	auto& vertices() const { return m_vertices; }
-	const sf::Vector2f& position() const { return m_vertices[0].position; }
+	Vector2f position() const { return m_vertices[0].position; }
 
-	void resize(const sf::Vector2f&);
+	void resize(const Vector2f&);
 
 private:
 

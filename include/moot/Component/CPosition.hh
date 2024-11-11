@@ -1,11 +1,11 @@
 #pragma once
 
 #include <moot/TrackedValue.hh>
-#include <SFML/System/Vector2.hpp>
+#include <moot/utility/Vector2.hh>
 
-struct CPosition : TrackedValue<sf::Vector2f>
+struct CPosition : TrackedValue<Vector2f>
 {
-	explicit CPosition(const sf::Vector2f& pos) : TrackedValue<sf::Vector2f>(pos) {}
+	explicit CPosition(const sf::Vector2f& pos) : TrackedValue<Vector2f>(pos) {}
 
-	using TrackedValue<sf::Vector2f>::operator=;
+	using TrackedValue<Vector2f>::operator=;
 };
