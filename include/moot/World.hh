@@ -48,8 +48,8 @@ public:
 
 	void remove(EntityContext);
 
-	ComponentVariant* addComponentTo(const EntityContext&, ComponentVariant&&);
-	void removeComponentFrom(const EntityContext&, ComponentId);
+	ComponentVariant* addComponentTo(Entity*, ComponentVariant&&);
+	void removeComponentFrom(Entity*, ComponentId);
 
 	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
 

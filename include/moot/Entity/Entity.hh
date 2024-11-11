@@ -51,20 +51,15 @@ public:
 
 	template<typename C> C* add()
 	{
-		m_comp += CId<C>;
-		return &std::get<C>(*world()->addComponentTo(*this, C()));
+		return &std::get<C>(*world()->addComponentTo(this, C()));
 	}
-
 	void add(ComponentVariant&& component)
 	{
-		m_comp += CVId(component);
-		world()->addComponentTo(*this, std::move(component));
+		world()->addComponentTo(this, std::move(component));
 	}
-
 	void remove(ComponentId cid)
 	{
-		m_comp -= cid;
-		world()->removeComponentFrom(*this, cid);
+		world()->removeComponentFrom(this, cid);
 	}
 
 	World* world() const { return m_arch->world(); }

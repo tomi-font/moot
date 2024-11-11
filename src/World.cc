@@ -270,11 +270,12 @@ void World::remove(EntityContext entity)
 	m_entitiesToRemove.insert(entity);
 }
 
-ComponentVariant* World::addComponentTo(const EntityContext& ec, ComponentVariant&& component)
+ComponentVariant* World::addComponentTo(Entity* entity, ComponentVariant&& component)
 {	
 	const ComponentId cid = CVId(component);
-
+	const EntityContext ec = *entity;
 	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
+	entity->m_comp += cid;
 
 	if (m_componentsToRemove.contains(ec))
 	{
@@ -287,10 +288,12 @@ ComponentVariant* World::addComponentTo(const EntityContext& ec, ComponentVarian
 	return &insertionPair.first->second;
 }
 
-void World::removeComponentFrom(const EntityContext& ec, ComponentId cid)
+void World::removeComponentFrom(Entity* entity, ComponentId cid)
 {
+	const EntityContext ec = *entity;
 	assert(cid != CId<CEntity>);
 	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
+	entity->m_comp -= cid;
 	
 	if (m_componentsToAdd.contains(ec))
 	{
