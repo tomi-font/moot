@@ -10,12 +10,11 @@ This:
 
 #### toolchain
 
-- Clang
+- Clang (for `-Weverything`)
 - CMake >= 3.30
 
 #### libraries
 
-- libc++
 - Boost
 - SFML 2.6.1
 - Lua 5.4.6

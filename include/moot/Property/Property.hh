@@ -2,6 +2,7 @@
 
 #include <moot/utility/Color.hh>
 #include <functional>
+#include <string>
 #include <variant>
 #include <SFML/System/Vector2.hpp>
 

@@ -108,6 +108,7 @@ void SRender::update()
 			updateView(entity);
 		}
 	}
+	assert(m_queries[Q::View].begin() != m_queries[Q::View].end());
 
 	for (Entity entity : m_queries[Q::ConvexPolygons])
 	{
@@ -212,8 +213,7 @@ void SRender::updateConvexPolygonFillColor(const Entity& entity, const CConvexPo
 	}
 	else if (hadTriangleVertices)
 	{
-		const auto& vertexSpan = span(&drawable.vertices, *vertexView);
-		drawable.vertices.erase(vertexSpan.begin(), vertexSpan.end());
+		drawable.vertices.erase(drawable.vertices.begin() + vertexView->front(), drawable.vertices.begin() + vertexView->back());
 		drawable.vertexViews.erase(vertexViewIt);
 		assert(drawable.vertices.empty() == drawable.vertexViews.empty());
 	}
