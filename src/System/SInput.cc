@@ -1,6 +1,6 @@
 #include <moot/System/SInput.hh>
 #include <moot/Entity/Entity.hh>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <moot/Window.hh>
 #include <SFML/Window/Event.hpp>
 
 // Indices for this system's queries.

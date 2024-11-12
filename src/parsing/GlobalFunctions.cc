@@ -4,6 +4,7 @@
 #include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/parsing/types.hh>
 #include <moot/utility/variant/indexToCompileTime.hh>
+#include <moot/Window.hh>
 
 static constexpr std::string_view PrototypeUidKey = "uid";
 

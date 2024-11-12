@@ -8,13 +8,13 @@
 #include <moot/parsing/Context.hh>
 #include <moot/Property/Properties.hh>
 #include <moot/System/System.hh>
-#include <moot/Window.hh>
 #include <deque>
 #include <memory>
 #include <set>
 #include <unordered_set>
 
 class Entity;
+class Window;
 
 class World :
 	public ParsingContext,

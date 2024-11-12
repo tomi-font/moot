@@ -1,7 +1,7 @@
 #include <moot/System/SRender.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/utility/iota_view.hh>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <moot/Window.hh>
 
 struct Drawable
 {
