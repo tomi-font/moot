@@ -20,7 +20,7 @@ static void recursivelyUpdateBoundCoords(Entity entity, BoundCoords* coords)
 
 	if (CChildren* cChildren = entity.find<CChildren*>())
 		for (EntityId childrenEId : cChildren->children())
-			recursivelyUpdateBoundCoords(entity.world()->findEntity(childrenEId), coords);
+			recursivelyUpdateBoundCoords(entity.world()->getEntity(childrenEId), coords);
 }
 
 FloatRect getEntityBoundingBox(Entity entity)

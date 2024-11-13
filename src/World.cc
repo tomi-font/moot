@@ -39,19 +39,16 @@ void World::triggered(const Event& event)
 
 void World::updateEntities()
 {
+	std::unordered_map<Archetype*, unsigned> alteredArchs;
 	std::vector<std::tuple<ComponentComposition, Prototype>> entitiesToChange;
 	entitiesToChange.reserve(m_entitiesToChange.size());
 
 	// First remove the entities. That invalidates references to other entities.
 	for (const EntityContext& entity : m_entitiesToRemove)
 	{
-		// assert(entity.comp() == entity.m_arch->comp());
-
 		const auto findIt = m_entitiesToChange.find(entity);
 		if (findIt != m_entitiesToChange.end())
 		{
-			// assert(entity.comp() == findIt->first.comp());
-
 			for (const auto& system: m_systems)
 				system->entityChangedRemovedCallback(entity, findIt->second.comp());
 			
@@ -62,20 +59,45 @@ void World::updateEntities()
 		{
 			for (const auto& system: m_systems)
 				system->entityRemovedCallback(entity);
+
+			const bool erased = m_entityIdMap.erase(Entity(entity).getId());
+			assert(erased);
 		}
 
 		entity.m_arch->remove(entity.m_idx);
+		alteredArchs[entity.m_arch] = entity.m_idx;
 	}
 	assert(m_entitiesToChange.empty());
 	m_entitiesToRemove.clear();
 
+	for (auto [arch, idx] : alteredArchs)
+	{
+		const auto& entityComponents = arch->getAll<CEntity>();
+		while (idx != entityComponents.size())
+		{
+			const EntityId eId = entityComponents[idx].id();
+			m_entityIdMap.at(eId).m_idx = idx;
+			++idx;
+		}
+	}
+	alteredArchs.clear();
+#ifndef NDEBUG
+	unsigned instantiatedEntityCount = 0;
+	for (const Archetype& arch : m_archs)
+		instantiatedEntityCount += arch.entityCount();
+	assert(instantiatedEntityCount + entitiesToChange.size() == m_entityIdMap.size());
+#endif
+
 	// References to entities cannot be stored between frames.
 	// This is the moment there must not be any extra reference left because they are invalidated by removal and modification of entities.
-	assert(EntityContext::instanceCount() == 0);
+	assert(EntityContext::instanceCount() == m_entityIdMap.size());
 
 	for (const auto& [oldComp, proto] : entitiesToChange)
 	{
 		const Entity entity = getArchetype(proto.comp())->instantiate(proto);
+
+		const auto insPair = m_entityIdMap.insert_or_assign(entity.getId(), entity);
+		assert(!insPair.second);
 
 		for (const auto& system: m_systems)
 			system->entityChangedAddedCallback(entity, oldComp);
@@ -87,6 +109,9 @@ void World::updateEntities()
 	for (const Prototype& proto : m_entitiesToInstantiate)
 	{
 		const Entity entity = getArchetype(proto.comp())->instantiate(proto);
+
+		const auto insPair = m_entityIdMap.emplace(entity.getId(), entity);
+		assert(insPair.second);
 
 		for (const auto& system : m_systems)
 			system->entityAddedCallback(entity);
@@ -171,25 +196,12 @@ Entity World::upToDateCompo(Entity entity) const
 	return entity;
 }
 
-Entity World::findEntity(EntityId eId)
+Entity World::getEntity(EntityId eId) const
 {
-	// TODO: entity ID cache
-	for (Archetype& arch : m_archs)
-	{
-		const auto& entityComponents = arch.getAll<CEntity>();
-		for (const CEntity& cEntity : entityComponents)
-		{
-			if (cEntity.id() == eId)
-			{
-				const unsigned index = static_cast<unsigned>(&cEntity - entityComponents.data());
-				return upToDateCompo(EntityContext(&arch, index));
-			}
-		}
-	}
-	return {};
+	return upToDateCompo(m_entityIdMap.at(eId));
 }
 
-std::optional<Entity> World::findEntity(std::string_view name)
+std::optional<Entity> World::findEntity(std::string_view name) const
 {
 	for (Entity entity : m_namedEntities)
 	{
@@ -245,7 +257,7 @@ void World::spawnChildOf(Entity* parent, const Prototype& childProto, std::optio
 
 void World::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::optional<sf::Vector2f> pos)
 {
-	assert(findEntity(parentEid).isEmpty());
+	assert(!m_entityIdMap.contains(parentEid));
 
 	Prototype& child = m_entitiesToInstantiate.emplace_back(childProto);
 	const EntityId childEId = spawn(&child, pos);

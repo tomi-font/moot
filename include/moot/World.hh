@@ -32,8 +32,8 @@ public:
 
 	auto* prototypeStore() { return &m_prototypeStore; }
 
-	Entity findEntity(EntityId eId);
-	std::optional<Entity> findEntity(std::string_view name);
+	Entity getEntity(EntityId eId) const;
+	std::optional<Entity> findEntity(std::string_view name) const;
 
 	decltype(auto) spawn(const std::string& protoName, std::optional<sf::Vector2f> pos = {})
 	{
@@ -77,6 +77,8 @@ private:
 	// Existing archetypes, where all the entities' components are.
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
 	std::deque<Archetype> m_archs;
+
+	std::unordered_map<EntityId, EntityContext> m_entityIdMap;
 
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
