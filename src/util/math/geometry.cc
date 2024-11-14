@@ -1,4 +1,4 @@
-#include <moot/utility/math/geometry.hh>
+#include <moot/util/math/geometry.hh>
 
 float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b, const sf::Vector2f& c)
 {

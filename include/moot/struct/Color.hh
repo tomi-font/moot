@@ -2,10 +2,8 @@
 
 #include <SFML/Graphics/Color.hpp>
 
-class Color : public sf::Color
+struct Color : public sf::Color
 {
-public:
-
 	Color() : sf::Color(0) {}
 	Color(const sf::Color& color) : sf::Color(color) {}
 	using sf::Color::Color;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/value.hh>
+#include <moot/util/value.hh>
 #include <ranges>
 
 template<unsigned N> consteval bool hasDefaultInitializedElement(auto (&array)[N], std::initializer_list<unsigned> exceptions = {})

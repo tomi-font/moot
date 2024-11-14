@@ -1,4 +1,4 @@
-#include <moot/utility/BoundCoords.hh>
+#include <moot/struct/BoundCoords.hh>
 
 void BoundCoords::incorporate(const BoundCoords& other)
 {

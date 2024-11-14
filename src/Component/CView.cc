@@ -1,5 +1,5 @@
 #include <moot/Component/CView.hh>
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Vector2.hh>
 #include <cassert>
 
 void CView::calculateNewSize()

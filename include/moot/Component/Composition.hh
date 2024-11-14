@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/bit.hh>
+#include <moot/util/bit.hh>
 #include <cassert>
 
 // Interface type for construction of component IDs to prevent implicit conversions.

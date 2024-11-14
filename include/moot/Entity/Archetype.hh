@@ -3,8 +3,8 @@
 #include <moot/Component/Composable.hh>
 #include <moot/Component/Types.hh>
 #include <moot/Entity/Context.hh>
-#include <moot/utility/bit.hh>
-#include <moot/utility/tuple/toVectorVariant.hh>
+#include <moot/util/bit.hh>
+#include <moot/util/tuple/toVectorVariant.hh>
 #include <cassert>
 #include <span>
 #include <vector>

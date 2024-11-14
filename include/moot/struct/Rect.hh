@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Vector2.hh>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 struct Rect

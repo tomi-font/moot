@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Entity/Entity.hh>
-#include <moot/utility/Rect.hh>
+#include <moot/struct/Rect.hh>
 
 std::vector<Entity> getEntityChildren(const Entity&);
 

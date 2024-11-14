@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Vector2.hh>
 #include <array>
 #include <SFML/Graphics/Vertex.hpp>
 

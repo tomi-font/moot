@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Component/Composable.hh>
-#include <moot/utility/InstanceCounter.hh>
+#include <moot/util/InstanceCounter.hh>
 
 class Archetype;
 

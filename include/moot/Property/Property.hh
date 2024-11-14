@@ -1,7 +1,7 @@
 #pragma once
 
-#include <moot/utility/Color.hh>
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Color.hh>
+#include <moot/struct/Vector2.hh>
 #include <functional>
 #include <string>
 #include <variant>

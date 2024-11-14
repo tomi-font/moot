@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/TrackedValue.hh>
-#include <moot/utility/Rect.hh>
+#include <moot/struct/Rect.hh>
 
 class CView
 {

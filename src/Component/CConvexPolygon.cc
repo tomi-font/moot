@@ -1,5 +1,5 @@
 #include <moot/Component/CConvexPolygon.hh>
-#include <moot/utility/math/geometry.hh>
+#include <moot/util/math/geometry.hh>
 #include <cassert>
 #include <span>
 

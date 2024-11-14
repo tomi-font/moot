@@ -1,7 +1,7 @@
 #include <moot/World.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/System/Types.hh>
-#include <moot/utility/variant/indexToCompileTime.hh>
+#include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
 
 World::World(Window* window) :

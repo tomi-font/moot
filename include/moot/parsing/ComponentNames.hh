@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/value.hh>
+#include <moot/util/value.hh>
 #include <moot/Component/Types.hh>
 
 class ComponentNames

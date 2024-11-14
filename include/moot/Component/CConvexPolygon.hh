@@ -1,9 +1,9 @@
 #pragma once
 
 #include <moot/TrackedValue.hh>
-#include <moot/utility/Color.hh>
-#include <moot/utility/BoundCoords.hh>
-#include <moot/utility/Rect.hh>
+#include <moot/struct/Color.hh>
+#include <moot/struct/BoundCoords.hh>
+#include <moot/struct/Rect.hh>
 #include <vector>
 
 class CConvexPolygon

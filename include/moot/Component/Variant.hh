@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Component/Types.hh>
-#include <moot/utility/tuple/toVariant.hh>
+#include <moot/util/tuple/toVariant.hh>
 
 // Variant that can hold every component.
 using ComponentVariant = tupleToVariant<Components>::type;

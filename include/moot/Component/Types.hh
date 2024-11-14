@@ -15,7 +15,7 @@
 #include <moot/Component/CRigidbody.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CView.hh>
-#include <moot/utility/tuple/index.hh>
+#include <moot/util/tuple/index.hh>
 
 using Components = std::tuple<
 	CPosition,

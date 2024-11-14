@@ -1,7 +1,7 @@
 #pragma once
 
-#include <moot/utility/Color.hh>
-#include <moot/utility/Rect.hh>
+#include <moot/struct/Color.hh>
+#include <moot/struct/Rect.hh>
 #include <SFML/Graphics/Color.hpp>
 #include <sol/sol.hpp>
 

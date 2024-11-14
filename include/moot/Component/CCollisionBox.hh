@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/utility/Rect.hh>
+#include <moot/struct/Rect.hh>
 
 struct CCollisionBox : FloatRect
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/TrackedValue.hh>
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Vector2.hh>
 
 struct CPosition : TrackedValue<Vector2f>
 {

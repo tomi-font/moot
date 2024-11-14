@@ -1,6 +1,6 @@
 #include <moot/parsing/CallbackParameters.hh>
-#include <moot/utility/Rect.hh>
-#include <moot/utility/Vector2.hh>
+#include <moot/struct/Rect.hh>
+#include <moot/struct/Vector2.hh>
 #include <SFML/Window/Event.hpp>
 
 template<typename T> static void registerVector2(sol::state* lua, const std::string& nameSuffix)

@@ -1,6 +1,6 @@
 #include <moot/System/SRender.hh>
 #include <moot/Entity/Entity.hh>
-#include <moot/utility/iota_view.hh>
+#include <moot/util/iota_view.hh>
 #include <moot/Window.hh>
 
 struct Drawable
