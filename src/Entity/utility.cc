@@ -1,6 +1,20 @@
 #include <moot/Entity/utility.hh>
 
-static void updateBoundCoords(Entity entity, BoundCoords* coords)
+std::vector<Entity> getEntityChildren(const Entity& entity)
+{
+	std::vector<Entity> children;
+
+	if (CChildren* cChildren = entity.find<CChildren*>())
+	{
+		const auto& childrenEIds = cChildren->eIds();
+		children.reserve(childrenEIds.size());
+		for (EntityId childEId : childrenEIds)
+			children.push_back(entity.world()->getEntity(childEId));
+	}
+	return children;
+}
+
+static void updateBoundCoords(const Entity& entity, BoundCoords* coords)
 {
 	if (CConvexPolygon* cConvexPolygon = entity.find<CConvexPolygon*>())
 	{
@@ -14,16 +28,15 @@ static void updateBoundCoords(Entity entity, BoundCoords* coords)
 	}
 }
 
-static void recursivelyUpdateBoundCoords(Entity entity, BoundCoords* coords)
+static void recursivelyUpdateBoundCoords(const Entity& entity, BoundCoords* coords)
 {
 	updateBoundCoords(entity, coords);
 
-	if (CChildren* cChildren = entity.find<CChildren*>())
-		for (EntityId childrenEId : cChildren->children())
-			recursivelyUpdateBoundCoords(entity.world()->getEntity(childrenEId), coords);
+	for (const Entity& child : getEntityChildren(entity))
+		recursivelyUpdateBoundCoords(child, coords);
 }
 
-FloatRect getEntityBoundingBox(Entity entity)
+FloatRect getEntityBoundingBox(const Entity& entity)
 {
 	assert(entity.has<CChildren>());
 	BoundCoords boundingCoords;

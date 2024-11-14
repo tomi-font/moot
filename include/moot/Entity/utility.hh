@@ -3,4 +3,6 @@
 #include <moot/Entity/Entity.hh>
 #include <moot/utility/Rect.hh>
 
-FloatRect getEntityBoundingBox(Entity);
+std::vector<Entity> getEntityChildren(const Entity&);
+
+FloatRect getEntityBoundingBox(const Entity&);

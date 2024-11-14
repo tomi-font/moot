@@ -282,8 +282,8 @@ void World::recursivelyRemove(Entity entity)
 	m_entitiesToRemove.insert(entity);
 
 	if (const CChildren* cChildren = entity.find<CChildren*>())
-		for (EntityId childrenEId : cChildren->children())
-			recursivelyRemove(m_entityIdMap.at(childrenEId));
+		for (EntityId childEId : cChildren->eIds())
+			recursivelyRemove(m_entityIdMap.at(childEId));
 }
 
 void World::remove(const Entity& entity)

@@ -7,12 +7,12 @@ class CChildren
 {
 public:
 
-	void add(EntityId childEId) { m_children.emplace(childEId); }
-	void remove(EntityId childEId) { m_children.erase(childEId); }
+	void add(EntityId childEId) { m_eIds.emplace(childEId); }
+	void remove(EntityId childEId) { m_eIds.erase(childEId); }
 
-	auto& children() const { return m_children; }
+	auto& eIds() const { return m_eIds; }
 
 private:
 
-	std::unordered_set<EntityId> m_children;
+	std::unordered_set<EntityId> m_eIds;
 };
