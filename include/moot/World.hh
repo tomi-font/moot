@@ -50,7 +50,7 @@ public:
 	ComponentVariant* addComponentTo(Entity*, ComponentVariant&&);
 	void removeComponentFrom(Entity*, ComponentId);
 
-	ComponentVariant* getStagedComponentOf(const EntityContext&, ComponentId cid);
+	ComponentVariant* getStagedComponentOf(const EntityPointer&, ComponentId cid);
 
 	auto* properties() { return &m_properties; }
 	auto* window() const { return m_window; }
@@ -78,7 +78,7 @@ private:
 	// Pointers to Archetypes are stored, so they shall not be invalidated.
 	std::deque<Archetype> m_archs;
 
-	std::unordered_map<EntityId, EntityContext> m_entityIdMap;
+	std::unordered_map<EntityId, EntityPointer> m_entityIdMap;
 
 	// All systems, indexed by their IDs.
 	std::vector<std::unique_ptr<System>> m_systems;
@@ -90,11 +90,11 @@ private:
 	// Entities and components are added/removed asynchronously to prevent
 	// Archetypes getting modified while the Systems are iterating through them.
 	std::vector<Prototype> m_entitiesToInstantiate;
-	std::set<EntityContext, std::greater<EntityContext>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
+	std::set<EntityPointer, std::greater<EntityPointer>> m_entitiesToRemove; // Sorted in descending order so that entities that are removed first do not invalidate the indices of the others.
 
-	std::unordered_map<EntityContext, Prototype> m_entitiesToChange;
-	std::unordered_map<EntityContext, std::unordered_set<ComponentId>> m_componentsToRemove;
-	std::unordered_map<EntityContext, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
+	std::unordered_map<EntityPointer, Prototype> m_entitiesToChange;
+	std::unordered_map<EntityPointer, std::unordered_set<ComponentId>> m_componentsToRemove;
+	std::unordered_map<EntityPointer, std::unordered_map<ComponentId, ComponentVariant>> m_componentsToAdd;
 
 	EntityQuery m_namedEntities;
 

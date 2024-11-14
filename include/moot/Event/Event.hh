@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/Entity/Context.hh>
+#include <moot/Entity/Pointer.hh>
 
 struct Event
 {

@@ -23,7 +23,7 @@ Archetype::Archetype(ComponentComposition comp, World* world) :
 	}
 }
 
-EntityContext Archetype::instantiate(const Prototype& entity)
+EntityPointer Archetype::instantiate(const Prototype& entity)
 {
 	assert(entity.comp() == m_comp);
 	ComponentComposition componentsLeft = m_comp;

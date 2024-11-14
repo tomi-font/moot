@@ -2,7 +2,7 @@
 
 #include <moot/Component/Composable.hh>
 #include <moot/Component/Types.hh>
-#include <moot/Entity/Context.hh>
+#include <moot/Entity/Pointer.hh>
 #include <moot/util/bit.hh>
 #include <moot/util/tuple/toVectorVariant.hh>
 #include <cassert>
@@ -40,7 +40,7 @@ public:
 	// Returns the component of the requested type found at the given idex.
 	template<typename C> C* get(unsigned index) { return &getAll<C>()[index]; }
 
-	EntityContext instantiate(const Prototype&);
+	EntityPointer instantiate(const Prototype&);
 	// Removes the entity at the given index.
 	void remove(unsigned);
 

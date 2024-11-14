@@ -3,14 +3,14 @@
 #include <moot/World.hh>
 
 // Handle to an entity that allows manipulating it.
-class Entity : public EntityContext, public ComponentComposable
+class Entity : public EntityPointer, public ComponentComposable
 {
 	friend World;
 
 public:
 
 	Entity() {}
-	Entity(const EntityContext& ec) : EntityContext(ec), ComponentComposable(m_arch->comp()) {}
+	Entity(const EntityPointer& ep) : EntityPointer(ep), ComponentComposable(m_arch->comp()) {}
 
 	// Returns a const reference to the requested component.
 	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
@@ -31,7 +31,7 @@ public:
 		}
 		catch (const std::bad_variant_access&)
 		{
-			assert(!isEmpty());
+			assert(isValid());
 			// The requested component was just added and is still in the staging phase.
 			return &std::get<C>(*world()->getStagedComponentOf(*this, CId<C>));
 		}
@@ -43,7 +43,7 @@ public:
 		using C = std::remove_pointer_t<CP>;
 		if (has<C>())
 			return get<CP>();
-		assert(!isEmpty());
+		assert(isValid());
 		return nullptr;
 	}
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Entity/Archetype.hh>
-#include <moot/Entity/Context.hh>
+#include <moot/Entity/Pointer.hh>
 
 class ArchetypeIteratorBase
 {
@@ -32,12 +32,12 @@ public:
 template<typename C> class ArchetypeIterator;
 
 // Iterates over entities.
-template<> class ArchetypeIterator<EntityContext> : public ArchetypeIteratorBase
+template<> class ArchetypeIterator<EntityPointer> : public ArchetypeIteratorBase
 {
 public:
 	using ArchetypeIteratorBase::ArchetypeIteratorBase;
 
-	EntityContext operator*() const { return { *m_archIt, m_idx }; }
+	EntityPointer operator*() const { return { *m_archIt, m_idx }; }
 };
 
 // Iterates over components of a same type.

@@ -31,8 +31,8 @@ public:
 	auto& entityAddedCallback() const { return m_params.entityAddedCallback; }
 	auto& entityRemovedCallback() const { return m_params.entityRemovedCallback; }
 
-	ArchetypeIterator<EntityContext> begin() const { return { m_matchedArchs.begin() }; }
-	ArchetypeIterator<EntityContext> end() const { return { m_matchedArchs.end() }; }
+	ArchetypeIterator<EntityPointer> begin() const { return { m_matchedArchs.begin() }; }
+	ArchetypeIterator<EntityPointer> end() const { return { m_matchedArchs.end() }; }
 
 	// Allows iterating over all the components of the given type belonging to entities matched by this query.
 	template<typename C> ArchetypeIterable<C> getAll() const { return { m_matchedArchs }; }

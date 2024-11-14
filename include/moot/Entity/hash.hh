@@ -1,10 +1,11 @@
 #pragma once
 
-#include <moot/Entity/Context.hh>
+#include <moot/Entity/Pointer.hh>
+#include <functional>
 
-template<> struct std::hash<EntityContext>
+template<> struct std::hash<EntityPointer>
 {
-	std::size_t operator()(const EntityContext&) const;
+	std::size_t operator()(const EntityPointer&) const;
 };
 
-template<> struct std::hash<Entity> : std::hash<EntityContext> {};
+template<> struct std::hash<class Entity> : std::hash<EntityPointer> {};

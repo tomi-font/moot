@@ -44,7 +44,7 @@ void World::updateEntities()
 	entitiesToChange.reserve(m_entitiesToChange.size());
 
 	// First remove the entities. That invalidates references to other entities.
-	for (const EntityContext& entity : m_entitiesToRemove)
+	for (const EntityPointer& entity : m_entitiesToRemove)
 	{
 		const auto findIt = m_entitiesToChange.find(entity);
 		if (findIt != m_entitiesToChange.end())
@@ -52,7 +52,7 @@ void World::updateEntities()
 			for (const auto& system: m_systems)
 				system->entityChangedRemovedCallback(entity, findIt->second.comp());
 			
-			entitiesToChange.emplace_back(entity.m_arch->comp(), std::move(findIt->second));
+			entitiesToChange.emplace_back(entity.arch()->comp(), std::move(findIt->second));
 			m_entitiesToChange.erase(findIt);
 		}
 		else
@@ -64,8 +64,8 @@ void World::updateEntities()
 			assert(erased);
 		}
 
-		entity.m_arch->remove(entity.m_idx);
-		alteredArchs[entity.m_arch] = entity.m_idx;
+		entity.arch()->remove(entity.index());
+		alteredArchs[entity.arch()] = entity.index();
 	}
 	assert(m_entitiesToChange.empty());
 	m_entitiesToRemove.clear();
@@ -76,7 +76,7 @@ void World::updateEntities()
 		while (idx != entityComponents.size())
 		{
 			const EntityId eId = entityComponents[idx].id();
-			m_entityIdMap.at(eId).m_idx = idx;
+			m_entityIdMap.at(eId) = {arch, idx};
 			++idx;
 		}
 	}
@@ -90,7 +90,7 @@ void World::updateEntities()
 
 	// References to entities cannot be stored between frames.
 	// This is the moment there must not be any extra reference left because they are invalidated by removal and modification of entities.
-	assert(EntityContext::instanceCount() == m_entityIdMap.size());
+	assert(EntityPointer::instanceCount() == m_entityIdMap.size());
 
 	for (const auto& [oldComp, proto] : entitiesToChange)
 	{
@@ -297,53 +297,53 @@ void World::remove(const Entity& entity)
 ComponentVariant* World::addComponentTo(Entity* entity, ComponentVariant&& component)
 {	
 	const ComponentId cid = CVId(component);
-	const EntityContext ec = *entity;
-	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
+	const EntityPointer ePtr = *entity;
+	assert(ePtr.isValid() && !m_entitiesToRemove.contains(ePtr));
 	entity->m_comp += cid;
 
-	if (m_componentsToRemove.contains(ec))
+	if (m_componentsToRemove.contains(ePtr))
 	{
 		// A component remove() + add() + get() would return the one that was originally removed.
-		assert(!m_componentsToRemove.at(ec).contains(cid));
+		assert(!m_componentsToRemove.at(ePtr).contains(cid));
 	}
 	
-	const auto& insertionPair = m_componentsToAdd[ec].emplace(cid, std::move(component));
+	const auto& insertionPair = m_componentsToAdd[ePtr].emplace(cid, std::move(component));
 	assert(insertionPair.second);
 	return &insertionPair.first->second;
 }
 
 void World::removeComponentFrom(Entity* entity, ComponentId cid)
 {
-	const EntityContext ec = *entity;
+	const EntityPointer ePtr = *entity;
 	assert(cid != CId<CEntity>);
-	assert(!ec.isEmpty() && !m_entitiesToRemove.contains(ec));
+	assert(ePtr.isValid() && !m_entitiesToRemove.contains(ePtr));
 	entity->m_comp -= cid;
 	
-	if (m_componentsToAdd.contains(ec))
+	if (m_componentsToAdd.contains(ePtr))
 	{
-		if (m_componentsToAdd.at(ec).erase(cid))
+		if (m_componentsToAdd.at(ePtr).erase(cid))
 			return;
 	}
-	const bool removed = m_componentsToRemove[ec].insert(cid).second;
+	const bool removed = m_componentsToRemove[ePtr].insert(cid).second;
 	assert(removed);
 }
 
-ComponentVariant* World::getStagedComponentOf(const EntityContext& entity, ComponentId cid)
+ComponentVariant* World::getStagedComponentOf(const EntityPointer& entity, ComponentId cid)
 {
 	return &m_componentsToAdd.at(entity).at(cid);
 }
 
 void World::updateEntitiesComponents()
 {
-	std::unordered_set<EntityContext> entities;
+	std::unordered_set<EntityPointer> entities;
 	for (const auto& [entity, _] : m_componentsToAdd)
 		entities.insert(entity);
 	for (const auto& [entity, _] : m_componentsToRemove)
 		entities.insert(entity);
 
-	for (EntityContext entity : entities)
+	for (EntityPointer entity : entities)
 	{
-		Archetype* const arch = entity.m_arch;
+		Archetype* const arch = entity.arch();
 
 		// Schedule the entity to be removed and its changed version to be added.
 		// All the entities must be removed in a controlled order because the removal invalidates references to other entities.
@@ -361,7 +361,7 @@ void World::updateEntitiesComponents()
 					[&](auto I)
 					{
 						using C = std::tuple_element_t<I, Components>;
-						proto.add<C>(*arch->get<C>(entity.m_idx));
+						proto.add<C>(*arch->get<C>(entity.index()));
 					});
 			}
 		}
