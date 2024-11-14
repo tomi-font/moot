@@ -18,7 +18,6 @@ public:
 
 	bool isEmpty() const { return !m_arch; }
 
-	// The component composition is not compared because it may differ between contexts of a same entity.
 	bool operator==(const EntityContext& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }
 	bool operator<(const EntityContext& right) const { return m_arch < right.m_arch || m_idx < right.m_idx; }
 	bool operator>(const EntityContext& right) const { return m_arch > right.m_arch || m_idx > right.m_idx; }

@@ -70,6 +70,7 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 			world->spawn(protoName, asVector2f(pos));
 		}
 	));
+	lua->set_function("remove", &World::remove, world);
 
 	lua->set_function("exitGame", &World::stopRunning, world);
 	lua->set_function("findEntity", static_cast<std::optional<Entity> (World::*)(std::string_view) const>(&World::findEntity), world);

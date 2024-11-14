@@ -1,7 +1,3 @@
-- entity hierarchies
-	- Remove children of a removed parent entity.
-	- Make positions propagate from parents to children.
-
 - Make iterable Entity::children().
 
 - Break down `parsing/` source files.

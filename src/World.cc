@@ -275,11 +275,23 @@ void World::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::o
 	assert(false);
 }
 
-void World::remove(EntityContext entity)
+void World::recursivelyRemove(Entity entity)
 {
 	m_componentsToRemove.erase(entity);
 	m_componentsToAdd.erase(entity);
 	m_entitiesToRemove.insert(entity);
+
+	if (const CChildren* cChildren = entity.find<CChildren*>())
+		for (EntityId childrenEId : cChildren->children())
+			recursivelyRemove(m_entityIdMap.at(childrenEId));
+}
+
+void World::remove(const Entity& entity)
+{	
+	if (const CParent* cParent = entity.find<CParent*>())
+		Entity(m_entityIdMap.at(*cParent)).get<CChildren*>()->remove(entity.getId());
+
+	recursivelyRemove(entity);
 }
 
 ComponentVariant* World::addComponentTo(Entity* entity, ComponentVariant&& component)

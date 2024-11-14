@@ -45,8 +45,7 @@ public:
 	}
 	void spawnChildOf(Entity* parent, const Prototype&, std::optional<sf::Vector2f> pos = {});
 	void spawnChildOf(EntityId parentEId, const Prototype&, std::optional<sf::Vector2f> pos = {});
-
-	void remove(EntityContext);
+	void remove(const Entity&);
 
 	ComponentVariant* addComponentTo(Entity*, ComponentVariant&&);
 	void removeComponentFrom(Entity*, ComponentId);
@@ -71,6 +70,7 @@ private:
 	Entity upToDateCompo(Entity) const;
 
 	EntityId spawn(Prototype*, std::optional<sf::Vector2f> pos);
+	void recursivelyRemove(Entity);
 
 	PrototypeStore m_prototypeStore;
 
