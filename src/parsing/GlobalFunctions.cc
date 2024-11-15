@@ -110,4 +110,10 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 				);
 			})
 	);
+
+	lua->set_function("trigger",
+		[world](Event::Id eventId, const Entity& entity)
+		{
+			world->eventManager()->trigger({eventId, entity});
+		});
 }

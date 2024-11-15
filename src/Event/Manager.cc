@@ -6,10 +6,9 @@ void EventManager::addListener(Event::Id eventId, EventUser* listener)
 	m_listeners[eventId].push_back(listener);
 }
 
-void EventManager::trigger(const Event& event)
+void EventManager::trigger(const Event& event) const
 {
-	for (EventUser* listener : m_listeners[event.id])
-	{
-		listener->eventTriggeredCallback(event);
-	}
+	if (const auto it = m_listeners.find(event.id); it != m_listeners.end())
+		for (EventUser* listener : it->second)
+			listener->eventTriggeredCallback(event);
 }

@@ -52,8 +52,9 @@ public:
 
 	ComponentVariant* getStagedComponentOf(const EntityPointer&, ComponentId cid);
 
+	auto* eventManager() const { return &m_eventManager; }
 	auto* properties() { return &m_properties; }
-	auto* window() const { return m_window; }
+	auto* window() { return m_window; }
 
 	void restartClock() { m_clock.restart(); }
 

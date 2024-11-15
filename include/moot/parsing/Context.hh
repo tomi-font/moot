@@ -10,8 +10,9 @@ class ParsingContext
 public:
 
 	void setScriptSearchPath(std::filesystem::path);
-
 	void processScript(const std::filesystem::path&);
+
+	auto* scriptContext() { return &m_lua; }
 
 protected:
 

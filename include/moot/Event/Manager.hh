@@ -12,7 +12,7 @@ public:
 
 	void addListener(Event::Id, EventUser*);
 
-	void trigger(const Event&);
+	void trigger(const Event&) const;
 
 private:
 

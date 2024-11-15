@@ -25,22 +25,22 @@ local player = {
 	View = {},
 	Input = {
 		{
-			{Event.KeyPress(Key.D), Event.KeyPress(Key.A),
-			 Event.KeyRelease(Key.D), Event.KeyRelease(Key.A)},
+			{InputEvent.KeyPress(Key.D), InputEvent.KeyPress(Key.A),
+			 InputEvent.KeyRelease(Key.D), InputEvent.KeyRelease(Key.A)},
 			function(this)
 				move = isKeyPressed(Key.D) - isKeyPressed(Key.A)
 				this:get(Component.Move):setXMotion(move)
 			end
 		},
 		{
-			{Event.KeyPress(Key.W), Event.KeyPress(Key.S)},
+			{InputEvent.KeyPress(Key.W), InputEvent.KeyPress(Key.S)},
 			function(this, event)
 				dir = (event.key.code == Key.W) and 1 or -1
 				this:get(Component.Rigidbody):applyYForce(dir * 750)
 			end
 		},
 		{
-			{Event.MouseWheelScroll},
+			{InputEvent.MouseWheelScroll},
 			function(this, event)
 				this:get(Component.View):zoom(1 - event.mouseWheel.delta / 4)
 			end
@@ -62,7 +62,7 @@ spawn(player)
 local platformBuilder = {
 	Input = {
 		{
-			{Event.MouseButtonPress(MouseButton.Left)},
+			{InputEvent.MouseButtonPress(MouseButton.Left)},
 			function(this, event)
 				if findEntity("platformInConstruction") then
 					return
@@ -78,7 +78,7 @@ local platformBuilder = {
 			end
 		},
 		{
-			{Event.MouseMove},
+			{InputEvent.MouseMove},
 			function(this, event)
 				local platform = findEntity("platformInConstruction")
 				if not platform then
@@ -89,7 +89,7 @@ local platformBuilder = {
 			end
 		},
 		{
-			{Event.MouseButtonRelease(MouseButton.Left)},
+			{InputEvent.MouseButtonRelease(MouseButton.Left)},
 			function(this, event)
 				local platform = findEntity("platformInConstruction")
 				if not platform then

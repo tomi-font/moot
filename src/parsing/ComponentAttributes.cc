@@ -8,8 +8,7 @@ template<typename C> static void registerAttributeValues(sol::state* lua);
 
 template<> void registerAttributeValues<CInput>(sol::state* lua)
 {
-	// Event Type
-	auto et = lua->create_table("Event");
+	auto et = lua->create_table("InputEvent");
 
 	et["WindowClose"] = sf::Event(sf::Event::Closed);
 	et["MouseWheelScroll"] = sf::Event{sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel};
