@@ -1,24 +1,15 @@
 #include <moot/Event/Manager.hh>
 #include <moot/Event/User.hh>
 
-EventManager::EventManager() : m_listeners(Event::COUNT)
+void EventManager::addListener(Event::Id eventId, EventUser* listener)
 {
-	for (unsigned et = 0; et != Event::COUNT; ++et)
-	{
-		// Initializing the listeners map here allows const accesses via at() later on.
-		m_listeners[static_cast<Event::Type>(et)];
-	}
+	m_listeners[eventId].push_back(listener);
 }
 
-void EventManager::addListener(Event::Type type, EventUser* listener)
+void EventManager::trigger(const Event& event)
 {
-	m_listeners.at(type).push_back(listener);
-}
-
-void EventManager::broadcast(const Event& event) const
-{
-	for (EventUser* listener : m_listeners.at(event.type))
+	for (EventUser* listener : m_listeners[event.id])
 	{
-		listener->triggered(event);
+		listener->eventTriggeredCallback(event);
 	}
 }

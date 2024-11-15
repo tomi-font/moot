@@ -1,5 +1,6 @@
 #include <moot/World.hh>
 #include <moot/Entity/Entity.hh>
+#include <moot/Event/Engine.hh>
 #include <moot/System/Types.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
@@ -26,14 +27,14 @@ World::World(Window* window) :
 	}
 
 	setEventManager(&m_eventManager);
-	listen(Event::GameClose);
+	listenTo(EngineEvent::GameClose);
 
 	initializeScriptContext(this);
 }
 
-void World::triggered(const Event& event)
+void World::eventTriggeredCallback(const Event& event)
 {
-	assert(event.type == Event::GameClose);
+	assert(event.id == EngineEvent::GameClose);
 	m_running = false;
 }
 

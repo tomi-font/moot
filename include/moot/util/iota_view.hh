@@ -4,8 +4,8 @@
 #include <span>
 #include <vector>
 
-template<typename T, typename U> static constexpr
-std::ranges::iota_view<T, T> iota_view(U first, U last)
+template<typename T> static constexpr
+std::ranges::iota_view<T, T> iota_view(auto first, auto last)
 {
 	return std::ranges::iota_view<T, T>(static_cast<T>(first), static_cast<T>(last));
 }

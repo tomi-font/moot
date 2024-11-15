@@ -1,14 +1,8 @@
 #pragma once
 
-#include <moot/Entity/Pointer.hh>
-
 struct Event
 {
-	enum Type
-	{
-		GameClose,
-		COUNT // Keep the enum values unassigned so that they are iterable.
-	};
+	using Id = unsigned;
 
-	const Type type;
+	const Id id;
 };

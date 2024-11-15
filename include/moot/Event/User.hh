@@ -1,27 +1,26 @@
 #pragma once
 
 #include <moot/Event/Event.hh>
+#include <SFML/System/NonCopyable.hpp>
 
 class EventManager;
 
-class EventUser
+class EventUser : sf::NonCopyable
 {
 public:
 
 	void setEventManager(EventManager*);
 	virtual void listenToEvents();
 
-	// Callback for when an event whose type was subscribed to is triggered.
-	virtual void triggered(const Event&);
+	virtual void eventTriggeredCallback(const Event&);
 
 protected:
 
 	virtual ~EventUser() {}
 
-	// Start listening to the given type of event.
-	void listen(Event::Type);
+	void listenTo(Event::Id);
 
-	void broadcast(const Event&) const;
+	void trigger(const Event&) const;
 
 private:
 

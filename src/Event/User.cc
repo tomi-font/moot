@@ -12,18 +12,18 @@ void EventUser::listenToEvents()
 {
 }
 
-void EventUser::triggered(const Event&)
+void EventUser::eventTriggeredCallback(const Event&)
 {
 }
 
-void EventUser::listen(Event::Type et)
+void EventUser::listenTo(Event::Id eventId)
 {
 	assert(m_eventManager);
-	m_eventManager->addListener(et, this);
+	m_eventManager->addListener(eventId, this);
 }
 
-void EventUser::broadcast(const Event& e) const
+void EventUser::trigger(const Event& e) const
 {
 	assert(m_eventManager);
-	m_eventManager->broadcast(e);
+	m_eventManager->trigger(e);
 }

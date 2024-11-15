@@ -59,7 +59,7 @@ public:
 
 private:
 
-	void triggered(const Event&) override;
+	void eventTriggeredCallback(const Event&) override;
 
 	void updateEntitiesComponents();
 	void updateEntities();

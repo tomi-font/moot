@@ -10,16 +10,11 @@ class EventManager
 {
 public:
 
-	EventManager();
+	void addListener(Event::Id, EventUser*);
 
-	// Subscribes a listener to an event type.
-	void addListener(Event::Type, EventUser*);
-
-	// Broadcasts an event to the subscribed listeners.
-	void broadcast(const Event&) const;
+	void trigger(const Event&);
 
 private:
 
-	// Maps the event types to their subscribed listeners.
-	std::unordered_map<Event::Type, std::vector<EventUser*>> m_listeners;
+	std::unordered_map<Event::Id, std::vector<EventUser*>> m_listeners;
 };

@@ -1,5 +1,6 @@
 #include <moot/System/SInput.hh>
 #include <moot/Entity/Entity.hh>
+#include <moot/Event/Engine.hh>
 #include <moot/Window.hh>
 #include <SFML/Window/Event.hpp>
 
@@ -56,7 +57,7 @@ void SInput::update()
 		    && (event.type == sf::Event::Closed
 		        || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q)))
 		{
-			broadcast({Event::GameClose});
+			trigger({EngineEvent::GameClose});
 		}
 	}
 	updatePointables();

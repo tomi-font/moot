@@ -11,7 +11,9 @@ target_compile_features(moot PUBLIC cxx_std_26)
 # For clangd to not show warnings in header files.
 set(PUBLIC_DISABLED_WARNINGS
 	c++98-compat
+	c++98-compat-pedantic
 	gnu-anonymous-struct
+	inaccessible-base
 	nested-anon-types
 	padded
 	pre-c++14-compat
