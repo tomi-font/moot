@@ -2,7 +2,7 @@
 
 #include <moot/System/System.hh>
 
-class SPhysics : public System
+class SPhysics final : public System
 {
 public:
 

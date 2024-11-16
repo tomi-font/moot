@@ -1,35 +1,36 @@
 #include <moot/World.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/Event/Engine.hh>
-#include <moot/System/Types.hh>
+#include <moot/System/SInput.hh>
+#include <moot/System/SPhysics.hh>
+#include <moot/System/SRender.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
 
 World::World(Window* window) :
-	m_systems(std::tuple_size_v<Systems>),
 	m_namedEntities({ .required = {CId<CName>} }),
 	m_window(window),
 	m_running(true)
 {
-	m_systems[SId<SInput>] = std::make_unique<SInput>();
-	m_systems[SId<SPhysics>] = std::make_unique<SPhysics>();
-	m_systems[SId<SRender>] = std::make_unique<SRender>();
-
-	for (const auto& system: m_systems)
-	{
-		system->setWindow(window);
-
-		system->setEventManager(&m_eventManager);
-		system->listenToEvents();
-
-		system->setProperties(&m_properties);
-		system->initializeProperties();
-	}
+	addSystem<SInput>({});
+	addSystem<SPhysics>(SystemSchedule::after<SInput>());
+	addSystem<SRender>(SystemSchedule::after<SPhysics>());
 
 	setEventManager(&m_eventManager);
 	listenTo(EngineEvent::GameClose);
 
 	initializeScriptContext(this);
+}
+
+void World::onSystemAdded(System* system)
+{
+	system->setWindow(m_window);
+
+	system->setEventManager(&m_eventManager);
+	system->listenToEvents();
+
+	system->setProperties(&m_properties);
+	system->initializeProperties();
 }
 
 void World::eventTriggeredCallback(const Event& event)
@@ -144,11 +145,8 @@ void World::update()
 	// Then remove and instantiate the entities that are waiting for that.
 	updateEntities();
 
-	for (const auto& system : m_systems)
-	{
-		system->performUpdate();
-	}
-	
+	updateSystems();
+
 	updateScriptContext();
 }
 

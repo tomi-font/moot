@@ -4,19 +4,21 @@
 #include <moot/Entity/hash.hh>
 #include <moot/Entity/Id.hh>
 #include <moot/Entity/PrototypeStore.hh>
+#include <moot/Entity/Query.hh>
 #include <moot/Event/Manager.hh>
+#include <moot/Event/User.hh>
 #include <moot/parsing/Context.hh>
 #include <moot/Property/Properties.hh>
-#include <moot/System/System.hh>
+#include <moot/System/Manager.hh>
 #include <deque>
-#include <memory>
 #include <set>
 #include <unordered_set>
 
 class Entity;
 class Window;
 
-class World :
+class World final :
+	public SystemManager,
 	public ParsingContext,
 	EventUser,
 	sf::NonCopyable
@@ -60,6 +62,8 @@ public:
 
 private:
 
+	void onSystemAdded(System*) override;
+ 
 	void eventTriggeredCallback(const Event&) override;
 
 	void updateEntitiesComponents();
@@ -80,9 +84,6 @@ private:
 	std::deque<Archetype> m_archs;
 
 	std::unordered_map<EntityId, EntityPointer> m_entityIdMap;
-
-	// All systems, indexed by their IDs.
-	std::vector<std::unique_ptr<System>> m_systems;
 
 	EventManager m_eventManager;
 

@@ -2,7 +2,7 @@
 
 #include <moot/System/System.hh>
 
-class SInput : public System
+class SInput final : public System
 {
 public:
 

@@ -4,7 +4,7 @@
 #include <moot/Entity/Id.hh>
 #include <SFML/Graphics/Vertex.hpp>
 
-class SRender : public System
+class SRender final : public System
 {
 public:
 
