@@ -54,7 +54,7 @@ SRender::SRender()
 	m_queries.resize(Q::COUNT);
 
 	m_queries[Q::View] = {{ .required = {CId<CView>},
-		.entityAddedCallback = [this](const Entity& entity)
+		.onEntityAdded = [this](const Entity& entity)
 		{
 			updateView(entity);
 		}
@@ -63,7 +63,7 @@ SRender::SRender()
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 	
 	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>},
-		.entityAddedCallback = [this](const Entity& entity)
+		.onEntityAdded = [this](const Entity& entity)
 		{
 			const EntityId entityId = entity.getId();
 			const auto& cConvexPolygon = entity.get<CConvexPolygon>();
@@ -82,7 +82,7 @@ SRender::SRender()
 
 			updateConvexPolygonFillColor(entity, cConvexPolygon);
 		},
-		.entityRemovedCallback = [this](const Entity& entity)
+		.onEntityRemoved = [this](const Entity& entity)
 		{
 			m_drawables.erase(entity.getId());
 		}

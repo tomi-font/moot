@@ -7,30 +7,30 @@ void EntityQuerier::match(Archetype* arch)
 		query.match(arch);
 }
 
-void EntityQuerier::entityAddedCallback(const Entity& entity) const
+void EntityQuerier::onEntityAdded(const Entity& entity) const
 {
 	for (const EntityQuery& query : m_queries)
-		if (query.entityAddedCallback() && query.matches(entity.comp()))
-			query.entityAddedCallback()(entity);
+		if (query.onEntityAdded() && query.matches(entity.comp()))
+			query.onEntityAdded()(entity);
 }
 
-void EntityQuerier::entityRemovedCallback(const Entity& entity) const
+void EntityQuerier::onEntityRemoved(const Entity& entity) const
 {
 	for (const EntityQuery& query : m_queries)
-		if (query.entityRemovedCallback() && query.matches(entity.comp()))
-			query.entityRemovedCallback()(entity);
+		if (query.onEntityRemoved() && query.matches(entity.comp()))
+			query.onEntityRemoved()(entity);
 }
 
-void EntityQuerier::entityChangedRemovedCallback(const Entity& oldEntity, ComponentComposition newComp) const
+void EntityQuerier::onChangedEntityRemoved(const Entity& oldEntity, ComponentComposition newComp) const
 {
 	for (const EntityQuery& query : m_queries)
-		if (query.entityRemovedCallback() && query.matches(oldEntity.comp()) && !query.matches(newComp))
-			query.entityRemovedCallback()(oldEntity);
+		if (query.onEntityRemoved() && query.matches(oldEntity.comp()) && !query.matches(newComp))
+			query.onEntityRemoved()(oldEntity);
 }
 
-void EntityQuerier::entityChangedAddedCallback(const Entity& newEntity, ComponentComposition oldComp) const
+void EntityQuerier::onChangedEntityAdded(const Entity& newEntity, ComponentComposition oldComp) const
 {
 	for (const EntityQuery& query : m_queries)
-		if (query.entityAddedCallback() && !query.matches(oldComp) && query.matches(newEntity.comp()))
-			query.entityAddedCallback()(newEntity);
+		if (query.onEntityAdded() && !query.matches(oldComp) && query.matches(newEntity.comp()))
+			query.onEntityAdded()(newEntity);
 }

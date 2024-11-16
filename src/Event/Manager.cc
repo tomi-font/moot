@@ -10,5 +10,5 @@ void EventManager::trigger(const Event& event) const
 {
 	if (const auto it = m_listeners.find(event.id); it != m_listeners.end())
 		for (EventUser* listener : it->second)
-			listener->eventTriggeredCallback(event);
+			listener->onEvent(event);
 }

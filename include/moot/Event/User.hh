@@ -12,7 +12,7 @@ public:
 	void setEventManager(EventManager*);
 	virtual void listenToEvents();
 
-	virtual void eventTriggeredCallback(const Event&);
+	virtual void onEvent(const Event&);
 
 protected:
 

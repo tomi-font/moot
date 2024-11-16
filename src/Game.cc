@@ -32,6 +32,8 @@ Game::Game() :
 
 void Game::onSystemAdded(System* system)
 {
+	assert(m_entityIdMap.empty());
+
 	system->setWindow(&m_window);
 
 	system->setEventManager(&m_eventManager);
@@ -41,7 +43,7 @@ void Game::onSystemAdded(System* system)
 	system->initializeProperties();
 }
 
-void Game::eventTriggeredCallback(const Event& event)
+void Game::onEvent(const Event& event)
 {
 	assert(event.id == EngineEvent::GameClose);
 	m_running = false;
@@ -60,7 +62,7 @@ void Game::updateEntities()
 		if (findIt != m_entitiesToChange.end())
 		{
 			for (const auto& system: m_systems)
-				system->entityChangedRemovedCallback(entity, findIt->second.comp());
+				system->onChangedEntityRemoved(entity, findIt->second.comp());
 			
 			entitiesToChange.emplace_back(entity.arch()->comp(), std::move(findIt->second));
 			m_entitiesToChange.erase(findIt);
@@ -68,7 +70,7 @@ void Game::updateEntities()
 		else
 		{
 			for (const auto& system: m_systems)
-				system->entityRemovedCallback(entity);
+				system->onEntityRemoved(entity);
 
 			const bool erased = m_entityIdMap.erase(Entity(entity).getId());
 			assert(erased);
@@ -110,7 +112,7 @@ void Game::updateEntities()
 		assert(!insPair.second);
 
 		for (const auto& system: m_systems)
-			system->entityChangedAddedCallback(entity, oldComp);
+			system->onChangedEntityAdded(entity, oldComp);
 	}
 	entitiesToChange.clear();
 
@@ -124,7 +126,7 @@ void Game::updateEntities()
 		assert(insPair.second);
 
 		for (const auto& system : m_systems)
-			system->entityAddedCallback(entity);
+			system->onEntityAdded(entity);
 
 		instantiatedEntities.insert(entity);
 	}

@@ -58,8 +58,7 @@ public:
 private:
 
 	void onSystemAdded(System*) override;
-
-	void eventTriggeredCallback(const Event&) override;
+	void onEvent(const Event&) override;
 
 	void updateEntitiesComponents();
 	void updateEntities();

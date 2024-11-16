@@ -7,15 +7,15 @@
 
 class EntityQuery
 {
-	using EntityCallback = std::function<void(const Entity&)>;
+	using Callback = std::function<void(const Entity&)>;
 	struct Parameters
 	{
 		// Components whose presence is required. Every different composition is an or; any one of them matching will fulfill the `required` criteria.
 		std::vector<ComponentComposition> required;
 		// Components whose presence is forbidden.
 		ComponentComposition forbidden;
-		EntityCallback entityAddedCallback;
-		EntityCallback entityRemovedCallback;
+		Callback onEntityAdded;
+		Callback onEntityRemoved;
 	};
 
 public:
@@ -28,8 +28,8 @@ public:
 
 	std::span<Archetype* const> matchedArchetypes() const { return m_matchedArchs; }
 
-	auto& entityAddedCallback() const { return m_params.entityAddedCallback; }
-	auto& entityRemovedCallback() const { return m_params.entityRemovedCallback; }
+	auto& onEntityAdded() const { return m_params.onEntityAdded; }
+	auto& onEntityRemoved() const { return m_params.onEntityRemoved; }
 
 	ArchetypeIterator<EntityPointer> begin() const { return { m_matchedArchs.begin() }; }
 	ArchetypeIterator<EntityPointer> end() const { return { m_matchedArchs.end() }; }

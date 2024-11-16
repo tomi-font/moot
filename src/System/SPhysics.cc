@@ -18,7 +18,7 @@ SPhysics::SPhysics()
 	m_queries.resize(Q::COUNT);
 	m_queries[Q::Dynamic] = {{ .required = {CId<CMove>, CId<CRigidbody>} }};
 	m_queries[Q::Collidable] = {{ .required = {CId<CCollisionBox>},
-		.entityAddedCallback = [](const Entity& entity)
+		.onEntityAdded = [](const Entity& entity)
 		{
 			entity.get<CCollisionBox*>()->bottomLeft = entity.get<CPosition>().val();
 		}

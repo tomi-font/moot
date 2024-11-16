@@ -12,7 +12,7 @@ void EventUser::listenToEvents()
 {
 }
 
-void EventUser::eventTriggeredCallback(const Event&)
+void EventUser::onEvent(const Event&)
 {
 }
 
