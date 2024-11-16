@@ -7,9 +7,8 @@
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
 
-World::World(Window* window) :
+World::World() :
 	m_namedEntities({ .required = {CId<CName>} }),
-	m_window(window),
 	m_running(true)
 {
 	addSystem<SInput>({});
@@ -20,11 +19,20 @@ World::World(Window* window) :
 	listenTo(EngineEvent::GameClose);
 
 	initializeScriptContext(this);
+
+	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
+	halfScreen.width /= 2;
+	halfScreen.height /= 2;
+	m_window.create(halfScreen, {});
+	m_window.setPosition(sf::Vector2i(halfScreen.width / 2, halfScreen.height / 2));
+	m_window.setFramerateLimit(60);
+	m_window.setVerticalSyncEnabled(true);
+	m_window.setKeyRepeatEnabled(false);
 }
 
 void World::onSystemAdded(System* system)
 {
-	system->setWindow(m_window);
+	system->setWindow(&m_window);
 
 	system->setEventManager(&m_eventManager);
 	system->listenToEvents();
@@ -134,20 +142,25 @@ void World::updateEntities()
 	}
 }
 
-void World::update()
+void World::play()
 {
-	m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
+	m_clock.restart();
 
-	// First remove and add existing entities' components.
-	// References to them get invalidated when removing entities.
-	updateEntitiesComponents();
+	while (m_running)
+	{
+		m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
 
-	// Then remove and instantiate the entities that are waiting for that.
-	updateEntities();
+		// First remove and add existing entities' components.
+		// References to them get invalidated when removing entities.
+		updateEntitiesComponents();
 
-	updateSystems();
+		// Then remove and instantiate the entities that are waiting for that.
+		updateEntities();
 
-	updateScriptContext();
+		updateSystems();
+
+		updateScriptContext();
+	}
 }
 
 Archetype* World::findArchetype(ComponentComposition comp)

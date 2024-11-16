@@ -10,12 +10,12 @@
 #include <moot/parsing/Context.hh>
 #include <moot/Property/Properties.hh>
 #include <moot/System/Manager.hh>
+#include <moot/Window.hh>
 #include <deque>
 #include <set>
 #include <unordered_set>
 
 class Entity;
-class Window;
 
 class World final :
 	public SystemManager,
@@ -25,12 +25,9 @@ class World final :
 {
 public:
 
-	World(Window*);
+	World();
 
-	bool isRunning() const { return m_running; }
-	void stopRunning() { m_running = false; }
-
-	void update();
+	void play();
 
 	auto* prototypeStore() { return &m_prototypeStore; }
 
@@ -56,14 +53,12 @@ public:
 
 	auto* eventManager() const { return &m_eventManager; }
 	auto* properties() { return &m_properties; }
-	auto* window() { return m_window; }
-
-	void restartClock() { m_clock.restart(); }
+	auto* window() { return &m_window; }
 
 private:
 
 	void onSystemAdded(System*) override;
- 
+
 	void eventTriggeredCallback(const Event&) override;
 
 	void updateEntitiesComponents();
@@ -100,8 +95,7 @@ private:
 
 	EntityQuery m_namedEntities;
 
-	// The window this world is bound to.
-	Window* const m_window;
+	Window m_window;
 
 	// Measures the time elapsed between updates.
 	sf::Clock m_clock;
