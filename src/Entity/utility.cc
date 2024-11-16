@@ -9,7 +9,7 @@ std::vector<Entity> getEntityChildren(const Entity& entity)
 		const auto& childrenEIds = cChildren->eIds();
 		children.reserve(childrenEIds.size());
 		for (EntityId childEId : childrenEIds)
-			children.push_back(entity.world()->getEntity(childEId));
+			children.push_back(entity.game()->getEntity(childEId));
 	}
 	return children;
 }

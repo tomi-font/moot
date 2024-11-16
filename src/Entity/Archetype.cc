@@ -3,9 +3,9 @@
 #include <moot/Entity/Prototype.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 
-Archetype::Archetype(ComponentComposition comp, World* world) :
+Archetype::Archetype(ComponentComposition comp, Game* game) :
 	ComponentComposable(comp),
-	m_world(world),
+	m_game(game),
 	m_entityCount(0)
 {
 	// Prepare the Archetype for storing all needed components.

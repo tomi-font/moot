@@ -17,7 +17,7 @@
 
 class Entity;
 
-class World final :
+class Game final :
 	public SystemManager,
 	public ParsingContext,
 	EventUser,
@@ -25,7 +25,7 @@ class World final :
 {
 public:
 
-	World();
+	Game();
 
 	void play();
 

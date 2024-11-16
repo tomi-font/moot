@@ -2,11 +2,11 @@
 
 #include <sol/sol.hpp>
 
-class World;
+class Game;
 
 class GlobalFunctions
 {
 public:
 
-	static void registerAll(sol::state*, World*);
+	static void registerAll(sol::state*, Game*);
 };

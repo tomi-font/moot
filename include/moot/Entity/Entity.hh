@@ -1,11 +1,11 @@
 #pragma once
 
-#include <moot/World.hh>
+#include <moot/Game.hh>
 
 // Handle to an entity that allows manipulating it.
 class Entity : public EntityPointer, public ComponentComposable
 {
-	friend World;
+	friend Game;
 
 public:
 
@@ -33,7 +33,7 @@ public:
 		{
 			assert(isValid());
 			// The requested component was just added and is still in the staging phase.
-			return &std::get<C>(*world()->getStagedComponentOf(*this, CId<C>));
+			return &std::get<C>(*game()->getStagedComponentOf(*this, CId<C>));
 		}
 	}
 
@@ -51,16 +51,16 @@ public:
 
 	template<typename C> C* add()
 	{
-		return &std::get<C>(*world()->addComponentTo(this, C()));
+		return &std::get<C>(*game()->addComponentTo(this, C()));
 	}
 	void add(ComponentVariant&& component)
 	{
-		world()->addComponentTo(this, std::move(component));
+		game()->addComponentTo(this, std::move(component));
 	}
 	void remove(ComponentId cid)
 	{
-		world()->removeComponentFrom(this, cid);
+		game()->removeComponentFrom(this, cid);
 	}
 
-	World* world() const { return m_arch->world(); }
+	Game* game() const { return m_arch->game(); }
 };

@@ -11,16 +11,16 @@
 #include <SFML/System/NonCopyable.hpp>
 
 class Prototype;
-class World;
+class Game;
 
 // Archetypes store components of entities that are the same, i.e. have exactly the same components.
 class Archetype : public ComponentComposable, sf::NonCopyable
 {
 public:
 
-	Archetype(ComponentComposition, World*);
+	Archetype(ComponentComposition, Game*);
 
-	World* world() const { return m_world; }
+	Game* game() const { return m_game; }
 
 	auto entityCount() const
 	{
@@ -46,8 +46,7 @@ public:
 
 private:
 
-	/* The world this Archetype belongs to. */
-	World* const m_world;
+	Game* const m_game;
 
 	unsigned computeEntityCount() const;
 	unsigned m_entityCount;

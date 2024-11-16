@@ -30,10 +30,10 @@ static const Prototype& findOrMakePrototype(sol::table protoTable, PrototypeStor
 	return *proto;
 }
 
-void GlobalFunctions::registerAll(sol::state* lua, World* world)
+void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 {
-	PrototypeStore* const prototypeStore = world->prototypeStore();
-	Window* const window = world->window();
+	PrototypeStore* const prototypeStore = game->prototypeStore();
+	Window* const window = game->window();
 
 	lua->set_function("register",
 		[prototypeStore](std::string name, sol::table protoTable)
@@ -55,24 +55,24 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table protoTable)
 		{
-			world->spawn(getPrototype(protoTable));
+			game->spawn(getPrototype(protoTable));
 		},
 		[=](sol::table protoTable, const sol::object& pos)
 		{
-			world->spawn(getPrototype(protoTable), asVector2f(pos));
+			game->spawn(getPrototype(protoTable), asVector2f(pos));
 		},
-		[world](const std::string& protoName)
+		[game](const std::string& protoName)
 		{
-			world->spawn(protoName);
+			game->spawn(protoName);
 		},
-		[world](const std::string& protoName, const sol::object& pos)
+		[game](const std::string& protoName, const sol::object& pos)
 		{
-			world->spawn(protoName, asVector2f(pos));
+			game->spawn(protoName, asVector2f(pos));
 		}
 	));
-	lua->set_function("remove", &World::remove, world);
+	lua->set_function("remove", &Game::remove, game);
 
-	lua->set_function("findEntity", static_cast<std::optional<Entity> (World::*)(std::string_view) const>(&World::findEntity), world);
+	lua->set_function("findEntity", static_cast<std::optional<Entity> (Game::*)(std::string_view) const>(&Game::findEntity), game);
 	lua->set_function("isKeyPressed",
 		[](sf::Keyboard::Key key)
 		{
@@ -93,14 +93,14 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 
 	lua->create_named_table("properties")[sol::metatable_key] = lua->create_table_with(
 		sol::meta_method::index, sol::property(
-			[world](sol::table, const std::string& name)
+			[game](sol::table, const std::string& name)
 			{
-				return world->properties()->get(name);
+				return game->properties()->get(name);
 			}),
 		sol::meta_method::new_index, sol::property(
-			[world](sol::table, const std::string& name, const sol::object& value)
+			[game](sol::table, const std::string& name, const sol::object& value)
 			{
-				Properties* const properties = world->properties();
+				Properties* const properties = game->properties();
 				variantIndexToCompileTime<Property::Value>(properties->get(name).index(),
 					[&](auto I)
 					{
@@ -111,8 +111,8 @@ void GlobalFunctions::registerAll(sol::state* lua, World* world)
 	);
 
 	lua->set_function("trigger",
-		[world](Event::Id eventId, const Entity& entity)
+		[game](Event::Id eventId, const Entity& entity)
 		{
-			world->eventManager()->trigger({eventId, entity});
+			game->eventManager()->trigger({eventId, entity});
 		});
 }

@@ -1,4 +1,4 @@
-#include <moot/World.hh>
+#include <moot/Game.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/System/SInput.hh>
@@ -7,7 +7,7 @@
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
 
-World::World() :
+Game::Game() :
 	m_namedEntities({ .required = {CId<CName>} }),
 	m_running(true)
 {
@@ -30,7 +30,7 @@ World::World() :
 	m_window.setKeyRepeatEnabled(false);
 }
 
-void World::onSystemAdded(System* system)
+void Game::onSystemAdded(System* system)
 {
 	system->setWindow(&m_window);
 
@@ -41,13 +41,13 @@ void World::onSystemAdded(System* system)
 	system->initializeProperties();
 }
 
-void World::eventTriggeredCallback(const Event& event)
+void Game::eventTriggeredCallback(const Event& event)
 {
 	assert(event.id == EngineEvent::GameClose);
 	m_running = false;
 }
 
-void World::updateEntities()
+void Game::updateEntities()
 {
 	std::unordered_map<Archetype*, unsigned> alteredArchs;
 	std::vector<std::tuple<ComponentComposition, Prototype>> entitiesToChange;
@@ -142,7 +142,7 @@ void World::updateEntities()
 	}
 }
 
-void World::play()
+void Game::play()
 {
 	m_clock.restart();
 
@@ -163,7 +163,7 @@ void World::play()
 	}
 }
 
-Archetype* World::findArchetype(ComponentComposition comp)
+Archetype* Game::findArchetype(ComponentComposition comp)
 {
 	for (Archetype& arch : m_archs)
 	{
@@ -173,7 +173,7 @@ Archetype* World::findArchetype(ComponentComposition comp)
 	return nullptr;
 }
 
-Archetype* World::getArchetype(ComponentComposition comp)
+Archetype* Game::getArchetype(ComponentComposition comp)
 {
 	Archetype* arch = findArchetype(comp);
 	if (arch)
@@ -193,7 +193,7 @@ Archetype* World::getArchetype(ComponentComposition comp)
 	return arch;
 }
 
-Entity World::upToDateCompo(Entity entity) const
+Entity Game::upToDateCompo(Entity entity) const
 {
 	const auto addedComponentsIt = m_componentsToAdd.find(entity);
 	if (addedComponentsIt != m_componentsToAdd.end())
@@ -208,12 +208,12 @@ Entity World::upToDateCompo(Entity entity) const
 	return entity;
 }
 
-Entity World::getEntity(EntityId eId) const
+Entity Game::getEntity(EntityId eId) const
 {
 	return upToDateCompo(m_entityIdMap.at(eId));
 }
 
-std::optional<Entity> World::findEntity(std::string_view name) const
+std::optional<Entity> Game::findEntity(std::string_view name) const
 {
 	for (Entity entity : m_namedEntities)
 	{
@@ -245,7 +245,7 @@ static void checkSpawnedEntity(const Prototype& entity)
 	checkEntity(entity);
 }
 
-EntityId World::spawn(Prototype* entity, std::optional<sf::Vector2f> pos)
+EntityId Game::spawn(Prototype* entity, std::optional<sf::Vector2f> pos)
 {
 	if (pos)
 		entity->add<CPosition>(*pos);
@@ -257,7 +257,7 @@ EntityId World::spawn(Prototype* entity, std::optional<sf::Vector2f> pos)
 	return eId;
 }
 
-void World::spawnChildOf(Entity* parent, const Prototype& childProto, std::optional<sf::Vector2f> pos)
+void Game::spawnChildOf(Entity* parent, const Prototype& childProto, std::optional<sf::Vector2f> pos)
 {
 	Prototype& child = m_entitiesToInstantiate.emplace_back(childProto);
 	const EntityId childEId = spawn(&child, pos);
@@ -267,7 +267,7 @@ void World::spawnChildOf(Entity* parent, const Prototype& childProto, std::optio
 	cChildren->add(childEId);
 }
 
-void World::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::optional<sf::Vector2f> pos)
+void Game::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::optional<sf::Vector2f> pos)
 {
 	assert(!m_entityIdMap.contains(parentEid));
 
@@ -287,7 +287,7 @@ void World::spawnChildOf(EntityId parentEid, const Prototype& childProto, std::o
 	assert(false);
 }
 
-void World::recursivelyRemove(Entity entity)
+void Game::recursivelyRemove(Entity entity)
 {
 	m_componentsToRemove.erase(entity);
 	m_componentsToAdd.erase(entity);
@@ -298,7 +298,7 @@ void World::recursivelyRemove(Entity entity)
 			recursivelyRemove(m_entityIdMap.at(childEId));
 }
 
-void World::remove(const Entity& entity)
+void Game::remove(const Entity& entity)
 {	
 	if (const CParent* cParent = entity.find<CParent*>())
 		Entity(m_entityIdMap.at(*cParent)).get<CChildren*>()->remove(entity.getId());
@@ -306,7 +306,7 @@ void World::remove(const Entity& entity)
 	recursivelyRemove(entity);
 }
 
-ComponentVariant* World::addComponentTo(Entity* entity, ComponentVariant&& component)
+ComponentVariant* Game::addComponentTo(Entity* entity, ComponentVariant&& component)
 {	
 	const ComponentId cid = CVId(component);
 	const EntityPointer ePtr = *entity;
@@ -324,7 +324,7 @@ ComponentVariant* World::addComponentTo(Entity* entity, ComponentVariant&& compo
 	return &insertionPair.first->second;
 }
 
-void World::removeComponentFrom(Entity* entity, ComponentId cid)
+void Game::removeComponentFrom(Entity* entity, ComponentId cid)
 {
 	const EntityPointer ePtr = *entity;
 	assert(cid != CId<CEntity>);
@@ -340,12 +340,12 @@ void World::removeComponentFrom(Entity* entity, ComponentId cid)
 	assert(removed);
 }
 
-ComponentVariant* World::getStagedComponentOf(const EntityPointer& entity, ComponentId cid)
+ComponentVariant* Game::getStagedComponentOf(const EntityPointer& entity, ComponentId cid)
 {
 	return &m_componentsToAdd.at(entity).at(cid);
 }
 
-void World::updateEntitiesComponents()
+void Game::updateEntitiesComponents()
 {
 	std::unordered_set<EntityPointer> entities;
 	for (const auto& [entity, _] : m_componentsToAdd)

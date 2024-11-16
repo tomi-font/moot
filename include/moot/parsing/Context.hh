@@ -3,7 +3,7 @@
 #include <filesystem>
 
 namespace sol { class state; }
-class World;
+class Game;
 
 class ParsingContext
 {
@@ -19,7 +19,7 @@ protected:
 	ParsingContext();
 	~ParsingContext();
 
-	void initializeScriptContext(World*);
+	void initializeScriptContext(Game*);
 
 	void updateScriptContext();
 

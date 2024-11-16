@@ -20,14 +20,14 @@ ParsingContext::~ParsingContext()
 	assert(false);
 }
 
-void ParsingContext::initializeScriptContext(World* world)
+void ParsingContext::initializeScriptContext(Game* game)
 {
 	auto errorHandler = m_lua["errorHandler"];
 	errorHandler.set_function(luaErrorHandler);
 	sol::protected_function::set_default_handler(errorHandler);
 
 	ComponentAttributes::registerAll(&m_lua);
-	GlobalFunctions::registerAll(&m_lua, world);
+	GlobalFunctions::registerAll(&m_lua, game);
 	EntityFunctions::registerAll(&m_lua);
 	CallbackParameters::registerAll(&m_lua);
 }
