@@ -10,7 +10,7 @@ static const std::unordered_map<std::string_view, CCallback::Type> s_callbackTyp
 
 void PrototypeAttributes::parse(const std::pair<sol::object, sol::object>& attribute, Prototype* proto)
 {
-	const auto& name = as<std::string_view>(attribute.first);
+	const auto& name = as<std::string>(attribute.first);
 	
 	if (const auto& parser = ComponentAttributes::findParser(name))
 	{

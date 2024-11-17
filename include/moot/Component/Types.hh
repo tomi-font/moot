@@ -33,7 +33,4 @@ using Components = std::tuple<
 	CParent,
 	CEntity>;
 
-// Gets a component's ID by using its class as the template.
-template<typename T> static constexpr ComponentComposition CId = static_cast<ComponentId>(tupleIndex<T, Components>::value);
-
-static constexpr auto ComponentCount = std::tuple_size_v<Components>;
+#include <moot/Component/Id.hh>

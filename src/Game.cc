@@ -1,4 +1,5 @@
 #include <moot/Game.hh>
+#include <moot/Component/Id.hh>
 #include <moot/Entity/Entity.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/System/SInput.hh>
@@ -7,10 +8,14 @@
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <SFML/Window/Event.hpp>
 
+unsigned ComponentIdRegistry::s_m_nextId = 0;
+
 Game::Game() :
 	m_namedEntities({ .required = {CId<CName>} }),
 	m_running(true)
 {
+	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
+
 	addSystem<SInput>({});
 	addSystem<SPhysics>(SystemSchedule::after<SInput>());
 	addSystem<SRender>(SystemSchedule::after<SPhysics>());
@@ -309,7 +314,7 @@ void Game::remove(const Entity& entity)
 }
 
 ComponentVariant* Game::addComponentTo(Entity* entity, ComponentVariant&& component)
-{	
+{
 	const ComponentId cid = CVId(component);
 	const EntityPointer ePtr = *entity;
 	assert(ePtr.isValid() && !m_entitiesToRemove.contains(ePtr));

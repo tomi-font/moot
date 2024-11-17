@@ -1,9 +1,6 @@
 #include <moot/Entity/Query.hh>
 #include <moot/Entity/Entity.hh>
 
-static_assert(sizeof(ComponentId) * 8 >= ComponentCount);
-static_assert(sizeof(ComponentComposition::Bits) * 8 >= ComponentCount);
-
 EntityQuery::EntityQuery(Parameters&& params) :
 	m_params(std::move(params))
 {

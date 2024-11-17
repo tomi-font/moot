@@ -7,9 +7,12 @@
 using ComponentVariant = tupleToVariant<Components>::type;
 
 // Returns the ID of the given component.
-constexpr ComponentId CVId(const ComponentVariant& component)
+constexpr ComponentId CVId(const ComponentVariant& cv)
 {
-	return static_cast<ComponentId>(component.index());
+	return std::visit([](const auto& component)
+	{
+		return CId<std::remove_cvref_t<decltype(component)>>;
+	}, cv);
 }
 
 constexpr bool operator<(const ComponentVariant& lhs, const ComponentVariant& rhs)

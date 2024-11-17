@@ -21,17 +21,18 @@ static void registerComponentIds(sol::state* lua)
 {
 	auto componentTable = lua->create_table("Component");
 
-	for (const auto i : std::views::iota(0u, ComponentCount))
+	for (const auto i : std::views::iota(0u, ComponentIdRegistry::idCount()))
 	{
 		const auto cid = TypeSafeComponentId(i);
-		if (ComponentNames::exists(cid))
-			componentTable[ComponentNames::get(cid)] = cid;
+		const std::string& componentName = ComponentNames::get(cid);
+		if (!componentName.empty())
+			componentTable[componentName] = cid;
 	}
 }
 
 template<typename C> static sol::usertype<C> registerComponent(sol::table& ct)
 {
-	return ct.new_usertype<C>(ComponentName<C>);
+	return ct.new_usertype<C>(ComponentNames::get<C>());
 }
 
 static void registerComponentTypes(sol::state* lua)
@@ -66,22 +67,22 @@ static void registerEntityComponentFunctions(sol::usertype<Entity>* et)
 
 	et->set("get", [](const Entity& entity, TypeSafeComponentId cid, sol::this_state solState)
 	{
+		if (cid == CId<CPosition>)
+			return sol::make_object<Vector2f*>(solState.lua_state(), &entity.get<CPosition*>()->mut());
+
 		return variantIndexToCompileTime<ComponentPointerVariant>(cid,
 			[luaState = solState.lua_state(), entity](auto I)
 			{
 				using CP = std::variant_alternative_t<I, ComponentPointerVariant>;
 				CP const componentPtr = entity.get<CP>();
 				
-				if constexpr (I == CId<CPosition>)
-					return sol::make_object<Vector2f*>(luaState, &componentPtr->mut());
-				else
-					return sol::make_object<CP>(luaState, componentPtr);
+				return sol::make_object<CP>(luaState, componentPtr);
 			});
 	});
 
 	et->set("add", [](Entity* entity, TypeSafeComponentId cid, const sol::object& data)
 	{
-		assert(cid < ComponentCount);
+		assert(cid < ComponentIdRegistry::idCount());
 		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cid));
 		assert(parser);
 		entity->add(parser(data));

@@ -145,25 +145,34 @@ template<> ComponentVariant parser<CPointable>(const sol::object& data)
 	return std::move(cPointable);
 }
 
-using ParserPairType = std::pair<const std::string_view, ComponentAttributes::Parser>;
+decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers;
 
-template<typename C> static constexpr ParserPairType ParserPair = {ComponentName<C>, parser<C>};
-static constexpr std::initializer_list<ParserPairType> parserPairs =
+void ComponentAttributes::registerParser(ComponentId cid, Parser parser)
 {
-	ParserPair<CPosition>,
-	ParserPair<CConvexPolygon>,
-	ParserPair<CMove>,
-	ParserPair<CInput>,
-	ParserPair<CCollisionBox>,
-	ParserPair<CRigidbody>,
-	ParserPair<CView>,
-	ParserPair<CName>,
-	ParserPair<CHudRender>,
-	ParserPair<CPointable>,
-};
-// CEntity is not made directly accessible.
-// CCallback is not parsed here.
-// CChildren/CParent are not definable.
-static_warn(parserPairs.size() == ComponentCount - 4);
+	const auto& name = ComponentNames::get(cid);
+	assert(!s_m_parsers.contains(name));
+	s_m_parsers[name] = parser;
+}
 
-decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers = parserPairs;
+template<typename C> static void registerComponent(std::string name)
+{
+	ComponentNames::add<C>(std::move(name));
+	ComponentAttributes::registerParser<C>(parser<C>);
+}
+
+static struct Init
+{
+	Init()
+	{
+		registerComponent<CPosition>("Position");
+		registerComponent<CConvexPolygon>("ConvexPolygon");
+		registerComponent<CMove>("Move");
+		registerComponent<CInput>("Input");
+		registerComponent<CCollisionBox>("CollisionBox");
+		registerComponent<CRigidbody>("Rigidbody");
+		registerComponent<CView>("View");
+		registerComponent<CName>("Name");
+		registerComponent<CHudRender>("HudRender");
+		registerComponent<CPointable>("Pointable");
+	}
+} _;

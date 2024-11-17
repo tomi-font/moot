@@ -1,5 +1,4 @@
 #include <moot/Entity/Prototype.hh>
-#include <moot/util/variant/indexToCompileTime.hh>
 
 void Prototype::add(ComponentVariant&& component)
 {

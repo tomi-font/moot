@@ -7,36 +7,15 @@ class ComponentNames
 {
 public:
 
-	static constexpr bool exists(ComponentId cid)
-	{
-		return !isDefaultInitialized(s_m_names[cid]);
-	}
-	static constexpr auto& get(ComponentId cid)
-	{
-		assert(exists(cid));
-		return s_m_names[cid];
-	}
-	template<typename C> static consteval auto& get()
-	{
-		return get(CId<C>);
-	}
+	template<typename C> static void add(std::string&& name) { add(CId<C>, std::move(name)); }
+
+	template<typename C> static auto& get() { return get(CId<C>); }
+
+	static const std::string& get(ComponentId cid) { return s_m_names[cid]; }
 
 private:
 
-	static constexpr const std::string s_m_names[ComponentCount] =
-	{
-		[CId<CPosition>] = "Position",
-		[CId<CConvexPolygon>] = "ConvexPolygon",
-		[CId<CMove>] = "Move",
-		[CId<CInput>] = "Input",
-		[CId<CCollisionBox>] = "CollisionBox",
-		[CId<CRigidbody>] = "Rigidbody",
-		[CId<CView>] = "View",
-		[CId<CName>] = "Name",
-		[CId<CHudRender>] = "HUD",
-		[CId<CPointable>] = "Pointable",
-	};
-	ComponentNames();
-};
+	static void add(ComponentId, std::string&&);
 
-template<typename C> static constexpr auto& ComponentName = ComponentNames::get<C>();
+	static std::vector<std::string> s_m_names;
+};
