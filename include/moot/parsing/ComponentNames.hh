@@ -1,7 +1,9 @@
 #pragma once
 
 #include <moot/util/value.hh>
-#include <moot/Component/Types.hh>
+#include <moot/Component/Id.hh>
+#include <string>
+#include <vector>
 
 class ComponentNames
 {

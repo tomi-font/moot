@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Component/Composition.hh>
-#include <moot/Component/Types.hh>
+#include <moot/Component/Id.hh>
 
 class ComponentComposable
 {

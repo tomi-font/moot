@@ -1,6 +1,9 @@
 #include <moot/parsing/ComponentNames.hh>
-#include <moot/util/array.hh>
-#include <moot/util/static_warn.hh>
+#include <moot/Component/CCallback.hh>
+#include <moot/Component/CChildren.hh>
+#include <moot/Component/CEntity.hh>
+#include <moot/Component/CParent.hh>
+#include <unordered_set>
 
 std::vector<std::string> ComponentNames::s_m_names;
 
