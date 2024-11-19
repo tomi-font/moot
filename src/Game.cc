@@ -233,7 +233,7 @@ std::optional<Entity> Game::findEntity(std::string_view name) const
 static void checkEntity(const Prototype& entity)
 {
 	if (!entity.has<CPosition>())
-		assert(entity.hasNoneOf(CId<CCollisionBox> + CId<CConvexPolygon> + CId<CView> + CId<CMove> + CId<CRigidbody>));
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CView, CMove, CRigidbody>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());
