@@ -15,7 +15,7 @@ public:
 	using Bits = unsigned;
 
 	constexpr ComponentComposition() : m_bits(0) {}
-	constexpr ComponentComposition(ComponentId cid) : m_bits(1 << cid) {}
+	constexpr ComponentComposition(ComponentId cId) : m_bits(1 << cId) {}
 	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
 	constexpr auto count() const { return setBitCount(m_bits); }
@@ -33,12 +33,12 @@ public:
 		m_bits &= ~r.bits();
 	}
 
-	constexpr bool operator==(ComponentId cid) const { return ComponentId(*this) == cid; }
+	constexpr bool operator==(ComponentId cId) const { return ComponentId(*this) == cId; }
 	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
 
-	constexpr bool has(ComponentId cid) const
+	constexpr bool has(ComponentId cId) const
 	{
-		return m_bits & ComponentComposition(cid).bits();
+		return m_bits & ComponentComposition(cId).bits();
 	}
 	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.bits()) == r.bits(); }
 	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.bits()); }

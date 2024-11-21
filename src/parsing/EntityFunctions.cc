@@ -23,10 +23,10 @@ static void registerComponentIds(sol::state* lua)
 
 	for (const auto i : std::views::iota(0u, ComponentIdRegistry::idCount()))
 	{
-		const auto cid = TypeSafeComponentId(i);
-		const std::string& componentName = ComponentNames::get(cid);
+		const auto cId = TypeSafeComponentId(i);
+		const std::string& componentName = ComponentNames::get(cId);
 		if (!componentName.empty())
-			componentTable[componentName] = cid;
+			componentTable[componentName] = cId;
 	}
 }
 
@@ -63,14 +63,14 @@ static void registerComponentTypes(sol::state* lua)
 
 static void registerEntityComponentFunctions(sol::usertype<Entity>* et)
 {
-	et->set("has", [](const Entity& entity, TypeSafeComponentId cid) { return entity.has(cid); });
+	et->set("has", [](const Entity& entity, TypeSafeComponentId cId) { return entity.has(cId); });
 
-	et->set("get", [](const Entity& entity, TypeSafeComponentId cid, sol::this_state solState)
+	et->set("get", [](const Entity& entity, TypeSafeComponentId cId, sol::this_state solState)
 	{
-		if (cid == CId<CPosition>)
+		if (cId == CId<CPosition>)
 			return sol::make_object<Vector2f*>(solState.lua_state(), &entity.get<CPosition*>()->mut());
 
-		return variantIndexToCompileTime<ComponentPointerVariant>(cid,
+		return variantIndexToCompileTime<ComponentPointerVariant>(cId,
 			[luaState = solState.lua_state(), entity](auto I)
 			{
 				using CP = std::variant_alternative_t<I, ComponentPointerVariant>;
@@ -80,15 +80,15 @@ static void registerEntityComponentFunctions(sol::usertype<Entity>* et)
 			});
 	});
 
-	et->set("add", [](Entity* entity, TypeSafeComponentId cid, const sol::object& data)
+	et->set("add", [](Entity* entity, TypeSafeComponentId cId, const sol::object& data)
 	{
-		assert(cid < ComponentIdRegistry::idCount());
-		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cid));
+		assert(cId < ComponentIdRegistry::idCount());
+		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cId));
 		assert(parser);
 		entity->add(parser(data));
 	});
 
-	et->set("remove", [](Entity* entity, TypeSafeComponentId cid) { entity->remove(cid); });
+	et->set("remove", [](Entity* entity, TypeSafeComponentId cId) { entity->remove(cId); });
 }
 
 static void registerEntityUtilityFunctions(sol::usertype<Entity>* et)

@@ -13,7 +13,7 @@ public:
 
 	template<typename C> static auto& get() { return get(CId<C>); }
 
-	static const std::string& get(ComponentId cid) { return s_m_names[cid]; }
+	static const std::string& get(ComponentId cId) { return s_m_names[cId]; }
 
 private:
 

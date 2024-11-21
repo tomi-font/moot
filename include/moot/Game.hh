@@ -49,7 +49,7 @@ public:
 	ComponentVariant* addComponentTo(Entity*, ComponentVariant&&);
 	void removeComponentFrom(Entity*, ComponentId);
 
-	ComponentVariant* getStagedComponentOf(const EntityPointer&, ComponentId cid);
+	ComponentVariant* getStagedComponentOf(const EntityPointer&, ComponentId cId);
 
 	auto* eventManager() const { return &m_eventManager; }
 	auto* properties() { return &m_properties; }

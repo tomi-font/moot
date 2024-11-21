@@ -57,9 +57,9 @@ public:
 	{
 		game()->addComponentTo(this, std::move(component));
 	}
-	void remove(ComponentId cid)
+	void remove(ComponentId cId)
 	{
-		game()->removeComponentFrom(this, cid);
+		game()->removeComponentFrom(this, cId);
 	}
 
 	Game* game() const { return m_arch->game(); }

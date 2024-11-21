@@ -7,7 +7,7 @@
 
 std::vector<std::string> ComponentNames::s_m_names;
 
-void ComponentNames::add(ComponentId cid, std::string&& name)
+void ComponentNames::add(ComponentId cId, std::string&& name)
 {
 	static const std::unordered_set<ComponentId> s_forbiddenCIds =
 	{
@@ -16,10 +16,10 @@ void ComponentNames::add(ComponentId cid, std::string&& name)
 		CId<CChildren>,
 		CId<CParent>,
 	};
-	assert(!s_forbiddenCIds.contains(cid));
+	assert(!s_forbiddenCIds.contains(cId));
 
 	s_m_names.resize(ComponentIdRegistry::idCount());
 
-	assert(s_m_names[cid].empty());
-	s_m_names[cid] = std::move(name);
+	assert(s_m_names[cId].empty());
+	s_m_names[cId] = std::move(name);
 }

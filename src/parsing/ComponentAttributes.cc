@@ -146,9 +146,9 @@ template<> ComponentVariant parser<CPointable>(const sol::object& data)
 
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers;
 
-void ComponentAttributes::registerParser(ComponentId cid, Parser parser)
+void ComponentAttributes::registerParser(ComponentId cId, Parser parser)
 {
-	const auto& name = ComponentNames::get(cid);
+	const auto& name = ComponentNames::get(cId);
 	assert(!s_m_parsers.contains(name));
 	s_m_parsers[name] = parser;
 }

@@ -204,13 +204,13 @@ Entity Game::upToDateCompo(Entity entity) const
 {
 	const auto addedComponentsIt = m_componentsToAdd.find(entity);
 	if (addedComponentsIt != m_componentsToAdd.end())
-		for (const auto& [cid, _] : addedComponentsIt->second)
-			entity.m_comp += cid;
+		for (const auto& [cId, _] : addedComponentsIt->second)
+			entity.m_comp += cId;
 
 	const auto removedComponentsIt = m_componentsToRemove.find(entity);
 	if (removedComponentsIt != m_componentsToRemove.end())
-		for (const ComponentId cid : removedComponentsIt->second)
-			entity.m_comp -= cid;
+		for (const ComponentId cId : removedComponentsIt->second)
+			entity.m_comp -= cId;
 	
 	return entity;
 }
@@ -315,41 +315,41 @@ void Game::remove(const Entity& entity)
 
 ComponentVariant* Game::addComponentTo(Entity* entity, ComponentVariant&& component)
 {
-	const ComponentId cid = CVId(component);
+	const ComponentId cId = CVId(component);
 	const EntityPointer ePtr = *entity;
 	assert(ePtr.isValid() && !m_entitiesToRemove.contains(ePtr));
-	entity->m_comp += cid;
+	entity->m_comp += cId;
 
 	if (m_componentsToRemove.contains(ePtr))
 	{
 		// A component remove() + add() + get() would return the one that was originally removed.
-		assert(!m_componentsToRemove.at(ePtr).contains(cid));
+		assert(!m_componentsToRemove.at(ePtr).contains(cId));
 	}
 	
-	const auto& insertionPair = m_componentsToAdd[ePtr].emplace(cid, std::move(component));
+	const auto& insertionPair = m_componentsToAdd[ePtr].emplace(cId, std::move(component));
 	assert(insertionPair.second);
 	return &insertionPair.first->second;
 }
 
-void Game::removeComponentFrom(Entity* entity, ComponentId cid)
+void Game::removeComponentFrom(Entity* entity, ComponentId cId)
 {
 	const EntityPointer ePtr = *entity;
-	assert(cid != CId<CEntity>);
+	assert(cId != CId<CEntity>);
 	assert(ePtr.isValid() && !m_entitiesToRemove.contains(ePtr));
-	entity->m_comp -= cid;
+	entity->m_comp -= cId;
 	
 	if (m_componentsToAdd.contains(ePtr))
 	{
-		if (m_componentsToAdd.at(ePtr).erase(cid))
+		if (m_componentsToAdd.at(ePtr).erase(cId))
 			return;
 	}
-	const bool removed = m_componentsToRemove[ePtr].insert(cid).second;
+	const bool removed = m_componentsToRemove[ePtr].insert(cId).second;
 	assert(removed);
 }
 
-ComponentVariant* Game::getStagedComponentOf(const EntityPointer& entity, ComponentId cid)
+ComponentVariant* Game::getStagedComponentOf(const EntityPointer& entity, ComponentId cId)
 {
-	return &m_componentsToAdd.at(entity).at(cid);
+	return &m_componentsToAdd.at(entity).at(cId);
 }
 
 void Game::updateEntitiesComponents()
@@ -372,11 +372,11 @@ void Game::updateEntitiesComponents()
 		const auto& componentsToRemove = m_componentsToRemove[entity];
 	
 		// Start with the entity's original components minus those that are to be removed.
-		for (ComponentId cid : arch->comp())
+		for (ComponentId cId : arch->comp())
 		{
-			if (!componentsToRemove.contains(cid))
+			if (!componentsToRemove.contains(cId))
 			{
-				variantIndexToCompileTime<ComponentVariant>(cid,
+				variantIndexToCompileTime<ComponentVariant>(cId,
 					[&](auto I)
 					{
 						using C = std::tuple_element_t<I, Components>;
@@ -385,7 +385,7 @@ void Game::updateEntitiesComponents()
 			}
 		}
 		// And to them add the components to be added.
-		for (auto& [cid, component] : m_componentsToAdd[entity])
+		for (auto& [cId, component] : m_componentsToAdd[entity])
 			proto.add(std::move(component));
 
 		checkChangedEntity(proto);

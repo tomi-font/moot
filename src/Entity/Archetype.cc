@@ -13,9 +13,9 @@ Archetype::Archetype(ComponentComposition comp, Game* game) :
 	m_entities.reserve(comp.count());
 
 	// Create the corresponding vector for every component present.
-	for (ComponentId cid : comp)
+	for (ComponentId cId : comp)
 	{
-		variantIndexToCompileTime<ComponentVectorVariant>(cid,
+		variantIndexToCompileTime<ComponentVectorVariant>(cId,
 			[this](auto I)
 			{
 				m_entities.emplace_back(std::in_place_index<I>);
@@ -30,14 +30,14 @@ EntityPointer Archetype::instantiate(const Prototype& entity)
 
 	// Instantiate a new entity by appending all of the prototype's components.
 	unsigned i = 0;
-	for (const auto& [cid, component] : entity.m_components)
+	for (const auto& [cId, component] : entity.m_components)
 	{
 		// Ensure that the prototype's components are stored in the expected order (ascending index).
-		assert(componentsLeft.hasNoneOf((1 << cid) - 1));
-		componentsLeft -= cid;
+		assert(componentsLeft.hasNoneOf((1 << cId) - 1));
+		componentsLeft -= cId;
 
-		assert(cid == component.index());
-		variantIndexToCompileTime<ComponentVariant>(cid,
+		assert(cId == component.index());
+		variantIndexToCompileTime<ComponentVariant>(cId,
 			[&](auto I)
 			{
 				using C = std::variant_alternative_t<I, ComponentVariant>;

@@ -35,10 +35,10 @@ public:
 
 private:
 
-	template<typename...Args> ComponentVariant& add(ComponentId cid, Args&&... args)
+	template<typename...Args> ComponentVariant& add(ComponentId cId, Args&&... args)
 	{
-		m_comp += cid;
-		const auto& insertion = m_components.try_emplace(cid, std::forward<Args>(args)...);
+		m_comp += cId;
+		const auto& insertion = m_components.try_emplace(cId, std::forward<Args>(args)...);
 		assert(insertion.second);
 		return insertion.first->second;
 	}
