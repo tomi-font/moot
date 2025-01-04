@@ -1,12 +1,15 @@
 #include <moot/parsing/GlobalFunctions.hh>
-#include <moot/Entity/Entity.hh>
+#include <moot/Entity/Handle.hh>
 #include <moot/Entity/PrototypeStore.hh>
+#include <moot/Event/Event.hh>
+#include <moot/Game.hh>
 #include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/parsing/types.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <moot/Window.hh>
+#include <SFML/Window/Event.hpp>
 
-static constexpr std::string_view PrototypeUidKey = "uid";
+static constexpr std::string_view PrototypeIdKey = "id";
 
 static void parsePrototype(sol::table protoTable, Prototype* proto)
 {
@@ -14,28 +17,29 @@ static void parsePrototype(sol::table protoTable, Prototype* proto)
 		PrototypeAttributes::parse(attr, proto);
 }
 
-static const Prototype& findOrMakePrototype(sol::table protoTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
+static const Prototype* findOrMakePrototype(sol::table protoTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
 {
-	auto uidObj = protoTable[PrototypeUidKey];
-	if (uidObj.valid())
-		return prototypeStore->getPrototype(as<PrototypeUid>(uidObj));
+	auto idObj = protoTable[PrototypeIdKey];
+	if (idObj.valid())
+		return &prototypeStore->getPrototype(as<PrototypeStore::PrototypeId>(idObj));
 
-	const auto [proto, uid] = prototypeStore->newPrototype();
+	const auto [proto, id] = prototypeStore->newPrototype();
 
 	parsePrototype(protoTable, proto);
 
-	uidObj = uid;
+	idObj = id;
 	protoTable[sol::metatable_key] = prototypeMetatable;
 
-	return *proto;
+	return proto;
 }
 
 void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 {
-	PrototypeStore* const prototypeStore = game->prototypeStore();
+	PrototypeStore* const prototypeStore = game;
+	EntityManager* const entityManager = game;
 	Window* const window = game->window();
 
-	lua->set_function("register",
+	lua->set_function("registerPrototype",
 		[prototypeStore](std::string name, sol::table protoTable)
 		{
 			parsePrototype(protoTable, prototypeStore->newPrototype(std::move(name)));
@@ -45,7 +49,7 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 	const sol::table prototypeMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
 		[prototypeStore](const sol::table& protoTable)
 		{
-			prototypeStore->deletePrototype(as<PrototypeUid>(protoTable[PrototypeUidKey]));
+			prototypeStore->deletePrototype(as<PrototypeStore::PrototypeId>(protoTable[PrototypeIdKey]));
 		});
 	const auto getPrototype =
 		[=](sol::table protoTable)
@@ -55,24 +59,28 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table protoTable)
 		{
-			game->spawn(getPrototype(protoTable));
+			return entityManager->spawn(*getPrototype(protoTable));
 		},
-		[=](sol::table protoTable, const sol::object& pos)
+		[=](sol::table protoTable, const sol::object& posObj)
 		{
-			game->spawn(getPrototype(protoTable), asVector2f(pos));
+			const auto pos = asVector2f(posObj);
+			return entityManager->spawn(*getPrototype(protoTable), pos);
 		},
-		[game](const std::string& protoName)
+		[=](const std::string& protoName)
 		{
-			game->spawn(protoName);
+			return entityManager->spawn(prototypeStore->getPrototype(protoName));
 		},
-		[game](const std::string& protoName, const sol::object& pos)
+		[=](const std::string& protoName, const sol::object& posObj)
 		{
-			game->spawn(protoName, asVector2f(pos));
+			const auto pos = asVector2f(posObj);
+			return entityManager->spawn(prototypeStore->getPrototype(protoName), pos);
 		}
 	));
+
 	lua->set_function("remove", &Game::remove, game);
 
-	lua->set_function("findEntity", static_cast<std::optional<Entity> (Game::*)(std::string_view) const>(&Game::findEntity), game);
+	lua->set_function("getEntity", &EntityManager::getEntity, entityManager);
+
 	lua->set_function("isKeyPressed",
 		[](sf::Keyboard::Key key)
 		{
@@ -111,7 +119,7 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 	);
 
 	lua->set_function("trigger",
-		[game](Event::Id eventId, const Entity& entity)
+		[game](Event::Id eventId, const EntityHandle& entity)
 		{
 			game->eventManager()->trigger({eventId, entity});
 		});

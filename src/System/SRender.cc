@@ -1,7 +1,12 @@
 #include <moot/System/SRender.hh>
-#include <moot/Entity/Entity.hh>
+#include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CHudRender.hh>
+#include <moot/Component/CPosition.hh>
+#include <moot/Component/CView.hh>
+#include <moot/Entity/util.hh>
 #include <moot/util/iota_view.hh>
 #include <moot/Window.hh>
+#include <map>
 
 struct Drawable
 {
@@ -21,7 +26,35 @@ enum Q
 	COUNT
 };
 
-static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, const Entity& entity,
+static void updateView(const EntityPointer& entity, Window* window)
+{
+	sf::Vector2f center = entity.get<CPosition>();
+	const auto& cView = entity.get<CView>();
+	const sf::Vector2f& size = cView.size();
+
+	if (entity.has<CConvexPolygon>())
+		center += entity.get<CConvexPolygon>().getCentroid();
+
+	if (const FloatRect& limits = cView.limits(); !limits.isEmpty())
+	{
+		center.x = std::min(
+			std::max(center.x, limits.left + size.x / 2),
+			limits.left + limits.width - size.x / 2
+		);
+		center.y = std::min(
+			std::max(center.y, limits.bottom + size.y / 2),
+			limits.bottom + limits.height - size.y / 2
+		);
+	}
+
+	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
+	center.y *= -1;
+	center.y += size.y;
+
+	window->setView({center, size});
+}
+
+static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, const EntityPointer& entity,
                                                 const CConvexPolygon& cConvexPolygon, Drawable* drawable)
 {
 	const auto& vertexView = drawable->vertexViews.at(vertexType);
@@ -49,30 +82,60 @@ static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, co
 	}
 }
 
+static void updateConvexPolygonFillColor(const EntityPointer& entity, const CConvexPolygon& cConvexPolygon, Drawable* drawable)
+{
+	const Color fillColor = cConvexPolygon.fillColor();
+	const auto vertexViewIt = fillColor
+	                          ? drawable->vertexViews.try_emplace(sf::PrimitiveType::TriangleStrip).first
+	                          : drawable->vertexViews.find(sf::PrimitiveType::TriangleStrip);
+	auto* vertexView = (vertexViewIt != drawable->vertexViews.end()) ? &vertexViewIt->second : nullptr;
+	const bool hadTriangleVertices = vertexView && !vertexView->empty();
+
+	if (fillColor)
+	{
+		if (hadTriangleVertices)
+			for (sf::Vertex& vertex : span(&drawable->vertices, *vertexView))
+				vertex.color = fillColor;
+		else
+		{
+			const std::size_t triangleVertexCount = cConvexPolygon.vertices().size();
+			*vertexView = iota_view<unsigned>(drawable->vertices.size(), drawable->vertices.size() + triangleVertexCount);
+			drawable->vertices.insert(drawable->vertices.end(), triangleVertexCount, sf::Vertex({}, fillColor));
+			
+			updateConvexPolygonVerticesPosition(sf::PrimitiveType::TriangleStrip, entity, cConvexPolygon, drawable);
+		}
+	}
+	else if (hadTriangleVertices)
+	{
+		drawable->vertices.erase(drawable->vertices.begin() + vertexView->front(), drawable->vertices.begin() + vertexView->back());
+		drawable->vertexViews.erase(vertexViewIt);
+		assert(drawable->vertices.empty() == drawable->vertexViews.empty());
+	}
+}
+
 SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
 
 	m_queries[Q::View] = {{ .required = {CId<CView>},
-		.onEntityAdded = [this](const Entity& entity)
+		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			updateView(entity);
+			updateView(entity, window());
 		}
 	}};
 
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 	
 	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>},
-		.onEntityAdded = [this](const Entity& entity)
+		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			const EntityId entityId = entity.getId();
 			const auto& cConvexPolygon = entity.get<CConvexPolygon>();
+			const EntityId entityId = Entity::getId(entity);
 			assert(!m_drawables.contains(entityId));
+			Drawable& drawable = m_drawables[entityId];
 
 			if (const Color outlineColor = cConvexPolygon.outlineColor())
 			{
-				Drawable& drawable = m_drawables[entityId];
-
 				const std::size_t vertexCount = cConvexPolygon.vertices().size() + 1;
 				drawable.vertices = {vertexCount, sf::Vertex({}, outlineColor)};
 				drawable.vertexViews.try_emplace(sf::PrimitiveType::LineStrip, 0u, vertexCount);
@@ -80,11 +143,11 @@ SRender::SRender()
 				updateConvexPolygonVerticesPosition(sf::PrimitiveType::LineStrip, entity, cConvexPolygon, &drawable);
 			}
 
-			updateConvexPolygonFillColor(entity, cConvexPolygon);
+			updateConvexPolygonFillColor(entity, cConvexPolygon, &drawable);
 		},
-		.onEntityRemoved = [this](const Entity& entity)
+		.onEntityRemoved = [this](const EntityPointer& entity)
 		{
-			m_drawables.erase(entity.getId());
+			m_drawables.erase(Entity::getId(entity));
 		}
 	}};
 }
@@ -100,26 +163,26 @@ void SRender::initializeProperties()
 
 void SRender::update()
 {
-	for (Entity entity : m_queries[Q::View])
+	for (EntityPointer entity : m_queries[Q::View])
 	{
 		if (hasChangedSinceLastUpdate(entity.get<CPosition>())
 		 || hasChangedSinceLastUpdate(entity.get<CView>().size()))
 		{
-			updateView(entity);
+			updateView(entity, window());
 		}
 	}
-	assert(m_queries[Q::View].begin() != m_queries[Q::View].end());
+	assert(m_queries[Q::View].getEntityCount() != 0);
 
-	for (Entity entity : m_queries[Q::ConvexPolygons])
+	for (EntityPointer entity : m_queries[Q::ConvexPolygons])
 	{
 		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
 
 		if (hasChangedSinceLastUpdate(cConvexPolygon.fillColor()))
-			updateConvexPolygonFillColor(entity, cConvexPolygon);
+			updateConvexPolygonFillColor(entity, cConvexPolygon, &m_drawables.at(Entity::getId(entity)));
 
 		if (hasChangedSinceLastUpdate(entity.get<CPosition>()))
 		{
-			Drawable& drawable = m_drawables.at(entity.getId());
+			Drawable& drawable = m_drawables.at(Entity::getId(entity));
 			for (const auto& [vertexType, _] : drawable.vertexViews)
 				updateConvexPolygonVerticesPosition(vertexType, entity, cConvexPolygon, &drawable);
 		}
@@ -147,74 +210,13 @@ void SRender::update()
 	hudTransform.combine(worldTransform);
 	hudTransform.scale(viewSize);
 
-	for (Archetype* arch : m_queries[Q::HudRendered].matchedArchetypes())
+	for (ComponentCollection* collection : m_queries[Q::HudRendered].matchingCollections())
 	{
-		const auto& cHudRenders = arch->getAll<CHudRender>();
+		const auto& cHudRenders = collection->getAll<CHudRender>();
 
 		if (!cHudRenders.empty())
 			window()->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
 	}
 
 	window()->display();
-}
-
-void SRender::updateView(const Entity& entity)
-{
-	sf::Vector2f center = entity.get<CPosition>();
-	const auto& cView = entity.get<CView>();
-	const sf::Vector2f& size = cView.size();
-
-	if (entity.has<CConvexPolygon>())
-		center += entity.get<CConvexPolygon>().getCentroid();
-
-	if (const FloatRect& limits = cView.limits(); !limits.isEmpty())
-	{
-		center.x = std::min(
-			std::max(center.x, limits.left + size.x / 2),
-			limits.left + limits.width - size.x / 2
-		);
-		center.y = std::min(
-			std::max(center.y, limits.bottom + size.y / 2),
-			limits.bottom + limits.height - size.y / 2
-		);
-	}
-
-	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
-	center.y *= -1;
-	center.y += size.y;
-
-	window()->setView({center, size});
-}
-
-void SRender::updateConvexPolygonFillColor(const Entity& entity, const CConvexPolygon& cConvexPolygon)
-{
-	const EntityId entityId = entity.getId();
-	Drawable& drawable = m_drawables[entityId];
-	const Color fillColor = cConvexPolygon.fillColor();
-	const auto vertexViewIt = fillColor
-	                          ? drawable.vertexViews.try_emplace(sf::PrimitiveType::TriangleStrip).first
-	                          : drawable.vertexViews.find(sf::PrimitiveType::TriangleStrip);
-	auto* vertexView = (vertexViewIt != drawable.vertexViews.end()) ? &vertexViewIt->second : nullptr;
-	const bool hadTriangleVertices = vertexView && !vertexView->empty();
-
-	if (fillColor)
-	{
-		if (hadTriangleVertices)
-			for (sf::Vertex& vertex : span(&drawable.vertices, *vertexView))
-				vertex.color = fillColor;
-		else
-		{
-			const std::size_t triangleVertexCount = cConvexPolygon.vertices().size();
-			*vertexView = iota_view<unsigned>(drawable.vertices.size(), drawable.vertices.size() + triangleVertexCount);
-			drawable.vertices.insert(drawable.vertices.end(), triangleVertexCount, sf::Vertex({}, fillColor));
-			
-			updateConvexPolygonVerticesPosition(sf::PrimitiveType::TriangleStrip, entity, cConvexPolygon, &drawable);
-		}
-	}
-	else if (hadTriangleVertices)
-	{
-		drawable.vertices.erase(drawable.vertices.begin() + vertexView->front(), drawable.vertices.begin() + vertexView->back());
-		drawable.vertexViews.erase(vertexViewIt);
-		assert(drawable.vertices.empty() == drawable.vertexViews.empty());
-	}
 }

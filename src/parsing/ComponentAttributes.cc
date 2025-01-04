@@ -1,6 +1,15 @@
 #include <moot/parsing/ComponentAttributes.hh>
-#include <moot/Entity/Entity.hh>
+#include <moot/Component/CCollisionBox.hh>
+#include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CHudRender.hh>
+#include <moot/Component/CInput.hh>
+#include <moot/Component/CMove.hh>
+#include <moot/Component/CPointable.hh>
+#include <moot/Component/CPosition.hh>
+#include <moot/Component/CRigidbody.hh>
+#include <moot/Component/CView.hh>
 #include <moot/parsing/ComponentNames.hh>
+#include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
@@ -45,14 +54,14 @@ void ComponentAttributes::registerAll(sol::state* lua)
 	registerAttributeValues<Color>(lua);
 }
 
-template<typename C> static ComponentVariant parser(const sol::object&);
+template<typename C> static void parser(const sol::object&, ComponentCollection*);
 
-template<> ComponentVariant parser<CPosition>(const sol::object& data)
+template<> void parser<CPosition>(const sol::object& data, ComponentCollection* collection)
 {
-	return CPosition(asVector2f(data));
+	collection->add<CPosition>(asVector2f(data));
 }
 
-template<> ComponentVariant parser<CConvexPolygon>(const sol::object& data)
+template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& fillColorObj = map["fillColor"];
@@ -63,16 +72,16 @@ template<> ComponentVariant parser<CConvexPolygon>(const sol::object& data)
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
 		vertices.push_back(asVector2f(value));
 
-	return CConvexPolygon(std::move(vertices), asParsedOr<Color>(fillColorObj), asParsedOr<Color>(outlineColorObj));
+	collection->add<CConvexPolygon>(std::move(vertices), asParsedOr<Color>(fillColorObj), asParsedOr<Color>(outlineColorObj));
 }
 
-template<> ComponentVariant parser<CMove>(const sol::object& data)
+template<> void parser<CMove>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& map = asLuaMap<1>(data);
-	return CMove(as<unsigned short>(map["speed"]));
+	collection->add<CMove>(as<unsigned short>(map["speed"]));
 }
 
-template<> ComponentVariant parser<CInput>(const sol::object& data)
+template<> void parser<CInput>(const sol::object& data, ComponentCollection* collection)
 {
 	std::vector<CInput::Watch> watches;
 
@@ -82,22 +91,22 @@ template<> ComponentVariant parser<CInput>(const sol::object& data)
 
 		watches.emplace_back(asArray<sf::Event>(watch[1]), as<sol::protected_function>(watch[2]));
 	}
-	return CInput(std::move(watches));
+	collection->add<CInput>(std::move(watches));
 }
 
-template<> ComponentVariant parser<CCollisionBox>(const sol::object& data)
+template<> void parser<CCollisionBox>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& map = asLuaMap<1>(data);
-	return CCollisionBox(asVector2f(map["size"]));
+	collection->add<CCollisionBox>(asVector2f(map["size"]));
 }
 
-template<> ComponentVariant parser<CRigidbody>(const sol::object& data)
+template<> void parser<CRigidbody>(const sol::object& data, ComponentCollection* collection)
 {
 	asLuaMap<0>(data);
-	return CRigidbody();
+	collection->add<CRigidbody>();
 }
 
-template<> ComponentVariant parser<CView>(const sol::object& data)
+template<> void parser<CView>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
@@ -111,24 +120,19 @@ template<> ComponentVariant parser<CView>(const sol::object& data)
 	if (limitsObj.valid())
 		limits = asFloatRect(limitsObj);
 
-	return CView(size, limits);
+	collection->add<CView>(size, limits);
 }
 
-template<> ComponentVariant parser<CName>(const sol::object& data)
-{
-	return CName(as<std::string_view>(data));
-}
-
-template<> ComponentVariant parser<CHudRender>(const sol::object& data)
+template<> void parser<CHudRender>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
 	assert(mapSize == 2 + sizeObj.valid());
 	const auto size = sizeObj.valid() ? asVector2f(sizeObj) : sf::Vector2f();
-	return CHudRender(asVector2f(map["pos"]), size, asColor(map["color"]));
+	collection->add<CHudRender>(asVector2f(map["pos"]), size, asColor(map["color"]));
 }
 
-template<> ComponentVariant parser<CPointable>(const sol::object& data)
+template<> void parser<CPointable>(const sol::object& data, ComponentCollection* collection)
 {
 	static const std::unordered_map<std::string_view, CPointable::EventType> s_eventTypes =
 	{
@@ -141,7 +145,7 @@ template<> ComponentVariant parser<CPointable>(const sol::object& data)
 		const CPointable::EventType et = s_eventTypes.at(as<std::string_view>(key));
 		cPointable.setCallback(et, as<sol::protected_function>(value));
 	}
-	return std::move(cPointable);
+	collection->add<CPointable>(std::move(cPointable));
 }
 
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers;
@@ -153,10 +157,21 @@ void ComponentAttributes::registerParser(ComponentId cId, Parser parser)
 	s_m_parsers[name] = parser;
 }
 
+template<typename C> static sol::object componentGetter(const EntityHandle& entity, lua_State* luaState)
+{
+	return sol::make_object(luaState, entity.get<C*>());
+}
+
+template<> sol::object componentGetter<CPosition>(const EntityHandle& entity, lua_State* luaState)
+{
+	return sol::make_object(luaState, &entity.get<CPosition*>()->mut());
+}
+
 template<typename C> static void registerComponent(std::string name)
 {
 	ComponentNames::add<C>(std::move(name));
 	ComponentAttributes::registerParser<C>(parser<C>);
+	EntityFunctions::registerComponentGetter<C>(componentGetter<C>);
 }
 
 static struct Init
@@ -170,7 +185,6 @@ static struct Init
 		registerComponent<CCollisionBox>("CollisionBox");
 		registerComponent<CRigidbody>("Rigidbody");
 		registerComponent<CView>("View");
-		registerComponent<CName>("Name");
 		registerComponent<CHudRender>("HudRender");
 		registerComponent<CPointable>("Pointable");
 	}

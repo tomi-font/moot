@@ -1,8 +1,8 @@
 #include <moot/Component/CPointable.hh>
 
-void CPointable::notify(EventType eventType, const Entity& entity) const
+void CPointable::notify(EventType eventType, EntityHandle& entity) const
 {
-	const auto findIt = m_callbacks.find(eventType);
-	if (findIt != m_callbacks.end())
-		findIt->second(entity);
+	const auto callbackIt = m_callbacks.find(eventType);
+	if (callbackIt != m_callbacks.end())
+		callbackIt->second(entity);
 }

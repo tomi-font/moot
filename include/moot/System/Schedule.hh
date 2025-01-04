@@ -4,7 +4,12 @@
 
 struct SystemSchedule
 {
-	template<typename T> static constexpr SystemSchedule after()
+	static inline SystemSchedule any()
+	{
+		return {};
+	}
+
+	template<typename T> static inline SystemSchedule after()
 	{
 		return {.order.after = &typeid(T)};
 	}

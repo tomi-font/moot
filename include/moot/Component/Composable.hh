@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Component/Composition.hh>
-#include <moot/Component/Types.hh>
+#include <moot/Component/Id.hh>
 
 class ComponentComposable
 {
@@ -14,7 +14,7 @@ public:
 	constexpr bool has(ComponentId cId) const { return m_comp.has(cId); }
 	template<typename C> constexpr bool has() const { return has(CId<C>); }
 
-	template<typename ...Cs> constexpr bool hasNoneOf() const { return m_comp.hasNoneOf((CId<Cs> | ...)); }
+	template<typename ...Cs> constexpr bool hasNoneOf() const { return m_comp.hasNoneOf((CId<Cs> + ...)); }
 
 protected:
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <moot/System/System.hh>
+#include <moot/Entity/Id.hh>
 
 class SInput final : public System
 {

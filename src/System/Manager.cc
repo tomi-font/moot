@@ -12,7 +12,6 @@ void SystemManager::addSystem(std::unique_ptr<System> addedSystem, SystemSchedul
 
 	if (!schedule.order.after)
 	{
-		assert(m_systems.empty());
 		m_systems.push_back(std::move(addedSystem));
 	}
 	else

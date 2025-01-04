@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-class Entity;
+struct EntityHandle;
 
 class CCallback
 {
@@ -13,11 +13,10 @@ public:
 	{
 		OnSpawn
 	};
-	using Callback = std::function<void(Entity)>;
+	using Callback = std::function<void(EntityHandle&)>;
 
 	void add(Type, Callback&&);
 	
-	// Callbacks that are to be called only once must be extracted.
 	Callback extract(Type type);
 
 private:

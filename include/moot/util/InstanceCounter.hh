@@ -2,6 +2,7 @@
 
 template<typename T> class InstanceCounter
 {
+#ifndef NDEBUG
 	static inline unsigned s_m_instanceCount = 0;
 
 public:
@@ -15,4 +16,5 @@ protected:
 
 	InstanceCounter(const InstanceCounter&) : InstanceCounter() {}
 	InstanceCounter& operator=(const InstanceCounter&) = default;
+#endif
 };

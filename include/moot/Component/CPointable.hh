@@ -2,11 +2,11 @@
 
 #include <functional>
 
-class Entity;
+struct EntityHandle;
 
 class CPointable
 {
-	using Callback = std::function<void(const Entity&)>;
+	using Callback = std::function<void(EntityHandle&)>;
 
 public:
 
@@ -16,7 +16,7 @@ public:
 		PointerLeft
 	};
 	void setCallback(EventType et, Callback&& cb) { m_callbacks[et] = std::move(cb); }
-	void notify(EventType, const Entity&) const;
+	void notify(EventType, EntityHandle&) const;
 
 private:
 

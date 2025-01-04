@@ -1,5 +1,4 @@
 #include <moot/Entity/Query.hh>
-#include <moot/Entity/Entity.hh>
 
 EntityQuery::EntityQuery(Parameters&& params) :
 	m_params(std::move(params))
@@ -23,8 +22,18 @@ bool EntityQuery::matches(ComponentComposition comp) const
 	return false;
 }
 
-void EntityQuery::match(Archetype* arch)
+void EntityQuery::match(ComponentCollection* collection)
 {
-	if (matches(arch->comp()))
-		m_matchedArchs.push_back(arch);
+	if (matches(collection->comp()))
+		m_matchingCollections.push_back(collection);
+}
+
+unsigned EntityQuery::getEntityCount() const
+{
+	unsigned count = 0;
+
+	for (const ComponentCollection* collection : m_matchingCollections)
+		count += collection->size();
+
+	return count;
 }

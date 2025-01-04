@@ -34,7 +34,7 @@ void ParsingContext::initializeScriptContext(Game* game)
 
 void ParsingContext::updateScriptContext()
 {
-	// Force the garbage collection between frames to make sure that Entity references do not remain.
+	// Force the garbage collection between frames to make sure that no EntityPointer remains.
 	m_lua.collect_garbage();
 }
 

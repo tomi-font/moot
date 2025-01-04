@@ -19,29 +19,38 @@ public:
 	constexpr ComponentComposition(Bits bits) : m_bits(bits) {}
 
 	constexpr auto count() const { return setBitCount(m_bits); }
-	constexpr bool empty() const { return !count(); }
+	constexpr bool empty() const { return !m_bits; }
 
-	constexpr ComponentComposition operator+(ComponentComposition r) const { return m_bits | r.bits(); }
-	constexpr void operator+=(ComponentComposition r)
+	constexpr auto& operator+=(ComponentComposition r)
 	{
-		assert(!has(r));
-		m_bits |= r.bits();
+		assert(hasNoneOf(r));
+		m_bits |= r.m_bits;
+		return *this;
 	}
-	constexpr void operator-=(ComponentComposition r)
+	constexpr auto& operator-=(ComponentComposition r)
 	{
-		assert(has(r));
-		m_bits &= ~r.bits();
+		assert(hasAllOf(r));
+		m_bits &= ~r.m_bits;
+		return *this;
+	}
+	constexpr auto operator+(ComponentComposition r) const
+	{
+		return ComponentComposition(m_bits) += r;
+	}
+	constexpr auto operator-(ComponentComposition r) const
+	{
+		return ComponentComposition(m_bits) -= r;
 	}
 
 	constexpr bool operator==(ComponentId cId) const { return ComponentId(*this) == cId; }
-	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.bits(); }
+	constexpr bool operator==(ComponentComposition r) const { return m_bits == r.m_bits; }
 
 	constexpr bool has(ComponentId cId) const
 	{
-		return m_bits & ComponentComposition(cId).bits();
+		return m_bits & ComponentComposition(cId).m_bits;
 	}
-	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.bits()) == r.bits(); }
-	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.bits()); }
+	constexpr bool hasAllOf(ComponentComposition r) const { return (m_bits & r.m_bits) == r.m_bits; }
+	constexpr bool hasNoneOf(ComponentComposition r) const { return !(m_bits & r.m_bits); }
 
 	constexpr Bits bits() const { return m_bits; }
 
@@ -49,6 +58,12 @@ public:
 	{
 		assert(count() == 1);
 		return static_cast<ComponentId>(firstBitSetPos(m_bits));
+	}
+
+	constexpr unsigned indexOf(ComponentId cId) const
+	{
+		assert(has(cId));
+		return setBitCount(m_bits & (ComponentComposition(cId).m_bits - 1));
 	}
 
 	class Iterator

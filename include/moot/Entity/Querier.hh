@@ -6,13 +6,13 @@ class EntityQuerier
 {
 public:
 
-	void match(Archetype*);
+	void match(ComponentCollection*);
 
-	void onEntityAdded(const Entity&) const;
-	void onEntityRemoved(const Entity&) const;
+	void onEntityAdded(const EntityPointer&) const;
+	void onEntityRemoved(const EntityPointer&) const;
 	
-	void onChangedEntityRemoved(const Entity& oldEntity, ComponentComposition newComp) const;
-	void onChangedEntityAdded(const Entity& newEntity, ComponentComposition oldComp) const;
+	void onChangedEntityRemoved(const EntityPointer& oldEntity, ComponentComposition newComp) const;
+	void onChangedEntityAdded(const EntityPointer& newEntity, ComponentComposition oldComp) const;
 
 protected:
 

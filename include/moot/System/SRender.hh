@@ -17,8 +17,5 @@ private:
 
 	void update() override;
 
-	void updateView(const Entity&);
-	void updateConvexPolygonFillColor(const Entity&, const CConvexPolygon&);
-
 	std::unordered_map<EntityId, struct Drawable> m_drawables;
 };

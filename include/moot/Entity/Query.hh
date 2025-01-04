@@ -1,13 +1,12 @@
 #pragma once
 
-#include <moot/Component/Composition.hh>
-#include <moot/Entity/Archetype/iteration.hh>
-#include <span>
+#include <moot/Component/Collection/Iterator.hh>
+#include <functional>
 #include <vector>
 
 class EntityQuery
 {
-	using Callback = std::function<void(const Entity&)>;
+	using Callback = std::function<void(const EntityPointer&)>;
 	struct Parameters
 	{
 		// Components whose presence is required. Every different composition is an or; any one of them matching will fulfill the `required` criteria.
@@ -24,22 +23,22 @@ public:
 	EntityQuery(Parameters&& args);
 
 	bool matches(ComponentComposition) const;
-	void match(Archetype*);
+	void match(ComponentCollection*);
 
-	std::span<Archetype* const> matchedArchetypes() const { return m_matchedArchs; }
+	auto& matchingCollections() const { return m_matchingCollections; }
 
 	auto& onEntityAdded() const { return m_params.onEntityAdded; }
 	auto& onEntityRemoved() const { return m_params.onEntityRemoved; }
 
-	ArchetypeIterator<EntityPointer> begin() const { return { m_matchedArchs.begin() }; }
-	ArchetypeIterator<EntityPointer> end() const { return { m_matchedArchs.end() }; }
+	ComponentCollectionIterator<EntityPointer> begin() const { return {m_matchingCollections.begin()}; }
+	ComponentCollectionIterator<EntityPointer> end() const { return {m_matchingCollections.end()}; }
+	unsigned getEntityCount() const;
 
-	// Allows iterating over all the components of the given type belonging to entities matched by this query.
-	template<typename C> ArchetypeIterable<C> getAll() const { return { m_matchedArchs }; }
+	template<typename C> ComponentCollectionIterator<C> getAll() const { return {m_matchingCollections}; }
 
 private:
 
-	std::vector<Archetype*> m_matchedArchs;
+	std::vector<ComponentCollection*> m_matchingCollections;
 
 	Parameters m_params;
 };

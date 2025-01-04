@@ -12,7 +12,10 @@ public:
 
 	virtual ~SystemManager();
 
-	template<typename T> void addSystem(SystemSchedule schedule) { addSystem(std::make_unique<T>(), schedule); }
+	template<typename T> inline void addSystem(SystemSchedule schedule)
+	{
+		addSystem(std::make_unique<T>(), schedule);
+	}
 
 protected:
 

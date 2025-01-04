@@ -1,7 +1,10 @@
 #include <moot/System/SPhysics.hh>
-#include <moot/Entity/Entity.hh>
+#include <moot/Component/CCollisionBox.hh>
+#include <moot/Component/CMove.hh>
+#include <moot/Component/CPosition.hh>
+#include <moot/Component/CRigidbody.hh>
+#include <moot/Entity/Pointer/operators.hh>
 #include <moot/util/math/base.hh>
-#include <moot/struct/Vector2.hh>
 
 static const std::string GravitationalAcceleration = "gravitationalAcceleration";
 
@@ -18,7 +21,7 @@ SPhysics::SPhysics()
 	m_queries.resize(Q::COUNT);
 	m_queries[Q::Dynamic] = {{ .required = {CId<CMove>, CId<CRigidbody>} }};
 	m_queries[Q::Collidable] = {{ .required = {CId<CCollisionBox>},
-		.onEntityAdded = [](const Entity& entity)
+		.onEntityAdded = [](const EntityPointer& entity)
 		{
 			entity.get<CCollisionBox*>()->bottomLeft = entity.get<CPosition>().val();
 		}
@@ -172,20 +175,20 @@ struct CollidableProvisional
 struct Collision
 {
 	Vector2f moveRatios;
-	Entity other;
+	EntityPointer other;
 	CollidableProvisional otherProv;
 
 	operator bool() const { return other.isValid(); }
 };
 
-static Collision getFirstCollision(const Entity& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,
+static Collision getFirstCollision(const EntityPointer& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,
                                    const EntityQuery& collidables,
-								   const std::unordered_map<Entity, CollidableProvisional>& movingCollidables)
+								   const std::unordered_map<EntityPointer, CollidableProvisional>& movingCollidables)
 {
 	struct Collision firstCollision;
 	float firstCollisionRatio = 2; // More than 1.
 
-	for (Entity other : collidables)
+	for (EntityPointer other : collidables)
 	{
 		const CCollisionBox& otherCCol = other.get<CCollisionBox>();
 		CollidableProvisional otherProv;
@@ -217,9 +220,9 @@ void SPhysics::update()
 {
 	const float elapsedTime = m_properties->get<float>(Property::ElapsedTime);
 	const float gravitationalAcceleration = m_properties->get<float>(GravitationalAcceleration);
-	std::unordered_map<Entity, CollidableProvisional> movingCollidables;
+	std::unordered_map<EntityPointer, CollidableProvisional> movingCollidables;
 
-	for (Entity entity : m_queries[Q::Dynamic])
+	for (EntityPointer entity : m_queries[Q::Dynamic])
 	{
 		Vector2f velocity;
 
@@ -248,7 +251,7 @@ void SPhysics::update()
 	     movingCollidableIt != movingCollidables.end();
 	     movingCollidableIt = movingCollidables.erase(movingCollidableIt))
 	{
-		const Entity& entity = movingCollidableIt->first;
+		const EntityPointer& entity = movingCollidableIt->first;
 		CollidableProvisional& prov = movingCollidableIt->second;
 		CCollisionBox* cCol = entity.get<CCollisionBox*>();
 

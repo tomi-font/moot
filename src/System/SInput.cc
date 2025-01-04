@@ -1,5 +1,10 @@
 #include <moot/System/SInput.hh>
-#include <moot/Entity/Entity.hh>
+#include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CInput.hh>
+#include <moot/Component/CPointable.hh>
+#include <moot/Component/CPosition.hh>
+#include <moot/Entity/Handle.hh>
+#include <moot/Entity/util.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/Window.hh>
 #include <SFML/Window/Event.hpp>
@@ -44,11 +49,12 @@ void SInput::update()
 
 		bool eventHasCallback = false;
 
-		for (Entity entity : m_queries[Q::Input])
+		for (EntityPointer entity : m_queries[Q::Input])
 		{
-			if (auto* callback = entity.get<CInput>().getCallback(event))
+			if (const auto* callback = entity.get<CInput>().getCallback(event))
 			{
-				(*callback)(entity, event);
+				EntityHandle eHandle = entityManager()->makeHandle(entity);
+				(*callback)(eHandle, event);
 				eventHasCallback = true;
 			}
 		}
@@ -70,18 +76,20 @@ void SInput::updatePointables()
 	const EntityId prevPointedEntityId = m_pointedEntityId;
 	m_pointedEntityId = {};
 
-	for (Entity entity : m_queries[Q::Pointables])
+	for (EntityPointer entity : m_queries[Q::Pointables])
 	{
-		const bool wasPointed = (entity.getId() == prevPointedEntityId);
+		const EntityId eId = Entity::getId(entity);
+		const bool wasPointed = (eId == prevPointedEntityId);
 		const bool isPointed = !m_pointedEntityId && m_mousePos && viewIsNotEmpty
 		                    && entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
+		EntityHandle eHandle = entityManager()->makeHandle(entity);
 
 		if (!wasPointed && isPointed)
-			entity.get<CPointable>().notify(CPointable::PointerEntered, entity);
+			entity.get<CPointable>().notify(CPointable::PointerEntered, eHandle);
 		else if (wasPointed && !isPointed)
-			entity.get<CPointable>().notify(CPointable::PointerLeft, entity);
+			entity.get<CPointable>().notify(CPointable::PointerLeft, eHandle);
 
 		if (isPointed)
-			m_pointedEntityId = entity.getId();
+			m_pointedEntityId = eId;
 	}
 }

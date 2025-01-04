@@ -1,15 +1,19 @@
 #include <moot/parsing/EntityFunctions.hh>
-#include <moot/Entity/Entity.hh>
-#include <moot/Entity/utility.hh>
+#include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CHudRender.hh>
+#include <moot/Component/CMove.hh>
+#include <moot/Component/CPosition.hh>
+#include <moot/Component/CRigidbody.hh>
+#include <moot/Component/CView.hh>
+#include <moot/Entity/Handle.hh>
+#include <moot/Entity/util.hh>
 #include <moot/parsing/ComponentAttributes.hh>
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/types.hh>
-#include <moot/util/variant/indexToCompileTime.hh>
-#include <moot/util/variant/toPointerVariant.hh>
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
 
-using ComponentPointerVariant = variantToPointerVariant<ComponentVariant>::type;
+std::vector<EntityFunctions::ComponentGetter> EntityFunctions::s_m_componentGetters(ComponentIdRegistry::idCount());
 
 struct TypeSafeComponentId
 {
@@ -61,39 +65,32 @@ static void registerComponentTypes(sol::state* lua)
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
 }
 
-static void registerEntityComponentFunctions(sol::usertype<Entity>* et)
+static void registerEntityComponentFunctions(sol::usertype<EntityHandle>* et)
 {
-	et->set("has", [](const Entity& entity, TypeSafeComponentId cId) { return entity.has(cId); });
+	et->set("has", [](const EntityHandle& entity, TypeSafeComponentId cId) { return entity.has(cId); });
 
-	et->set("get", [](const Entity& entity, TypeSafeComponentId cId, sol::this_state solState)
+	et->set("get", [](const EntityHandle& entity, TypeSafeComponentId cId, sol::this_state solState)
 	{
-		if (cId == CId<CPosition>)
-			return sol::make_object<Vector2f*>(solState.lua_state(), &entity.get<CPosition*>()->mut());
-
-		return variantIndexToCompileTime<ComponentPointerVariant>(cId,
-			[luaState = solState.lua_state(), entity](auto I)
-			{
-				using CP = std::variant_alternative_t<I, ComponentPointerVariant>;
-				CP const componentPtr = entity.get<CP>();
-				
-				return sol::make_object<CP>(luaState, componentPtr);
-			});
+		const auto& getter = EntityFunctions::getComponentGetter(cId);
+		return getter(entity, solState.lua_state());
 	});
 
-	et->set("add", [](Entity* entity, TypeSafeComponentId cId, const sol::object& data)
+	et->set("add", [](EntityHandle* entity, TypeSafeComponentId cId, const sol::object& data)
 	{
 		assert(cId < ComponentIdRegistry::idCount());
 		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cId));
 		assert(parser);
-		entity->add(parser(data));
+		parser(data, entity->manager->getComponentsToAddOf(*entity));
+		*entity = {*entity, entity->comp() + ComponentComposition(cId), entity->manager};
 	});
 
-	et->set("remove", [](Entity* entity, TypeSafeComponentId cId) { entity->remove(cId); });
+	et->set("remove", [](EntityHandle* entity, TypeSafeComponentId cId) { entity->remove(cId); });
 }
 
-static void registerEntityUtilityFunctions(sol::usertype<Entity>* et)
+static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 {
-	et->set("getBoundingBox", getEntityBoundingBox);
+	et->set("getBoundingBox", Entity::getBoundingBox);
+	et->set("getId", [](const EntityHandle& entity) { return Entity::getId(entity); });
 }
 
 void EntityFunctions::registerAll(sol::state* lua)
@@ -101,7 +98,7 @@ void EntityFunctions::registerAll(sol::state* lua)
 	registerComponentIds(lua);
 	registerComponentTypes(lua);
 
-	auto entityType = lua->new_usertype<Entity>("ET");
+	auto entityType = lua->new_usertype<EntityHandle>("ET");
 	registerEntityComponentFunctions(&entityType);
 	registerEntityUtilityFunctions(&entityType);
 }

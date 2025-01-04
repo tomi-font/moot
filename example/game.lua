@@ -59,51 +59,51 @@ local player = {
 }
 spawn(player)
 
+local platformInConstructionId = 0
+
 local platformBuilder = {
 	Input = {
 		{
 			{InputEvent.MouseButtonPress(MouseButton.Left)},
 			function(this, event)
-				if findEntity("platformInConstruction") then
+				if platformInConstructionId ~= 0 then
 					return
 				end
 				local platform = {
-					HUD = {
+					HudRender = {
 						pos = mapPixelToHud(event.mouseButton),
 						color = Color.Black
-					},
-					Name = "platformInConstruction"
+					}
 				}
-				spawn(platform)
+				platformInConstructionId = spawn(platform):getId()
 			end
 		},
 		{
 			{InputEvent.MouseMove},
 			function(this, event)
-				local platform = findEntity("platformInConstruction")
-				if not platform then
+				if platformInConstructionId == 0 then
 					return
 				end
-				local hud = platform:get(Component.HUD)
-				hud:resize(mapPixelToHud(event.mousePos) - hud.pos)
+				local hudRender = getEntity(platformInConstructionId):get(Component.HudRender)
+				hudRender:resize(mapPixelToHud(event.mousePos) - hudRender.pos)
 			end
 		},
 		{
 			{InputEvent.MouseButtonRelease(MouseButton.Left)},
 			function(this, event)
-				local platform = findEntity("platformInConstruction")
-				if not platform then
+				if platformInConstructionId == 0 then
 					return
 				end
+				local platform = getEntity(platformInConstructionId)
 
-				local pos = mapHudToWorld(platform:get(Component.HUD).pos)
+				local pos = mapHudToWorld(platform:get(Component.HudRender).pos)
 				local size = mapPixelToWorld(event.mouseButton) - pos
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })
 				platform:add(Component.ConvexPolygon, { vertices = { {0, 0}, {size.x, 0}, size, {0, size.y} },
 				                                        fillColor = Color.Black })
-				platform:remove(Component.HUD)
-				platform:remove(Component.Name)
+				platform:remove(Component.HudRender)
+				platformInConstructionId = 0
 			end
 		}
 	}

@@ -1,50 +1,13 @@
 #pragma once
 
-#include <moot/Component/Composable.hh>
-#include <moot/Component/Variant.hh>
-#include <map>
-#include <type_traits>
+#include <moot/Component/Collection.hh>
 
-class Prototype : public ComponentComposable
+class Prototype : public ComponentCollection
 {
 public:
 
-	// Adds a (not already present) component.
-	void add(ComponentVariant&&);
-	template<typename C, typename...Args> C* add(Args&&... args)
+	template<typename C> inline const C& get() const
 	{
-		return &std::get<C>(add(CId<C>, std::in_place_type<C>, std::forward<Args>(args)...));
+		return getAll<C>().front();
 	}
-
-	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
-	CP get()
-	{
-		using C = std::remove_pointer_t<CP>;
-		assert(has<C>());
-		return &std::get<C>(m_components.at(CId<C>));
-	}
-	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
-	const C& get() const
-	{
-		assert(has<C>());
-		return std::get<C>(m_components.at(CId<C>));
-	}
-
-	// Removes a (present) component.
-	void remove(ComponentId);
-
-private:
-
-	template<typename...Args> ComponentVariant& add(ComponentId cId, Args&&... args)
-	{
-		m_comp += cId;
-		const auto& insertion = m_components.try_emplace(cId, std::forward<Args>(args)...);
-		assert(insertion.second);
-		return insertion.first->second;
-	}
-
-	// A map allows easily inserting mutable components in their sorting order without knowing in advance the final composition.
-	std::map<ComponentId, ComponentVariant> m_components;
-
-	friend class Archetype;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/Entity/Prototype.hh>
+#include <moot/Component/Collection.hh>
 #include <unordered_map>
 #include <sol/sol.hpp>
 
@@ -10,7 +10,7 @@ public:
 
 	static void registerAll(sol::state*);
 
-	using Parser = ComponentVariant(*)(const sol::object&);
+	using Parser = void(*)(const sol::object&, ComponentCollection*);
 
 	template<typename C> static void registerParser(Parser parser) { registerParser(CId<C>, parser); }
 

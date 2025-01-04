@@ -1,32 +1,47 @@
 #pragma once
 
+#include <moot/Component/Collection.hh>
 #include <moot/util/InstanceCounter.hh>
 
-class Archetype;
-
-class EntityPointer : public InstanceCounter<EntityPointer>
+struct EntityPointer : InstanceCounter<EntityPointer>
 {
-public:
+	EntityPointer() : collection(nullptr), index(UINT_MAX) {}
+	EntityPointer(ComponentCollection* cc, unsigned idx) : collection(cc), index(idx) {}
 
-	EntityPointer() : m_arch(nullptr), m_idx(0) {}
-	EntityPointer(Archetype* arch, unsigned index) : m_arch(arch), m_idx(index) {}	
+	bool isValid() const { return collection; }
 
-	bool isValid() const { return m_arch; }
+	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
+	inline const C& get() const noexcept
+	{
+		return collection->getAll<C>()[index];
+	}
 
-	Archetype* arch() const { return m_arch; }
-	unsigned index() const { return m_idx; }
+	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
+	inline CP get() const noexcept
+	{
+		using C = std::remove_pointer_t<CP>;
+		return &collection->getAll<C>()[index];
+	}
 
-	bool operator==(const EntityPointer& right) const { return m_arch == right.m_arch && m_idx == right.m_idx; }
-	bool operator<(const EntityPointer& right) const { return m_arch < right.m_arch || m_idx < right.m_idx; }
-	bool operator>(const EntityPointer& right) const { return m_arch > right.m_arch || m_idx > right.m_idx; }
+	template<typename C> inline bool has() const
+	{
+		return collection->has<C>();
+	}
 
-protected:
+	template<typename CP> CP find() const noexcept
+	{
+		using C = std::remove_pointer_t<CP>;
+		if (has<C>())
+			return get<CP>();
+		assert(isValid());
+		return nullptr;
+	}
 
-	Archetype* m_arch;
-	unsigned m_idx;
+	ComponentComposition comp() const
+	{
+		return collection->comp();
+	}
 
-private:
-
-	bool operator<=(const EntityPointer& right) const;
-	bool operator>=(const EntityPointer& right) const;
+	ComponentCollection* collection;
+	unsigned index;
 };

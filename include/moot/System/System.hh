@@ -4,8 +4,9 @@
 #include <moot/Event/User.hh>
 #include <moot/Global/Clock.hh>
 #include <moot/Property/User.hh>
+#include <moot/TrackedValue.hh>
 
-class Archetype;
+class EntityManager;
 class Window;
 
 class System :
@@ -18,6 +19,7 @@ public:
 
 	virtual ~System() override;
 
+	void setEntityManager(EntityManager*);
 	void setWindow(Window*);
 
 	void performUpdate();
@@ -26,15 +28,20 @@ protected:
 
 	System();
 
-	template<typename T> constexpr bool
-	hasChangedSinceLastUpdate(const TrackedValue<T>& tv) { return tv.hasChangedSince(m_lastUpdateTicks); }
+	template<typename T> inline bool hasChangedSinceLastUpdate(const TrackedValue<T>& tv)
+	{
+		return tv.hasChangedSince(m_lastUpdateTicks);
+	}
 
+	EntityManager* entityManager() const { return m_entityManager; }
 	Window* window() const { return m_window; }
 
 private:
 
-	GlobalClock::Ticks m_lastUpdateTicks;
-	Window* m_window;
-
 	virtual void update() = 0;
+
+	GlobalClock::Ticks m_lastUpdateTicks;
+
+	EntityManager* m_entityManager;
+	Window* m_window;
 };

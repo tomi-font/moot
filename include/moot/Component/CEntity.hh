@@ -6,11 +6,11 @@ class CEntity
 {
 public:
 
-	EntityId id() const { return m_id; }
+	CEntity(EntityId eId) : m_eId(eId) {}
+
+	EntityId eId() const { return m_eId; }
 
 private:
 
-	EntityId m_id = s_m_nextId++;
-
-	static EntityId s_m_nextId;
+	EntityId m_eId;
 };

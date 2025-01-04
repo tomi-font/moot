@@ -1,9 +1,9 @@
 #include <moot/Entity/PrototypeStore.hh>
 
-std::pair<Prototype*, PrototypeUid> PrototypeStore::newPrototype()
+std::pair<Prototype*, PrototypeStore::PrototypeId> PrototypeStore::newPrototype()
 {
-	const PrototypeUid uid = m_nextUid++;
-	return { &m_numberedPrototypes[uid], uid };
+	const PrototypeId id = m_nextId++;
+	return { &m_numberedPrototypes[id], id };
 }
 
 Prototype* PrototypeStore::newPrototype(std::string&& name)
@@ -19,8 +19,8 @@ const Prototype* PrototypeStore::findPrototype(const std::string& name) const
 	return (prototypeIt == m_namedPrototypes.end()) ? nullptr : &prototypeIt->second;
 }
 
-void PrototypeStore::deletePrototype(PrototypeUid uid)
+void PrototypeStore::deletePrototype(PrototypeId id)
 {
-	const bool erased = m_numberedPrototypes.erase(uid);
+	const bool erased = m_numberedPrototypes.erase(id);
 	assert(erased);
 }

@@ -4,7 +4,7 @@
 #include <vector>
 #include <SFML/Window/Event.hpp>
 
-class Entity;
+struct EntityHandle;
 
 class CInput
 {
@@ -15,7 +15,7 @@ public:
 		// The events of interest (for each, the type and specific data that must match).
 		std::vector<sf::Event> events;
 
-		using Callback = std::function<void (Entity&, const sf::Event&)>;
+		using Callback = std::function<void (EntityHandle&, const sf::Event&)>;
 		Callback callback;
 	};
 
