@@ -1,4 +1,5 @@
 #include <moot/Entity/Pointer/operators.hh>
+#include <cstdint>
 
 bool operator==(const EntityPointer& left, const EntityPointer& right)
 {

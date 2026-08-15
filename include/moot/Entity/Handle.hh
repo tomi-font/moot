@@ -2,6 +2,7 @@
 
 #include <moot/Entity/Pointer.hh>
 #include <moot/Entity/Manager.hh>
+#include <stdexcept>
 
 struct EntityHandle : EntityPointer, ComponentComposable
 {

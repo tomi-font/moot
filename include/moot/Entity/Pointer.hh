@@ -2,10 +2,11 @@
 
 #include <moot/Component/Collection.hh>
 #include <moot/util/InstanceCounter.hh>
+#include <limits>
 
 struct EntityPointer : InstanceCounter<EntityPointer>
 {
-	EntityPointer() : collection(nullptr), index(UINT_MAX) {}
+	EntityPointer() : collection(nullptr), index(std::numeric_limits<unsigned>::max()) {}
 	EntityPointer(ComponentCollection* cc, unsigned idx) : collection(cc), index(idx) {}
 
 	bool isValid() const { return collection; }

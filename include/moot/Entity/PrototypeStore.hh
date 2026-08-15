@@ -2,6 +2,7 @@
 
 #include <moot/Entity/Prototype.hh>
 #include <SFML/System/NonCopyable.hpp>
+#include <string>
 
 class PrototypeStore : sf::NonCopyable
 {

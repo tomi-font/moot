@@ -5,6 +5,8 @@
 #include <moot/Entity/Pointer/operators.hh>
 #include <moot/Entity/Prototype.hh>
 #include <deque>
+#include <functional>
+#include <optional>
 #include <set>
 #include <unordered_set>
 #include <SFML/System/Vector2.hpp>
