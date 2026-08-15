@@ -5,7 +5,6 @@
 #include <moot/Entity/Pointer/operators.hh>
 #include <moot/Entity/Prototype.hh>
 #include <deque>
-#include <functional>
 #include <optional>
 #include <set>
 #include <unordered_set>
@@ -19,7 +18,8 @@ public:
 
 	EntityManager();
 
-	EntityHandle spawn(const Prototype&, std::optional<std::reference_wrapper<const sf::Vector2f>> pos = {});
+	EntityHandle spawn(const Prototype&, std::optional<sf::Vector2f> = {});
+	EntityHandle spawnEmpty(std::optional<sf::Vector2f> = {});
 	void remove(const EntityHandle&);
 
 	EntityHandle getEntity(EntityId);
@@ -55,7 +55,9 @@ private:
 		ComponentComposition toRemove;
 	};
 
-	bool isEntityToAdd(const EntityPointer&) const;
+	bool isEntityToSpawn(const EntityPointer&) const;
+	EntityHandle processEntityToSpawn(ComponentCollection* entity, std::optional<sf::Vector2f> pos);
+
 	std::pair<EntityToChange*, ComponentComposition*> registerEntityToChange(const EntityPointer&);
 	ComponentCollection* addComponentTo(const EntityPointer&, ComponentId);
 
@@ -63,7 +65,7 @@ private:
 	std::unordered_map<EntityId, EntityPointer> m_entityIdMap;
 	EntityId m_nextEId;
 
-	std::deque<ComponentCollection> m_entitiesToAdd;
+	std::deque<ComponentCollection> m_entitiesToSpawn;
 	std::unordered_map<ComponentCollection*, std::set<unsigned, std::greater<>>> m_entitiesToExtract;
 	std::unordered_set<EntityPointer> m_entitiesToRemove;
 	std::unordered_map<EntityPointer, EntityToChange> m_entitiesToChange;

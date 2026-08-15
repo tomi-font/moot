@@ -73,12 +73,12 @@ void ComponentCollection::remove(ComponentId cId)
 	m_comp -= cId;
 }
 
-void ComponentCollection::add(ComponentComposition comp, ComponentCollection&& from, unsigned fromIndex)
+void ComponentCollection::add(ComponentComposition comp, ComponentCollection* from, unsigned fromIndex)
 {
 	for (ComponentId cId : comp)
 	{
-		const Operations* const ops = from.m_ops[from.m_comp.indexOf(cId)];
+		const Operations* const ops = from->m_ops[from->m_comp.indexOf(cId)];
 		add(cId, ops);
-		(this->*ops->pushBack)(from.m_id, fromIndex);
+		(this->*ops->pushBack)(from->m_id, fromIndex);
 	}
 }

@@ -6,11 +6,11 @@ class CParent
 {
 public:
 
-	CParent(EntityId parentEId) : m_parent(parentEId) {}
+	CParent(EntityId parentEId) : m_parentEId(parentEId) {}
 
-	operator EntityId() const { return m_parent; }
+	EntityId eId() const { return m_parentEId; }
 
 private:
 
-	EntityId m_parent;
+	EntityId m_parentEId;
 };

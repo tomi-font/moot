@@ -43,7 +43,7 @@ public:
 	}
 	void remove(ComponentId);
 
-	void add(ComponentComposition, ComponentCollection&& from, unsigned fromIndex);
+	void add(ComponentComposition, ComponentCollection* from, unsigned fromIndex);
 
 	using Id = unsigned;
 
