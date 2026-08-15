@@ -12,7 +12,8 @@
 #include <moot/Entity/util.hh>
 
 EntityManager::EntityManager() :
-	m_nextEId(1) // 0 (default-constructed value) is the invalid entity ID.
+	m_nextEId(1), // 0 (default-constructed value) is the invalid entity ID.
+	m_isPreUpdate(false)
 {
 }
 
@@ -54,10 +55,10 @@ void EntityManager::remove(const EntityHandle& entity)
 {
 	assert(!isEntityToSpawn(entity));
 	assert(!m_entitiesToChange.contains(entity));
+	assert(!m_isPreUpdate);
 
 	m_entitiesToRemove.emplace(entity);
 	m_entitiesToExtract[entity.collection].emplace(entity.index);
-	m_entityInfo.entitiesToRemove.emplace(entity);
 
 	if (const CChildren* cChildren = entity.find<CChildren*>())
 		for (EntityId childEId : cChildren->eIds())
@@ -104,31 +105,36 @@ bool EntityManager::isEntityToSpawn(const EntityPointer& entity) const
 	return false;
 }
 
-std::pair<EntityManager::EntityToChange*, ComponentComposition*> EntityManager::registerEntityToChange(const EntityPointer& entity)
+EntityManager::EntityToChange* EntityManager::registerEntityToChange(const EntityPointer& entity)
 {
+	assert(!m_isPreUpdate);
 	assert(!m_entitiesToRemove.contains(entity));
+
 	m_entitiesToExtract[entity.collection].emplace(entity.index);
-	return {&m_entitiesToChange[entity], &m_entityInfo.entitiesToChange.emplace(entity, entity.collection->comp()).first->second};
+	return &m_entitiesToChange[entity];
 }
 
 ComponentCollection* EntityManager::addComponentTo(const EntityPointer& entity, ComponentId cId)
 {
 	if (isEntityToSpawn(entity))
 	{
-		checkComponentComposition(entity.collection->comp() += cId);
+		checkComponentComposition(entity.comp() += cId);
 		return entity.collection;
 	}
 
-	auto [entityToChange, newComp] = registerEntityToChange(entity);
+	EntityToChange* entityToChange = registerEntityToChange(entity);
 	assert(!entityToChange->toRemove.has(cId));
-	*newComp += cId;
-	checkComponentComposition(*newComp);
+	checkComponentComposition(entity.comp() += cId + entityToChange->toAdd.comp() - entityToChange->toRemove + cId);
 
 	return &entityToChange->toAdd;
 }
 
 void EntityManager::removeComponentFrom(const EntityPointer& entity, ComponentId cId)
 {
+	assert(cId != CId<CEntity>);
+	assert(cId != CId<CChildren>);
+	assert(cId != CId<CParent>);
+
 	if (isEntityToSpawn(entity))
 	{
 		entity.collection->remove(cId);
@@ -136,25 +142,29 @@ void EntityManager::removeComponentFrom(const EntityPointer& entity, ComponentId
 		return;
 	}
 
-	auto [entityToChange, newComp] = registerEntityToChange(entity);
-	assert(!entityToChange->toAdd.has(cId));
-	*newComp -= cId;
-	checkComponentComposition(*newComp);
-
-	assert(cId != CId<CEntity>);
-	assert(cId != CId<CChildren>);
-	assert(cId != CId<CParent>);
-
+	EntityToChange* entityToChange = registerEntityToChange(entity);
 	entityToChange->toRemove += cId;
+	assert(!entityToChange->toAdd.has(cId));
+	checkComponentComposition(entity.comp() + entityToChange->toAdd.comp() - entityToChange->toRemove);
 }
 
-void EntityManager::updateEntities()
+EntityManager::PreUpdateInfo EntityManager::preUpdateEntities()
 {
-	m_entityInfo.entitiesToRemove.clear();
-	m_entityInfo.entitiesToChange.clear();
-	m_entityInfo.newCollections.clear();
-	m_entityInfo.addedEntities.clear();
-	m_entityInfo.changedEntities.clear();
+	std::unordered_map<EntityPointer, ComponentComposition> entitiesToChange;
+	for (const auto& [entity, entityToChange] : m_entitiesToChange)
+	{
+		entitiesToChange.emplace(entity, entity.comp() + entityToChange.toAdd.comp() - entityToChange.toRemove);
+	}
+
+	m_isPreUpdate = true;
+	return { m_entitiesToRemove, entitiesToChange };
+}
+
+EntityManager::UpdateInfo EntityManager::updateEntities()
+{
+	m_isPreUpdate = false;
+
+	UpdateInfo updateInfo;
 
 	std::unordered_map<ComponentCollection*, ComponentComposition> changedEntities;
 
@@ -221,7 +231,7 @@ void EntityManager::updateEntities()
 		const auto& [collectionIt, inserted] = m_collections.emplace(entityToSpawn.comp().bits(), std::move(entityToSpawn));
 		ComponentCollection& collection = collectionIt->second;
 		if (inserted)
-			m_entityInfo.newCollections.emplace(&collection);
+			updateInfo.newCollections.emplace(&collection);
 		else
 			collection.append(std::move(entityToSpawn));
 
@@ -231,10 +241,12 @@ void EntityManager::updateEntities()
 		m_entityIdMap[eId] = addedEntity;
 		
 		if (const auto changedEntityIt = changedEntities.find(&entityToSpawn); changedEntityIt != changedEntities.end())
-			m_entityInfo.changedEntities.emplace(addedEntity, changedEntityIt->second);
+			updateInfo.changedEntities.emplace(addedEntity, changedEntityIt->second);
 		else
-			m_entityInfo.addedEntities.insert(addedEntity);
+			updateInfo.addedEntities.insert(addedEntity);
 	}
 	m_entitiesToSpawn.clear();
-	assert(m_entityInfo.changedEntities.size() == changedEntities.size());
+
+	assert(updateInfo.changedEntities.size() == changedEntities.size());
+	return updateInfo;
 }

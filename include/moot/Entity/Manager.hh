@@ -34,18 +34,20 @@ public:
 
 protected:
 
-	void updateEntities();
-
-	struct
+	struct PreUpdateInfo
 	{
 		std::unordered_set<EntityPointer> entitiesToRemove;
 		std::unordered_map<EntityPointer, ComponentComposition> entitiesToChange;
+	};
+	PreUpdateInfo preUpdateEntities();
 
+	struct UpdateInfo
+	{
 		std::unordered_set<ComponentCollection*> newCollections;
 		std::unordered_set<EntityPointer> addedEntities;
 		std::unordered_map<EntityPointer, ComponentComposition> changedEntities;
-	}
-	m_entityInfo;
+	};
+	UpdateInfo updateEntities();
 
 private:
 
@@ -58,7 +60,7 @@ private:
 	bool isEntityToSpawn(const EntityPointer&) const;
 	EntityHandle processEntityToSpawn(ComponentCollection* entity, std::optional<sf::Vector2f> pos);
 
-	std::pair<EntityToChange*, ComponentComposition*> registerEntityToChange(const EntityPointer&);
+	EntityToChange* registerEntityToChange(const EntityPointer&);
 	ComponentCollection* addComponentTo(const EntityPointer&, ComponentId);
 
 	std::unordered_map<ComponentComposition::Bits, ComponentCollection> m_collections;
@@ -69,4 +71,6 @@ private:
 	std::unordered_map<ComponentCollection*, std::set<unsigned, std::greater<>>> m_entitiesToExtract;
 	std::unordered_set<EntityPointer> m_entitiesToRemove;
 	std::unordered_map<EntityPointer, EntityToChange> m_entitiesToChange;
+
+	bool m_isPreUpdate;
 };

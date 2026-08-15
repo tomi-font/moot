@@ -56,29 +56,29 @@ void Game::onEvent(const Event& event)
 	m_running = false;
 }
 
-void Game::processEntitiesToBeRemoved()
+void Game::preProcessEntities(EntityManager::PreUpdateInfo preUpdateInfo)
 {
 	for (const auto& system : m_systems)
 	{
-		for (const auto& [entity, newComp] : m_entityInfo.entitiesToChange)
+		for (const auto& [entity, newComp] : preUpdateInfo.entitiesToChange)
 			system->onChangedEntityRemoved(entity, newComp);
 
-		for (const EntityPointer& entity : m_entityInfo.entitiesToRemove)
+		for (const EntityPointer& entity : preUpdateInfo.entitiesToRemove)
 			system->onEntityRemoved(entity);
 	}
 }
 
-void Game::processAddedEntities()
+void Game::postProcessEntities(EntityManager::UpdateInfo updateInfo)
 {
 	for (const auto& system : m_systems)
 	{
-		for (ComponentCollection* collection : m_entityInfo.newCollections)
+		for (ComponentCollection* collection : updateInfo.newCollections)
 			system->match(collection);
 
-		for (const auto& [entity, oldComp] : m_entityInfo.changedEntities)
+		for (const auto& [entity, oldComp] : updateInfo.changedEntities)
 			system->onChangedEntityAdded(entity, oldComp);
 
-		for (const EntityPointer& entity : m_entityInfo.addedEntities)
+		for (const EntityPointer& entity : updateInfo.addedEntities)
 			system->onEntityAdded(entity);
 	}
 }
@@ -93,13 +93,32 @@ void Game::play()
 
 		m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
 
-		processEntitiesToBeRemoved();
+		bool needsAnotherEntityUpdate;
+		do
+		{
+			needsAnotherEntityUpdate = false;
 
-		updateScriptContext();
+			{
+				EntityManager::PreUpdateInfo preUpdateInfo = preUpdateEntities();
 
-		updateEntities();
+				if (!preUpdateInfo.entitiesToChange.empty() || !preUpdateInfo.entitiesToRemove.empty())
+					needsAnotherEntityUpdate = true;
 
-		processAddedEntities();
+				preProcessEntities(preUpdateInfo);
+			}
+
+			updateScriptContext();
+			
+			{
+				EntityManager::UpdateInfo updateInfo = updateEntities();
+
+				if (!updateInfo.addedEntities.empty() || !updateInfo.changedEntities.empty())
+					needsAnotherEntityUpdate = true;
+
+				postProcessEntities(updateInfo);
+			}
+		}
+		while (needsAnotherEntityUpdate);
 
 		updateSystems();
 	}

@@ -32,8 +32,8 @@ private:
 	void onSystemAdded(System*) override;
 	void onEvent(const Event&) override;
 
-	void processEntitiesToBeRemoved();
-	void processAddedEntities();
+	void preProcessEntities(EntityManager::PreUpdateInfo);
+	void postProcessEntities(EntityManager::UpdateInfo);
 
 	EventManager m_eventManager;
 
