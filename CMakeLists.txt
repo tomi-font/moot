@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
 
+set(SFML_BUILD_AUDIO OFF)
+set(SFML_BUILD_NETWORK OFF)
+add_subdirectory(lib/SFML SYSTEM)
+
 add_library(moot STATIC)
 
 target_include_directories(moot PRIVATE include)
@@ -49,9 +53,11 @@ target_compile_options(moot PRIVATE
 file(GLOB_RECURSE source_files src/*.cc)
 target_sources(moot PRIVATE ${source_files})
 
-target_link_libraries(moot PRIVATE
-	sfml-graphics
-	sfml-window
-	sfml-system
-	lua
+target_link_libraries(moot
+	PUBLIC
+		sfml-graphics
+		sfml-window
+		sfml-system
+	PRIVATE
+		lua
 )
