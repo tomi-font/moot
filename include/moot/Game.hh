@@ -14,12 +14,14 @@ class Game final :
 	public EntityManager,
 	public SystemManager,
 	public PrototypeStore,
-	EventUser,
-	sf::NonCopyable
+	EventUser
 {
 public:
 
 	Game();
+
+	Game(const Game&) = delete;
+	Game& operator=(const Game&) = delete;
 
 	void play();
 

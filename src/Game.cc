@@ -27,10 +27,9 @@ Game::Game() :
 	initializeScriptContext(this);
 
 	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
-	halfScreen.width /= 2;
-	halfScreen.height /= 2;
-	m_window.create(halfScreen, {});
-	m_window.setPosition(sf::Vector2i(halfScreen.width / 2, halfScreen.height / 2));
+	halfScreen.size /= 2u;
+	m_window.create(halfScreen, "a moot game");
+	m_window.setPosition(sf::Vector2i(halfScreen.size));
 	m_window.setFramerateLimit(60);
 	m_window.setVerticalSyncEnabled(true);
 	m_window.setKeyRepeatEnabled(false);

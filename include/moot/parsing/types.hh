@@ -61,10 +61,11 @@ template<typename T, unsigned N> std::array<T, N> asArray(const sol::object& var
 template<typename T> std::vector<T> asArray(const sol::object& var)
 {
 	const auto& luaArray = asLuaArray(var);
-	std::vector<T> vector(luaArray.size());
+	std::vector<T> vector;
+	vector.reserve(luaArray.size());
 
 	for (const auto& [luaIndex, value] : luaArray)
-		vector[as<unsigned>(luaIndex) - 1] = as<T>(value);
+		vector.emplace(vector.begin() + as<unsigned>(luaIndex) - 1, as<T>(value));
 
 	return vector;
 }

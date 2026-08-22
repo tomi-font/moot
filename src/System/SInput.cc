@@ -32,36 +32,36 @@ void SInput::initializeProperties()
 
 void SInput::update()
 {
-	for (sf::Event event; window()->pollEvent(event);)
+	while (const auto event = window()->pollEvent())
 	{
-		switch (event.type)
+		if (event->is<sf::Event::MouseEntered>())
 		{
-		case sf::Event::MouseEntered:
 			m_mousePos = sf::Mouse::getPosition(*window());
-			break;
-		case sf::Event::MouseLeft:
+		}
+		else if (event->is<sf::Event::MouseLeft>())
+		{
 			m_mousePos.reset();
-			break;
-		case sf::Event::MouseMoved:
-			m_mousePos = {event.mouseMove.x, event.mouseMove.y};
-			break;
+		}
+		else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
+		{
+			m_mousePos = mouseMoved->position;
 		}
 
 		bool eventHasCallback = false;
 
 		for (EntityPointer entity : m_queries[Q::Input])
 		{
-			if (const auto* callback = entity.get<CInput>().getCallback(event))
+			if (const auto* callback = entity.get<CInput>().getCallback(*event))
 			{
 				EntityHandle eHandle = entityManager()->makeHandle(entity);
-				(*callback)(eHandle, event);
+				(*callback)(eHandle, *event);
 				eventHasCallback = true;
 			}
 		}
 
 		if (!eventHasCallback
-		    && (event.type == sf::Event::Closed
-		        || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q)))
+		 && (event->is<sf::Event::Closed>()
+		  || (event->is<sf::Event::KeyPressed>() && event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Q)))
 		{
 			trigger({EngineEvent::GameClose});
 		}

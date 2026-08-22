@@ -35,14 +35,14 @@ local player = {
 		{
 			{InputEvent.KeyPress(Key.W), InputEvent.KeyPress(Key.S)},
 			function(this, event)
-				dir = (event.key.code == Key.W) and 1 or -1
+				dir = (event.key == Key.W) and 1 or -1
 				this:get(Component.Rigidbody):applyYForce(dir * 750)
 			end
 		},
 		{
 			{InputEvent.MouseWheelScroll},
 			function(this, event)
-				this:get(Component.View):zoom(1 - event.mouseWheel.delta / 4)
+				this:get(Component.View):zoom(1 - event.mouseWheelScroll / 4)
 			end
 		}
 	},
@@ -71,7 +71,7 @@ local platformBuilder = {
 				end
 				local platform = {
 					HudRender = {
-						pos = mapPixelToHud(event.mouseButton),
+						pos = mapPixelToHud(event.mousePosition),
 						color = Color.Black
 					}
 				}
@@ -85,7 +85,7 @@ local platformBuilder = {
 					return
 				end
 				local hudRender = getEntity(platformInConstructionId):get(Component.HudRender)
-				hudRender:resize(mapPixelToHud(event.mousePos) - hudRender.pos)
+				hudRender:resize(mapPixelToHud(event.mousePosition) - hudRender.pos)
 			end
 		},
 		{
@@ -97,7 +97,7 @@ local platformBuilder = {
 				local platform = getEntity(platformInConstructionId)
 
 				local pos = mapHudToWorld(platform:get(Component.HudRender).pos)
-				local size = mapPixelToWorld(event.mouseButton) - pos
+				local size = mapPixelToWorld(event.mousePosition) - pos
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })
 				platform:add(Component.ConvexPolygon, { vertices = { {0, 0}, {size.x, 0}, size, {0, size.y} },

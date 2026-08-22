@@ -18,13 +18,13 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 {
 	auto et = lua->create_table("InputEvent");
 
-	et["WindowClose"] = sf::Event(sf::Event::Closed);
-	et["MouseWheelScroll"] = sf::Event{sf::Event::MouseWheelScrolled, .mouseWheelScroll.wheel = sf::Mouse::Wheel::VerticalWheel};
-	et["MouseMove"] = sf::Event(sf::Event::MouseMoved);
-	et["KeyPress"] = [](sf::Keyboard::Key keyCode) { return sf::Event{sf::Event::KeyPressed, .key.code = keyCode}; };
-	et["KeyRelease"] = [](sf::Keyboard::Key keyCode) { return sf::Event{sf::Event::KeyReleased, .key.code = keyCode}; };
-	et["MouseButtonPress"] = [](sf::Mouse::Button button) { return sf::Event{sf::Event::MouseButtonPressed, .mouseButton.button = button}; };
-	et["MouseButtonRelease"] = [](sf::Mouse::Button button) { return sf::Event{sf::Event::MouseButtonReleased, .mouseButton.button = button}; };
+	et["WindowClose"] = sf::Event(sf::Event::Closed{});
+	et["MouseWheelScroll"] = sf::Event(sf::Event::MouseWheelScrolled{.wheel = sf::Mouse::Wheel::Vertical});
+	et["MouseMove"] = sf::Event(sf::Event::MouseMoved{});
+	et["KeyPress"] = [](sf::Keyboard::Key keyCode) -> sf::Event { return sf::Event::KeyPressed{.code = keyCode}; };
+	et["KeyRelease"] = [](sf::Keyboard::Key keyCode) -> sf::Event { return sf::Event::KeyReleased{.code = keyCode}; };
+	et["MouseButtonPress"] = [](sf::Mouse::Button button) -> sf::Event { return sf::Event::MouseButtonPressed{.button = button}; };
+	et["MouseButtonRelease"] = [](sf::Mouse::Button button) -> sf::Event { return sf::Event::MouseButtonReleased{.button = button}; };
 
 	lua->new_enum("Key",
 		"A", sf::Keyboard::Key::A,

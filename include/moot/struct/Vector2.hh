@@ -7,6 +7,7 @@ template<typename T> struct Vector2 : sf::Vector2<T>
 {
 	using sf::Vector2<T>::Vector2;
 	Vector2(const sf::Vector2<T>& other) : sf::Vector2<T>(other) {}
+	template<typename U> Vector2(const sf::Vector2<U>& other) : sf::Vector2<T>(other) {}
 
 	bool isZero() const { return *this == sf::Vector2<T>(); }
 	bool isNotZero() const { return !isZero(); }

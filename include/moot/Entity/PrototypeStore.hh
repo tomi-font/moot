@@ -1,12 +1,15 @@
 #pragma once
 
 #include <moot/Entity/Prototype.hh>
-#include <SFML/System/NonCopyable.hpp>
 #include <string>
 
-class PrototypeStore : sf::NonCopyable
+class PrototypeStore
 {
 public:
+
+	PrototypeStore() = default;
+	PrototypeStore(const PrototypeStore&) = delete;
+	PrototypeStore& operator=(const PrototypeStore&) = delete;
 
 	using PrototypeId = unsigned;
 

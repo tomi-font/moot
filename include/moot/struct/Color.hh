@@ -4,9 +4,9 @@
 
 struct Color : public sf::Color
 {
-	Color() : sf::Color(0) {}
-	Color(const sf::Color& color) : sf::Color(color) {}
+	constexpr Color() : sf::Color(0, 0, 0, 0) {}
+	constexpr Color(const sf::Color& color) : sf::Color(color) {}
 	using sf::Color::Color;
-
-	operator bool() const { return *this != Color(); }
+	
+	constexpr operator bool() const { return *this != Color(); }
 };

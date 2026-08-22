@@ -7,7 +7,7 @@ class Window : public sf::RenderWindow
 {
 public:
 
-	template<typename T> Vector2f mapPixelToWorld(const T& pos) const
+	Vector2f mapPixelToWorld(const Vector2i& pos) const
 	{
 		Vector2f worldCoord = sf::RenderWindow::mapPixelToCoords({pos.x, pos.y});
 		// Flip the Y axis so that it grows upwards and starts at the bottom.
@@ -16,14 +16,14 @@ public:
 		return worldCoord;
 	}
 
-	template<typename T> Vector2f mapPixelToHud(const T& pos) const
+	Vector2f mapPixelToHud(const Vector2i& pos) const
 	{
 		const Vector2f windowSize(getSize());
 		// Flip the Y axis so that it grows upwards and starts at the bottom.
 		return {pos.x / windowSize.x, (windowSize.y - pos.y) / windowSize.y};
 	}
 
-	template<typename T> Vector2i mapHudToPixel(const T& pos) const
+	Vector2i mapHudToPixel(const Vector2f& pos) const
 	{
 		const Vector2f windowSize(getSize());
 		// Flip the Y axis back to growing downwards and starting at the top.
@@ -31,7 +31,7 @@ public:
 		        static_cast<int>(windowSize.y - pos.y * windowSize.y)};
 	}
 
-	template<typename T> Vector2f mapHudToWorld(const T& pos) const
+	Vector2f mapHudToWorld(const Vector2f& pos) const
 	{
 		return mapPixelToWorld(mapHudToPixel(pos));
 	}

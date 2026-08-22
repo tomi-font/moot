@@ -86,18 +86,10 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 		{
 			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
 		});
-	lua->set_function("mapHudToWorld", &Window::mapHudToWorld<Vector2f>, window);
-	lua->set_function("mapPixelToHud", sol::overload(
-		[window](const sf::Event::MouseButtonEvent& mouseButton)
-		{
-			return window->mapPixelToHud(mouseButton);
-		},
-		[window](const sf::Event::MouseMoveEvent& mouseMove)
-		{
-			return window->mapPixelToHud(mouseMove);
-		}
-	));
-	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld<sf::Event::MouseButtonEvent>, window);
+
+	lua->set_function("mapHudToWorld", &Window::mapHudToWorld, window);
+	lua->set_function("mapPixelToHud", &Window::mapPixelToHud, window);
+	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld, window);
 
 	lua->create_named_table("properties")[sol::metatable_key] = lua->create_table_with(
 		sol::meta_method::index, sol::property(

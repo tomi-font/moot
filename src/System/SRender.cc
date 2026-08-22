@@ -69,7 +69,7 @@ static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, co
 			vertex.position = entityPos + polygonVertex;
 		vertices.back().position = entityPos + polygonVertices.front();
 		break;
-	case sf::PrimitiveType::TrianglesStrip:
+	case sf::PrimitiveType::TriangleStrip:
 		for (unsigned i = 0; i != vertices.size(); ++i)
 		{
 			const unsigned steps = (i + 1) / 2;
@@ -195,8 +195,8 @@ void SRender::update()
 
 	// Render the entities with the Y axis flipped so that the Y coordinates grow upwards.
 	sf::Transform worldTransform;
-	worldTransform.translate(0, viewSize.y);
-	worldTransform.scale(1, -1);
+	worldTransform.translate({0, viewSize.y});
+	worldTransform.scale({1, -1});
 
 	for (const auto& [_, drawable] : m_drawables)
 	{
@@ -215,7 +215,7 @@ void SRender::update()
 		const auto& cHudRenders = collection->getAll<CHudRender>();
 
 		if (!cHudRenders.empty())
-			window()->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::Quads, hudTransform);
+			window()->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::PrimitiveType::TriangleFan, hudTransform);
 	}
 
 	window()->display();

@@ -1,13 +1,16 @@
 #pragma once
 
 #include <moot/Event/Event.hh>
-#include <SFML/System/NonCopyable.hpp>
 
 class EventManager;
 
-class EventUser : sf::NonCopyable
+class EventUser
 {
 public:
+
+	EventUser() = default;
+	EventUser(const EventUser&) = delete;
+	EventUser& operator=(const EventUser&) = delete;
 
 	void setEventManager(EventManager*);
 	virtual void listenToEvents();

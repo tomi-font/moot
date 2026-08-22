@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <memory>
 
 namespace sol { class state; }
 class Game;
@@ -12,7 +13,7 @@ public:
 	void setScriptSearchPath(std::filesystem::path);
 	void processScript(const std::filesystem::path&);
 
-	auto* scriptContext() { return &m_lua; }
+	auto* scriptContext() { return m_lua.get(); }
 
 protected:
 
@@ -25,7 +26,7 @@ protected:
 
 private:
 
-	sol::state& m_lua;
+	std::unique_ptr<sol::state> m_lua;
 
 	std::filesystem::path m_searchPath;
 };

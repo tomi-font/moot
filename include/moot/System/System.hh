@@ -12,10 +12,12 @@ class Window;
 class System :
 	public EntityQuerier,
 	public EventUser,
-	public PropertyUser,
-	sf::NonCopyable
+	public PropertyUser
 {
 public:
+
+	System(const System&) = delete;
+	System& operator=(const System&) = delete;
 
 	virtual ~System() override;
 
