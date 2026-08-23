@@ -43,17 +43,22 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 	assert(!a.intersects(b));
 	assert((a + aMove).intersects(b + bMove));
 
+	constexpr float NoMoveRatio = -std::numeric_limits<float>::infinity();
 	Vector2f ratios;
 
 	if (relativeMove.x > 0)
 		ratios.x = (b.left - a.right()) / relativeMove.x;
 	else if (relativeMove.x < 0)
 		ratios.x = (a.left - b.right()) / -relativeMove.x;
+	else
+		ratios.x = NoMoveRatio;
 
 	if (relativeMove.y > 0)
 		ratios.y = (b.bottom - a.top()) / relativeMove.y;
 	else if (relativeMove.y < 0)
 		ratios.y = (a.bottom - b.top()) / -relativeMove.y;
+	else
+		ratios.y = NoMoveRatio;
 
 	assert(ratios.x <= 1 && ratios.y <= 1);
 	// One ratio may be negative if the entities were already overlapping on an axis.
@@ -69,8 +74,8 @@ static float firstContactPointMoveRatio(const Vector2f& ratios)
 	return std::max(ratios.x, ratios.y);
 }
 
-static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBox* a, Vector2f* aMove,
-                                                                    CCollisionBox* b, Vector2f* bMove)
+static Vector2i moveToFirstContactPoint(const Vector2f& ratios, float ratio, FloatRect* a, Vector2f* aMove,
+                                                                             FloatRect* b, Vector2f* bMove)
 {
 	// The move of A relative to B.
 	const sf::Vector2f relativeMove = *aMove - *bMove;
@@ -84,16 +89,13 @@ static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBo
 
 	assert(collidedOn.x or collidedOn.y);
 
-	// The move ratio that's left after the first contact point.
-	const float ratioLeft = 1 - firstContactPointMoveRatio(ratios);
-
-	// First move B back to the (approximate) first contact point.
-	*bMove *= ratioLeft;
-	*b -= *bMove;
+	// First move B to the (approximate) first contact point.
+	*b += *bMove * ratio;
+	*bMove *= 1 - ratio;
 
 	// Then do the same with A...
-	*aMove *= ratioLeft;
-	*a -= *aMove;
+	*a += *aMove * ratio;
+	*aMove *= 1 - ratio;
 
 	// And make sure that it touches B where they collided.
 
@@ -170,24 +172,27 @@ static void adjustMoveAfterCollision(const Vector2i& collidedOn, const CCollisio
 struct CollidableProvisional
 {
 	Vector2f move;
-	CCollisionBox cCol;
+	FloatRect base;
+
+	FloatRect destination() const { return base + move; }
 };
 
 struct Collision
 {
 	Vector2f moveRatios;
+	float moveRatio;
 	EntityPointer other;
 	CollidableProvisional otherProv;
 
 	operator bool() const { return other.isValid(); }
 };
 
-static Collision getFirstCollision(const EntityPointer& entity, const CollidableProvisional& prov, const CCollisionBox& cCol,
+static Collision getFirstCollision(const EntityPointer& entity, const CollidableProvisional& prov,
                                    const EntityQuery& collidables,
 								   const std::unordered_map<EntityPointer, CollidableProvisional>& movingCollidables)
 {
-	struct Collision firstCollision;
-	float firstCollisionRatio = 2; // More than 1.
+	Collision firstCollision;
+	firstCollision.moveRatio = 2; // More than 1.
 
 	for (EntityPointer other : collidables)
 	{
@@ -201,18 +206,15 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 			otherProv = movingCollidables.at(other);
 		}
 		else
-			otherProv.cCol = otherCCol;
-		
-		if (!prov.cCol.intersects(otherProv.cCol))
+			otherProv.base = otherCCol;
+
+		if (!prov.destination().intersects(otherProv.destination()))
 			continue;
-		
-		const Vector2f ratios = firstContactPointMoveRatios(cCol, prov.move, otherCCol, otherProv.move);
+
+		const Vector2f ratios = firstContactPointMoveRatios(prov.base, prov.move, otherProv.base, otherProv.move);
 		const float ratio = firstContactPointMoveRatio(ratios);
-		if (ratio < firstCollisionRatio)
-		{
-			firstCollisionRatio = ratio;
-			firstCollision = { ratios, other, otherProv };
-		}
+		if (ratio < firstCollision.moveRatio)
+			firstCollision = { ratios, ratio, other, otherProv };
 	}
 	return firstCollision;
 }
@@ -237,13 +239,12 @@ void SPhysics::update()
 			velocity += cRigidbody->velocity();
 		}
 
-		if (velocity.isZero())
-			continue;
 		const Vector2f move = velocity * elapsedTime;
-		assert(move.isNotZero());
+		if (move.isZero())
+			continue;
 
 		if (entity.has<CCollisionBox>())
-			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>() + move));
+			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>()));
 		else
 			entity.get<CPosition*>()->mut() += move;
 	}
@@ -254,31 +255,28 @@ void SPhysics::update()
 	{
 		const EntityPointer& entity = movingCollidableIt->first;
 		CollidableProvisional& prov = movingCollidableIt->second;
-		CCollisionBox* cCol = entity.get<CCollisionBox*>();
 
-		while (Collision c = getFirstCollision(entity, prov, *cCol, m_queries[Q::Collidable], movingCollidables))
+		while (Collision c = getFirstCollision(entity, prov, m_queries[Q::Collidable], movingCollidables))
 		{
-			const Vector2i collidedOn = moveBackToFirstContactPoint(c.moveRatios, &prov.cCol, &prov.move, &c.otherProv.cCol, &c.otherProv.move);
+			const Vector2i collidedOn = moveToFirstContactPoint(c.moveRatios, c.moveRatio, &prov.base, &prov.move, &c.otherProv.base, &c.otherProv.move);
 
 			if (entity.has<CRigidbody>())
 				applyRigidbodyCollisionForces(collidedOn, entity.get<CRigidbody*>(), c.other.find<CRigidbody*>());
-			
-			adjustMoveAfterCollision(collidedOn, prov.cCol, &prov.move, c.otherProv.cCol, &c.otherProv.move);
 
-			// Update the provisional positions to reflect the changes brought by this collision.
-			prov.cCol += prov.move;
+			adjustMoveAfterCollision(collidedOn, prov.base, &prov.move, c.otherProv.base, &c.otherProv.move);
+
+			// The other entity's provisional now starts at the contact point with the move left after it.
 			if (movingCollidables.contains(c.other))
-			{
-				c.otherProv.cCol += c.otherProv.move;
 				movingCollidables[c.other] = c.otherProv;
-			}
 			else
 				assert(c.otherProv.move.isZero());
 		}
 
-		if (prov.cCol.bottomLeft != cCol->bottomLeft)
+		const CCollisionBox destination = prov.destination();
+		CCollisionBox* cCol = entity.get<CCollisionBox*>();
+		if (destination.bottomLeft != cCol->bottomLeft)
 		{
-			*cCol = prov.cCol;
+			*cCol = destination;
 			*entity.get<CPosition*>() = cCol->bottomLeft;
 		}
 		// TODO: else assert
