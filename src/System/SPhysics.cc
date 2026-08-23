@@ -40,8 +40,8 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 	const Vector2f relativeMove = aMove - bMove;
 	assert(aMove.isNotZero() && relativeMove.isNotZero());
 
-	a.assertIntersects(b, false);
-	(a + aMove).assertIntersects(b + bMove);
+	assert(!a.intersects(b));
+	assert((a + aMove).intersects(b + bMove));
 
 	Vector2f ratios;
 
@@ -57,7 +57,8 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 
 	assert(ratios.x <= 1 && ratios.y <= 1);
 	// One ratio may be negative if the entities were already overlapping on an axis.
-	assert(ratios.x >= 0 || ratios.y >= 0);
+	assert(ratios.x >= -epsilon(b.left - a.right(), a.left - b.right())
+	    || ratios.y >= -epsilon(b.bottom - a.top(), a.bottom - b.top()));
 
 	return ratios;
 }
@@ -111,9 +112,9 @@ static Vector2i moveBackToFirstContactPoint(const Vector2f& ratios, CCollisionBo
 			a->bottom = b->top();
 	}
 
-	a->assertIntersects(*b, false);
+	assert(!a->intersects(*b));
 	// TODO: add factor
-	(*a + *aMove).assertIntersects(*b + *bMove);
+	assert((*a + *aMove).intersects(*b + *bMove));
 
 	return collidedOn;
 }
@@ -139,31 +140,31 @@ static void adjustMoveAfterCollision(const Vector2i& collidedOn, const CCollisio
 {
 	if (collidedOn.x == 1)
 	{
-		assert(equal(a.right(), b.left));
+		assert(equal(a.right(), b.left, epsilon(a.left, b.right())));
 		aMove->x = std::min(0.f, aMove->x);
 		bMove->x = std::max(0.f, bMove->x);
 	}
 	else if (collidedOn.x == -1)
 	{
-		assert(equal(a.left, b.right()));
+		assert(equal(a.left, b.right(), epsilon(a.right(), b.left)));
 		aMove->x = std::max(0.f, aMove->x);
 		bMove->x = std::min(0.f, bMove->x);
 	}
 
 	if (collidedOn.y == 1)
 	{
-		assert(equal(a.top(), b.bottom));
+		assert(equal(a.top(), b.bottom, epsilon(a.bottom, b.top())));
 		aMove->y = std::min(0.f, aMove->y);
 		bMove->y = std::max(0.f, bMove->y);
 	}
 	else if (collidedOn.y == -1)
 	{
-		assert(equal(a.bottom, b.top()));
+		assert(equal(a.bottom, b.top(), epsilon(a.top(), b.bottom)));
 		aMove->y = std::max(0.f, aMove->y);
 		bMove->y = std::min(0.f, bMove->y);
 	}
 	
-	(a + *aMove).assertIntersects(b + *bMove, false);
+	assert(!(a + *aMove).intersects(b + *bMove));
 }
 
 struct CollidableProvisional

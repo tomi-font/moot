@@ -1,6 +1,7 @@
 #pragma once
 
 #include <moot/struct/Vector2.hh>
+#include <moot/util/math/base.hh>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
 struct Rect
@@ -44,12 +45,11 @@ struct Rect
 		};
 	}
 
-	bool intersects(const Rect<T>& other) const { return intersectionWith(other).hasPositiveArea(); }
-
-	void assertIntersects(const Rect<T>& other, bool intersects = true) const
+	bool intersects(const Rect<T>& other) const
 	{
 		Rect<T> inter = intersectionWith(other);
-		assert(inter.hasPositiveArea() == intersects);
+		return inter.width > epsilon(maxAbs(left, right()), maxAbs(other.left, other.right()))
+		    && inter.height > epsilon(maxAbs(bottom, top()), maxAbs(other.bottom, other.top()));
 	}
 
 	union
