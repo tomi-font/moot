@@ -40,7 +40,6 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 	const Vector2f relativeMove = aMove - bMove;
 	assert(aMove.isNotZero() && relativeMove.isNotZero());
 
-	assert(!a.intersects(b));
 	assert((a + aMove).intersects(b + bMove));
 
 	constexpr float NoMoveRatio = -std::numeric_limits<float>::infinity();
@@ -61,8 +60,9 @@ static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector
 		ratios.y = NoMoveRatio;
 
 	assert(ratios.x <= 1 && ratios.y <= 1);
-	// One ratio may be negative if the entities were already overlapping on an axis.
-	assert(ratios.x >= -epsilon(b.left - a.right(), a.left - b.right())
+	// Each axis' ratio may be negative if the entities were already overlapping on that axis.
+	assert(a.intersects(b)
+	    || ratios.x >= -epsilon(b.left - a.right(), a.left - b.right())
 	    || ratios.y >= -epsilon(b.bottom - a.top(), a.bottom - b.top()));
 
 	return ratios;
@@ -256,7 +256,8 @@ void SPhysics::update()
 		const EntityPointer& entity = movingCollidableIt->first;
 		CollidableProvisional& prov = movingCollidableIt->second;
 
-		while (Collision c = getFirstCollision(entity, prov, m_queries[Q::Collidable], movingCollidables))
+		Collision c;
+		while (prov.move.isNotZero() && (c = getFirstCollision(entity, prov, m_queries[Q::Collidable], movingCollidables)))
 		{
 			const Vector2i collidedOn = moveToFirstContactPoint(c.moveRatios, c.moveRatio, &prov.base, &prov.move, &c.otherProv.base, &c.otherProv.move);
 
