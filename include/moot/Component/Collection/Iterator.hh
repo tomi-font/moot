@@ -36,15 +36,16 @@ template<typename C> class ComponentCollectionIterator : public ComponentCollect
 public:
 	using ComponentCollectionIteratorBase::ComponentCollectionIteratorBase;
 
-	C& operator*()
+	const C& operator*()
 	{
 		if (m_idx == 0)
 		{
-			m_components = (*m_collectionIt)->template getAll<C>();
+			m_components = &(*m_collectionIt)->template getAll<C>();
 			assert(m_components->size() == (*m_collectionIt)->size());
 		}
 		return (*m_components)[m_idx];
 	}
+	const C* operator->() { return &this->operator*(); }
 };
 
 // Allows range-based for loop iteration over components of a same type.

@@ -11,7 +11,7 @@ struct SystemSchedule
 
 	template<typename T> static inline SystemSchedule after()
 	{
-		return {.order.after = &typeid(T)};
+		return {.order = {.after = &typeid(T)}};
 	}
 
 	struct

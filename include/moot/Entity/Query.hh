@@ -34,7 +34,7 @@ public:
 	ComponentCollectionIterator<EntityPointer> end() const { return {m_matchingCollections.end()}; }
 	unsigned getEntityCount() const;
 
-	template<typename C> ComponentCollectionIterator<C> getAll() const { return {m_matchingCollections}; }
+	template<typename C> ComponentCollectionIterable<C> getAll() const { return {m_matchingCollections}; }
 
 private:
 

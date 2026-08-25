@@ -15,7 +15,8 @@ struct Drawable
 	std::map<sf::PrimitiveType, std::ranges::iota_view<unsigned, unsigned>, std::greater<>> vertexViews;
 };
 
-static const std::string ClearColor = "clearColor";
+static constexpr std::string ClearColor = "clearColor";
+static constexpr std::string AmbientLight = "ambientLight";
 
 // Indices for this system's queries.
 enum Q
@@ -158,10 +159,11 @@ SRender::~SRender()
 
 void SRender::initializeProperties()
 {
-	m_properties->set(ClearColor, sf::Color::Black);
+	m_properties->set(ClearColor, Color::Black);
+	m_properties->set(AmbientLight, Color::White);
 }
 
-void SRender::update()
+void SRender::updateViews()
 {
 	for (EntityPointer entity : m_queries[Q::View])
 	{
@@ -171,8 +173,11 @@ void SRender::update()
 			updateView(entity, window());
 		}
 	}
-	assert(m_queries[Q::View].getEntityCount() != 0);
+	assert(m_queries[Q::View].getEntityCount() == 1);
+}
 
+void SRender::updateConvexPolygons()
+{
 	for (EntityPointer entity : m_queries[Q::ConvexPolygons])
 	{
 		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
@@ -187,15 +192,15 @@ void SRender::update()
 				updateConvexPolygonVerticesPosition(vertexType, entity, cConvexPolygon, &drawable);
 		}
 	}
+}
 
-	window()->clear(m_properties->get<Color>(ClearColor));
-
-	const sf::View& view = window()->getView();
-	const sf::Vector2f& viewSize = view.getSize();
-
-	// Render the entities with the Y axis flipped so that the Y coordinates grow upwards.
+void SRender::drawWorld()
+{
+	// Render the world with the Y axis flipped so that it grows upwards.
 	sf::Transform worldTransform;
-	worldTransform.translate({0, viewSize.y});
+	// Move the origin from the top-left to the bottom-left corner.
+	worldTransform.translate({0, window()->getView().getSize().y});
+	// Make the Y axis grow upwards.
 	worldTransform.scale({1, -1});
 
 	for (const auto& [_, drawable] : m_drawables)
@@ -203,12 +208,50 @@ void SRender::update()
 		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
 			window()->draw(drawable.vertices.data() + vertexView.front(), vertexView.size(), vertexType, worldTransform);
 	}
+}
+
+void SRender::drawLightMap()
+{
+	const sf::Vector2u& windowSize = window()->getSize();
+	if (m_lightMap.getSize() != windowSize)
+	{
+		bool success = m_lightMap.resize(windowSize);
+		assert(success);
+	}
+
+	m_lightMap.clear(m_properties->get<Color>(AmbientLight));
+
+	const sf::View& view = window()->getView();
+	const sf::Vector2f viewSize = view.getSize();
+	const sf::Vector2f viewPos = view.getCenter() - viewSize / 2.f;
+
+	const std::array<sf::Vertex, 4> corners =
+	{
+		sf::Vertex{.position = {viewPos},                           .texCoords = {0.f, 0.f}},
+		sf::Vertex{.position = {viewPos.x + viewSize.x, viewPos.y}, .texCoords = {float(windowSize.x), 0.f}},
+		sf::Vertex{.position = {viewPos + viewSize},                .texCoords = {sf::Vector2f(windowSize)}},
+		sf::Vertex{.position = {viewPos.x, viewPos.y + viewSize.y}, .texCoords = {0.f, float(windowSize.y)}},
+	};
+
+	sf::RenderStates states;
+	states.blendMode = sf::BlendMultiply;
+	states.texture = &m_lightMap.getTexture();
+
+	window()->draw(corners.data(), corners.size(), sf::PrimitiveType::TriangleFan, states);
+}
+
+void SRender::drawHud()
+{
+	const sf::View& view = window()->getView();
+	const sf::Vector2f viewCenter = view.getCenter();
+	const sf::Vector2f viewSize = view.getSize();
 
 	// Render the HUD so that it always appears at the same place on screen.
 	sf::Transform hudTransform;
-	hudTransform.translate(view.getCenter() - viewSize / 2.f);
-	hudTransform.combine(worldTransform);
-	hudTransform.scale(viewSize);
+	// Set the origin to the bottom-left corner.
+	hudTransform.translate({viewCenter.x - viewSize.x / 2, viewCenter.y + viewSize.y / 2.f});
+	// Make the Y axis grow upwards and (1,1) be the top-right corner.
+	hudTransform.scale({viewSize.x, -viewSize.y});
 
 	for (ComponentCollection* collection : m_queries[Q::HudRendered].matchingCollections())
 	{
@@ -217,6 +260,18 @@ void SRender::update()
 		if (!cHudRenders.empty())
 			window()->draw(cHudRenders[0].vertices().data(), cHudRenders.size() * 4, sf::PrimitiveType::TriangleFan, hudTransform);
 	}
+}
+
+void SRender::update()
+{
+	updateViews();
+	updateConvexPolygons();
+
+	window()->clear(m_properties->get<Color>(ClearColor));
+
+	drawWorld();
+	drawLightMap();
+	drawHud();
 
 	window()->display();
 }

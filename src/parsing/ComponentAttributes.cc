@@ -41,11 +41,14 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 template<> void registerAttributeValues<Color>(sol::state* lua)
 {
 	auto colors = lua->create_table("Color");
-	
-	colors["Black"] = Color(sf::Color::Black);
+
+	colors["None"] = Color();
+	colors["Black"] = Color(0, 0, 0);
+	colors["Brown"] = Color(101, 67, 33);
 	colors["ForestGreen"] = Color(0, 110, 51);
 	colors["Gray"] = Color(128, 128, 128);
-	colors["None"] = Color();
+	colors["SkyBlue"] = Color(135, 206, 235);
+	colors["White"] = Color(255, 255, 255);
 }
 
 void ComponentAttributes::registerAll(sol::state* lua)
