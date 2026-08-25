@@ -2,7 +2,8 @@
 
 #include <moot/System/System.hh>
 #include <moot/Entity/Id.hh>
-#include <SFML/Graphics/Vertex.hpp>
+#include <unordered_map>
+#include <SFML/Graphics/RenderTexture.hpp>
 
 class SRender final : public System
 {
@@ -16,6 +17,13 @@ private:
 	void initializeProperties() override;
 
 	void update() override;
+	void updateViews();
+	void updateConvexPolygons();
+	void drawWorld();
+	void drawLightMap();
+	void drawHud();
 
 	std::unordered_map<EntityId, struct Drawable> m_drawables;
+
+	sf::RenderTexture m_lightMap;
 };

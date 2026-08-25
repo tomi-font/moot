@@ -6,7 +6,7 @@
 
 ParsingContext::ParsingContext() : m_lua(new sol::state)
 {
-	m_lua->open_libraries(sol::lib::base);
+	m_lua->open_libraries(sol::lib::base, sol::lib::math);
 }
 
 ParsingContext::~ParsingContext()

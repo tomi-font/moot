@@ -1,5 +1,5 @@
-properties.clearColor = Color.Gray
-properties.gravitationalAcceleration = 999.80665
+properties.clearColor = Color.SkyBlue
+properties.gravitationalAcceleration = 3000
 
 local ground = {
 	CollisionBox = {
@@ -13,7 +13,7 @@ local player = {
 	Position = {0, 900},
 	ConvexPolygon = {
 		vertices = { {0, 0}, {100, 0}, {100, 100}, {0, 100} },
-		fillColor = {0, 128, 0}
+		fillColor = Color.ForestGreen
 	},
 	Move = {
 		speed = 1000
@@ -36,7 +36,7 @@ local player = {
 			{InputEvent.KeyPress(Key.W), InputEvent.KeyPress(Key.S)},
 			function(this, event)
 				dir = (event.key == Key.W) and 1 or -1
-				this:get(Component.Rigidbody):applyYForce(dir * 750)
+				this:get(Component.Rigidbody):applyYForce(dir * 1200)
 			end
 		},
 		{
@@ -72,7 +72,7 @@ local platformBuilder = {
 				local platform = {
 					HudRender = {
 						pos = mapPixelToHud(event.mousePosition),
-						color = Color.Black
+						color = Color.White
 					}
 				}
 				platformInConstructionId = spawn(platform):getId()
@@ -101,7 +101,7 @@ local platformBuilder = {
 				platform:add(Component.Position, pos)
 				platform:add(Component.CollisionBox, { size = size })
 				platform:add(Component.ConvexPolygon, { vertices = { {0, 0}, {size.x, 0}, size, {0, size.y} },
-				                                        fillColor = Color.Black })
+				                                        fillColor = Color.Brown})
 				platform:remove(Component.HudRender)
 				platformInConstructionId = 0
 			end
@@ -109,3 +109,16 @@ local platformBuilder = {
 	}
 }
 spawn(platformBuilder)
+
+local lightDimmer = {
+	Input = {
+		{
+			{InputEvent.MouseMove},
+			function(this, event)
+				local brightness = math.floor(256 * mapPixelToHud(event.mousePosition).x)
+				properties.ambientLight = {brightness, brightness, brightness}
+			end
+		}
+	}
+}
+spawn(lightDimmer)
