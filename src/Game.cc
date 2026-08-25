@@ -10,10 +10,12 @@
 
 unsigned ComponentIdRegistry::s_m_nextId = 0;
 
-Game::Game() :
+Game::Game(std::source_location location) :
 	m_frameNumber(0),
 	m_running(true)
 {
+	assert(location.function_name()[0] && "Game must not be a global");
+
 	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
 
 	addSystem<SInput>(SystemSchedule::any());

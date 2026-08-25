@@ -8,6 +8,7 @@
 #include <moot/Property/Properties.hh>
 #include <moot/System/Manager.hh>
 #include <moot/Window.hh>
+#include <source_location>
 
 class Game final :
 	public ParsingContext,
@@ -18,7 +19,7 @@ class Game final :
 {
 public:
 
-	Game();
+	Game(std::source_location = std::source_location::current());
 
 	Game(const Game&) = delete;
 	Game& operator=(const Game&) = delete;
