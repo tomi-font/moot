@@ -11,12 +11,14 @@ public:
 
 	enum Type
 	{
-		OnSpawn
+		OnSpawn,
+		OnUpdate,
 	};
 	using Callback = std::function<void(EntityHandle&)>;
 
 	void add(Type, Callback&&);
 	
+	const Callback* get(Type type) const;
 	Callback extract(Type type);
 
 private:
