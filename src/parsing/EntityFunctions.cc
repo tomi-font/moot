@@ -13,7 +13,7 @@
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
 
-std::vector<EntityFunctions::ComponentGetter> EntityFunctions::s_m_componentGetters(ComponentIdRegistry::idCount());
+std::vector<EntityFunctions::ComponentGetter> EntityFunctions::s_m_componentGetters;
 
 struct TypeSafeComponentId
 {
@@ -60,6 +60,7 @@ static void registerComponentTypes(sol::state* lua)
 	view["setLimits"] = [](CView* cView, sol::object size) { cView->setLimits(asFloatRect(size)); };
 
 	auto position = registerComponent<CPosition>(ct);
+	position["pos"] = sol::property(&CPosition::val, sol::resolve<void(Vector2f)>(&CPosition::operator=));
 
 	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);

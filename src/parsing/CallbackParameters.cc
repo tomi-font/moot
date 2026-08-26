@@ -28,6 +28,7 @@ void CallbackParameters::registerAll(sol::state* lua)
 {
 	registerVector2<float>(lua, "f");
 	registerVector2<unsigned>(lua, "u");
+	registerVector2<int>(lua, "i");
 
 	registerRect<float>(lua, "f");
 
@@ -38,10 +39,10 @@ void CallbackParameters::registerAll(sol::state* lua)
 				return event.getIf<sf::Event::KeyPressed>()->code;
 			}),
 		"mousePosition", sol::property(
-			[](const sf::Event& event) -> Vector2i
+			[](const sf::Event& event)
 			{
 				return event.visit(
-					[](const auto& subEvent) -> sf::Vector2i
+					[](const auto& subEvent) -> Vector2i
 					{
 						using T = std::decay_t<decltype(subEvent)>;
 						if constexpr (std::is_same_v<T, sf::Event::MouseMoved>
