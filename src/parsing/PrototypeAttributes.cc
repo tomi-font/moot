@@ -7,6 +7,7 @@
 static const std::unordered_map<std::string_view, CCallback::Type> s_callbackTypes =
 {
 	{"onSpawn", CCallback::OnSpawn},
+	{"onUpdate", CCallback::OnUpdate},
 };
 
 void PrototypeAttributes::parse(const std::pair<sol::object, sol::object>& attribute, Prototype* proto)
