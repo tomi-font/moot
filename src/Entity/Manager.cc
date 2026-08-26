@@ -3,6 +3,7 @@
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CEntity.hh>
+#include <moot/Component/CLight.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CParent.hh>
 #include <moot/Component/CPointable.hh>
@@ -20,7 +21,7 @@ EntityManager::EntityManager() :
 static void checkComponentComposition(ComponentComposable entity)
 {
 	if (!entity.has<CPosition>())
-		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CView, CMove, CRigidbody, CPointable>()));
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CView, CMove, CRigidbody, CPointable, CLight>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());

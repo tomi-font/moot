@@ -1,5 +1,6 @@
 #include <moot/System/SRender.hh>
 #include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CLight.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CView.hh>
@@ -7,6 +8,7 @@
 #include <moot/util/iota_view.hh>
 #include <moot/Window.hh>
 #include <map>
+#include <numbers>
 
 struct Drawable
 {
@@ -24,6 +26,7 @@ enum Q
 	View,
 	ConvexPolygons,
 	HudRendered,
+	Lights,
 	COUNT
 };
 
@@ -151,6 +154,8 @@ SRender::SRender()
 			m_drawables.erase(Entity::getId(entity));
 		}
 	}};
+
+	m_queries[Q::Lights] = {{ .required = {CId<CLight>} }};
 }
 
 SRender::~SRender()
@@ -194,15 +199,8 @@ void SRender::updateConvexPolygons()
 	}
 }
 
-void SRender::drawWorld()
+void SRender::drawWorld(const sf::Transform& worldTransform)
 {
-	// Render the world with the Y axis flipped so that it grows upwards.
-	sf::Transform worldTransform;
-	// Move the origin from the top-left to the bottom-left corner.
-	worldTransform.translate({0, window()->getView().getSize().y});
-	// Make the Y axis grow upwards.
-	worldTransform.scale({1, -1});
-
 	for (const auto& [_, drawable] : m_drawables)
 	{
 		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
@@ -210,7 +208,7 @@ void SRender::drawWorld()
 	}
 }
 
-void SRender::drawLightMap()
+void SRender::updateLightMap()
 {
 	const sf::Vector2u& windowSize = window()->getSize();
 	if (m_lightMap.getSize() != windowSize)
@@ -220,17 +218,60 @@ void SRender::drawLightMap()
 	}
 
 	m_lightMap.clear(m_properties->get<Color>(AmbientLight));
+	m_lightMap.setView(window()->getView());
+}
+
+void SRender::drawLights(const sf::Transform& worldTransform)
+{
+	constexpr unsigned SegmentsPerLight = 64;
+	constexpr float SegmentAngle = 2 * std::numbers::pi_v<float> / SegmentsPerLight;
+
+	std::vector<sf::Vertex> vertices;
+	vertices.reserve(3 * SegmentsPerLight * m_queries[Q::Lights].getEntityCount());
+
+	for (EntityPointer entity : m_queries[Q::Lights])
+	{
+		const sf::Vector2f& pos = entity.get<CPosition>();
+		const CLight& cLight = entity.get<CLight>();
+		const float radius = cLight.radius();
+		float angle = 0;
+
+		for (unsigned i = 0; i != SegmentsPerLight;)
+		{
+			vertices.emplace_back(pos, cLight.emission());
+			vertices.emplace_back(sf::Vector2f(pos.x + radius * std::cos(angle),
+			                                   pos.y + radius * std::sin(angle)),
+			                      sf::Color::Black);
+			++i;
+			angle = SegmentAngle * i;
+			vertices.emplace_back(sf::Vector2f(pos.x + radius * std::cos(angle),
+			                                   pos.y + radius * std::sin(angle)),
+			                      sf::Color::Black);
+		}
+	}
+
+	sf::RenderStates states;
+	states.blendMode = sf::BlendAdd;
+	states.transform = worldTransform;
+
+	m_lightMap.draw(vertices.data(), vertices.size(), sf::PrimitiveType::Triangles, states);
+}
+
+void SRender::drawLightMap()
+{
+	m_lightMap.display();
 
 	const sf::View& view = window()->getView();
 	const sf::Vector2f viewSize = view.getSize();
 	const sf::Vector2f viewPos = view.getCenter() - viewSize / 2.f;
+	const sf::Vector2f windowSize = sf::Vector2f(window()->getSize());
 
 	const std::array<sf::Vertex, 4> corners =
 	{
 		sf::Vertex{.position = {viewPos},                           .texCoords = {0.f, 0.f}},
-		sf::Vertex{.position = {viewPos.x + viewSize.x, viewPos.y}, .texCoords = {float(windowSize.x), 0.f}},
-		sf::Vertex{.position = {viewPos + viewSize},                .texCoords = {sf::Vector2f(windowSize)}},
-		sf::Vertex{.position = {viewPos.x, viewPos.y + viewSize.y}, .texCoords = {0.f, float(windowSize.y)}},
+		sf::Vertex{.position = {viewPos.x + viewSize.x, viewPos.y}, .texCoords = {windowSize.x, 0.f}},
+		sf::Vertex{.position = {viewPos + viewSize},                .texCoords = {windowSize}},
+		sf::Vertex{.position = {viewPos.x, viewPos.y + viewSize.y}, .texCoords = {0.f, windowSize.y}},
 	};
 
 	sf::RenderStates states;
@@ -264,13 +305,23 @@ void SRender::drawHud()
 
 void SRender::update()
 {
-	updateViews();
-	updateConvexPolygons();
-
 	window()->clear(m_properties->get<Color>(ClearColor));
 
-	drawWorld();
+	updateViews();
+
+	sf::Transform worldTransform;
+	// Move the origin from the top-left to the bottom-left corner.
+	worldTransform.translate({0, window()->getView().getSize().y});
+	// Make the Y axis grow upwards.
+	worldTransform.scale({1, -1});
+
+	updateConvexPolygons();
+	drawWorld(worldTransform);
+
+	updateLightMap();
+	drawLights(worldTransform);
 	drawLightMap();
+
 	drawHud();
 
 	window()->display();

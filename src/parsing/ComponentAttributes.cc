@@ -3,6 +3,7 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CInput.hh>
+#include <moot/Component/CLight.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPointable.hh>
 #include <moot/Component/CPosition.hh>
@@ -152,6 +153,13 @@ template<> void parser<CPointable>(const sol::object& data, ComponentCollection*
 	collection->add<CPointable>(std::move(cPointable));
 }
 
+template<> void parser<CLight>(const sol::object& data, ComponentCollection* collection)
+{
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	assert(mapSize == 2);
+	collection->add<CLight>(asColor(map["emission"]), as<float>(map["radius"]));
+}
+
 decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers;
 
 void ComponentAttributes::registerParser(ComponentId cId, Parser parser)
@@ -186,5 +194,6 @@ static struct Init
 		registerComponent<CView>("View");
 		registerComponent<CHudRender>("HudRender");
 		registerComponent<CPointable>("Pointable");
+		registerComponent<CLight>("Light");
 	}
 } _;
