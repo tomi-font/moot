@@ -86,6 +86,11 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 		{
 			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
 		});
+	lua->set_function("getMousePosition",
+		[window]()
+		{
+			return Vector2i(sf::Mouse::getPosition(*window));
+		});
 
 	lua->set_function("mapHudToWorld", &Window::mapHudToWorld, window);
 	lua->set_function("mapPixelToHud", &Window::mapPixelToHud, window);

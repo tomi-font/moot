@@ -34,7 +34,8 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 		"W", sf::Keyboard::Key::W
 	);
 	lua->new_enum("MouseButton",
-		"Left", sf::Mouse::Button::Left
+		"Left", sf::Mouse::Button::Left,
+		"Right", sf::Mouse::Button::Right
 	);
 }
 
@@ -163,11 +164,6 @@ void ComponentAttributes::registerParser(ComponentId cId, Parser parser)
 template<typename C> static sol::object componentGetter(const EntityHandle& entity, lua_State* luaState)
 {
 	return sol::make_object(luaState, entity.get<C*>());
-}
-
-template<> sol::object componentGetter<CPosition>(const EntityHandle& entity, lua_State* luaState)
-{
-	return sol::make_object(luaState, &entity.get<CPosition*>()->mut());
 }
 
 template<typename C> static void registerComponent(std::string name)

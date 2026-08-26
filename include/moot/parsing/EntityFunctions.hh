@@ -13,7 +13,9 @@ public:
 
 	template<typename C> static void registerComponentGetter(ComponentGetter getter)
 	{
-		s_m_componentGetters[CId<C>] = getter;
+		auto& getters = s_m_componentGetters;
+		getters.resize(std::max(getters.size(), std::size_t(CId<C>) + 1));
+		getters[CId<C>] = getter;
 	}
 
 	static ComponentGetter getComponentGetter(ComponentId cId) { return s_m_componentGetters[cId]; }
