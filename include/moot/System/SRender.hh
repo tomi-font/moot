@@ -19,7 +19,9 @@ private:
 	void update() override;
 	void updateViews();
 	void updateConvexPolygons();
-	void drawWorld();
+	void drawWorld(const sf::Transform& worldTransform);
+	void updateLightMap();
+	void drawLights(const sf::Transform& worldTransform);
 	void drawLightMap();
 	void drawHud();
 
