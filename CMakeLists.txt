@@ -12,8 +12,7 @@ target_include_directories(moot SYSTEM INTERFACE include)
 
 target_compile_features(moot PUBLIC cxx_std_26)
 
-# For clangd to not show warnings in header files.
-set(PUBLIC_DISABLED_WARNINGS
+set(DISABLED_WARNINGS
 	c++98-compat
 	c++98-compat-pedantic
 	gnu-anonymous-struct
@@ -21,14 +20,6 @@ set(PUBLIC_DISABLED_WARNINGS
 	nested-anon-types
 	padded
 	pre-c++14-compat
-)
-list(TRANSFORM PUBLIC_DISABLED_WARNINGS PREPEND "-Wno-")
-
-target_compile_options(moot PUBLIC
-	${PUBLIC_DISABLED_WARNINGS}
-)
-
-set(PRIVATE_DISABLED_WARNINGS
 	c99-designator
 	c++20-compat
 	c++20-extensions
@@ -43,12 +34,19 @@ set(PRIVATE_DISABLED_WARNINGS
 	switch-enum
 	unsafe-buffer-usage
 )
-list(TRANSFORM PRIVATE_DISABLED_WARNINGS PREPEND "-Wno-")
+list(TRANSFORM DISABLED_WARNINGS PREPEND "-Wno-")
 
-target_compile_options(moot PRIVATE
-	-Weverything
-	${PRIVATE_DISABLED_WARNINGS}
-)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	target_compile_options(moot PRIVATE
+		-Weverything
+		${DISABLED_WARNINGS}
+	)
+else()
+	target_compile_options(moot PRIVATE
+		-Wall
+		-Wextra
+	)
+endif()
 
 file(GLOB_RECURSE source_files src/*.cc)
 target_sources(moot PRIVATE ${source_files})
