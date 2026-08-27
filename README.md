@@ -10,7 +10,7 @@ This:
 
 #### toolchain
 
-- Clang (for `-Weverything`) with support for C++26
+- C++26
 - CMake >= 3.30
 
 #### libraries
