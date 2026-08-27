@@ -1,9 +1,9 @@
 #pragma once
 
+#include <moot/parsing/sol.hh>
 #include <moot/struct/Color.hh>
 #include <moot/struct/Rect.hh>
 #include <SFML/Graphics/Color.hpp>
-#include <sol/sol.hpp>
 
 template<typename T> T as(const sol::object& var)
 {

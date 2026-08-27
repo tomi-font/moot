@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Entity/Handle.hh>
-#include <sol/sol.hpp>
+#include <moot/parsing/sol.hh>
 
 class EntityFunctions
 {
