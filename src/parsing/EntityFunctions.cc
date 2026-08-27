@@ -60,7 +60,10 @@ static void registerComponentTypes(sol::state* lua)
 	view["setLimits"] = [](CView* cView, sol::object size) { cView->setLimits(asFloatRect(size)); };
 
 	auto position = registerComponent<CPosition>(ct);
-	position["pos"] = sol::property(&CPosition::val, sol::resolve<void(Vector2f)>(&CPosition::operator=));
+	position["x"] = sol::property([](const CPosition& pos) { return pos.val().x; },
+	                              [](CPosition* pos, float x) { pos->mut().x = x; });
+	position["y"] = sol::property([](const CPosition& pos) { return pos.val().y; },
+	                              [](CPosition* pos, float y) { pos->mut().y = y; });
 
 	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
@@ -92,6 +95,10 @@ static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 {
 	et->set("getBoundingBox", Entity::getBoundingBox);
 	et->set("getId", [](const EntityHandle& entity) { return Entity::getId(entity); });
+
+	et->set("position", sol::property(
+		[](const EntityHandle& entity) { return entity.get<CPosition*>(); },
+		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CPosition*>() = pos; }));
 }
 
 void EntityFunctions::registerAll(sol::state* lua)
