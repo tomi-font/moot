@@ -4,6 +4,7 @@
 #include <moot/Event/User.hh>
 #include <moot/Global/Clock.hh>
 #include <moot/Property/User.hh>
+#include <moot/System/Schedule.hh>
 #include <moot/TrackedValue.hh>
 
 class EntityManager;
@@ -21,8 +22,11 @@ public:
 
 	virtual ~System() override;
 
+	auto& schedule() const { return m_schedule; }
+
 	void setEntityManager(EntityManager*);
 	void setWindow(Window*);
+	void setSchedule(SystemSchedule);
 
 	void performUpdate();
 
@@ -46,4 +50,6 @@ private:
 
 	EntityManager* m_entityManager;
 	Window* m_window;
+
+	SystemSchedule m_schedule;
 };

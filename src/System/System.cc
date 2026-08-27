@@ -23,6 +23,13 @@ void System::setWindow(Window* window)
 	m_window = window;
 }
 
+void System::setSchedule(SystemSchedule schedule)
+{
+	assert(m_schedule.phase == SystemSchedule().phase
+	    && m_schedule.order.before == SystemSchedule().order.before);
+	m_schedule = schedule;
+}
+
 void System::performUpdate()
 {
 	const GlobalClock::Ticks thisUpdateTicks = GlobalClock::ticksSinceStart();

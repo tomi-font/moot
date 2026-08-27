@@ -6,27 +6,31 @@ SystemManager::~SystemManager()
 {
 }
 
-void SystemManager::addSystem(std::unique_ptr<System> addedSystem, SystemSchedule schedule)
+void SystemManager::addSystem(std::unique_ptr<System> addedSystem, SystemSchedule addedSchedule)
 {
+	addedSystem->setSchedule(addedSchedule);
 	onSystemAdded(addedSystem.get());
 
-	if (!schedule.order.after)
+	auto systemIt = m_systems.begin();
+	while (systemIt != m_systems.end())
 	{
-		m_systems.push_back(std::move(addedSystem));
-	}
-	else
-	{
-		for (auto systemIt = m_systems.begin(); systemIt != m_systems.end(); ++systemIt)
+		System* system = systemIt->get();
+
+		if (addedSchedule.phase < system->schedule().phase)
+			break;
+		
+		if (addedSchedule.order.before && *addedSchedule.order.before == typeid(*system))
 		{
-			const System* const system = systemIt->get();
-			if (typeid(*system) == *schedule.order.after)
-			{
-				m_systems.insert(systemIt + 1, std::move(addedSystem));
-				return;
-			}
+			assert(addedSchedule.phase == system->schedule().phase);
+		 	goto insert;
 		}
-		assert(false);
+
+		++systemIt;
 	}
+	assert(!addedSchedule.order.before);
+
+insert:
+	m_systems.insert(systemIt, std::move(addedSystem));
 }
 
 void SystemManager::updateSystems() const
