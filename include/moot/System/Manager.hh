@@ -12,9 +12,9 @@ public:
 
 	virtual ~SystemManager();
 
-	template<typename T> inline void addSystem(SystemSchedule schedule)
+	template<typename T> constexpr void addSystem(auto&&... args)
 	{
-		addSystem(std::make_unique<T>(), schedule);
+		addSystem(std::make_unique<T>(), SystemSchedule(std::forward<decltype(args)>(args)...));
 	}
 
 protected:

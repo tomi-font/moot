@@ -18,10 +18,10 @@ Game::Game(std::source_location location) :
 
 	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
 
-	addSystem<SInput>(SystemSchedule::any());
-	addSystem<SPhysics>(SystemSchedule::after<SInput>());
-	addSystem<SRender>(SystemSchedule::after<SPhysics>());
-	addSystem<SCallback>(SystemSchedule::any());
+	addSystem<SInput>(SystemSchedule::Phase::Input);
+	addSystem<SPhysics>(SystemSchedule::Phase::Update);
+	addSystem<SCallback>(SystemSchedule::Phase::Update, SystemSchedule::before<SPhysics>());
+	addSystem<SRender>(SystemSchedule::Phase::Render);
 
 	setEventManager(&m_eventManager);
 	listenTo(EngineEvent::GameClose);
