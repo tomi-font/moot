@@ -17,7 +17,7 @@ public:
 	void operator++() { ++m_idx; }
 };
 
-template<typename C> class ComponentCollectionIterator;
+template<typename ...Cs> class ComponentCollectionIterator;
 
 // Iterates over entities.
 template<> class ComponentCollectionIterator<EntityPointer> : public ComponentCollectionIteratorBase
@@ -28,34 +28,44 @@ public:
 	EntityPointer operator*() const { return {*m_collectionIt, m_idx}; }
 };
 
-// Iterates over components of a same type.
-template<typename C> class ComponentCollectionIterator : public ComponentCollectionIteratorBase
+// Iterates over components of the given types.
+template<typename ...Cs> class ComponentCollectionIterator : public ComponentCollectionIteratorBase
 {
-	const std::vector<C>* m_components;
+	std::tuple<const std::vector<Cs>* ...> m_components;
 
 public:
 	using ComponentCollectionIteratorBase::ComponentCollectionIteratorBase;
 
-	const C& operator*()
+	std::tuple<const Cs&...> operator*()
 	{
 		if (m_idx == 0)
-		{
-			m_components = &(*m_collectionIt)->template getAll<C>();
-			assert(m_components->size() == (*m_collectionIt)->size());
-		}
-		return (*m_components)[m_idx];
+			m_components = {&(*m_collectionIt)->template getAll<Cs>() ...};
+
+		return {(*std::get<const std::vector<Cs>*>(m_components))[m_idx] ...};
 	}
-	const C* operator->() { return &this->operator*(); }
+};
+
+// Additionally yields a pointer to the iterated entity, by value, in front of its components.
+template<typename ...Cs> class ComponentCollectionIterator<EntityPointer, Cs...> : public ComponentCollectionIterator<Cs...>
+{
+public:
+	using ComponentCollectionIterator<Cs...>::ComponentCollectionIterator;
+
+	std::tuple<EntityPointer, const Cs&...> operator*()
+	{
+		return std::tuple_cat(std::tuple<EntityPointer>({*this->m_collectionIt, this->m_idx}),
+		                      ComponentCollectionIterator<Cs...>::operator*());
+	}
 };
 
 // Allows range-based for loop iteration over components of a same type.
-template<typename C> class ComponentCollectionIterable
+template<typename ...Cs> class ComponentCollectionIterable
 {
 	const std::vector<ComponentCollection*>& m_collections;
 
 public:
 	ComponentCollectionIterable(decltype(m_collections) collections) : m_collections(collections) {}
 
-	ComponentCollectionIterator<C> begin() const { return {m_collections.begin()}; }
-	ComponentCollectionIterator<C> end() const { return {m_collections.end()}; }
+	ComponentCollectionIterator<Cs...> begin() const { return {m_collections.begin()}; }
+	ComponentCollectionIterator<Cs...> end() const { return {m_collections.end()}; }
 };
