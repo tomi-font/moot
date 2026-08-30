@@ -30,7 +30,7 @@ enum Q
 	COUNT
 };
 
-static void updateView(const EntityPointer& entity, Window* window)
+static void updateWindowView(const EntityPointer& entity, Window* window)
 {
 	sf::Vector2f center = entity.get<CPosition>();
 	const auto& cView = entity.get<CView>();
@@ -124,7 +124,7 @@ SRender::SRender()
 	m_queries[Q::View] = {{ .required = {CId<CView>},
 		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			updateView(entity, window());
+			updateWindowView(entity, window());
 		}
 	}};
 
@@ -175,7 +175,7 @@ void SRender::updateViews()
 		if (hasChangedSinceLastUpdate(entity.get<CPosition>())
 		 || hasChangedSinceLastUpdate(entity.get<CView>().size()))
 		{
-			updateView(entity, window());
+			updateWindowView(entity, window());
 		}
 	}
 	assert(m_queries[Q::View].getEntityCount() == 1);
@@ -183,14 +183,12 @@ void SRender::updateViews()
 
 void SRender::updateConvexPolygons()
 {
-	for (EntityPointer entity : m_queries[Q::ConvexPolygons])
+	for (auto [entity, cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<EntityPointer, CConvexPolygon, CPosition>())
 	{
-		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
-
 		if (hasChangedSinceLastUpdate(cConvexPolygon.fillColor()))
 			updateConvexPolygonFillColor(entity, cConvexPolygon, &m_drawables.at(Entity::getId(entity)));
 
-		if (hasChangedSinceLastUpdate(entity.get<CPosition>()))
+		if (hasChangedSinceLastUpdate(cPosition))
 		{
 			Drawable& drawable = m_drawables.at(Entity::getId(entity));
 			for (const auto& [vertexType, _] : drawable.vertexViews)

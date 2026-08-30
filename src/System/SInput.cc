@@ -49,9 +49,9 @@ void SInput::update()
 
 		bool eventHasCallback = false;
 
-		for (EntityPointer entity : m_queries[Q::Input])
+		for (auto [entity, cInput] : m_queries[Q::Input].getAll<EntityPointer, CInput>())
 		{
-			if (const auto* callback = entity.get<CInput>().getCallback(*event))
+			if (const auto* callback = cInput.getCallback(*event))
 			{
 				EntityHandle eHandle = entityManager()->makeHandle(entity);
 				(*callback)(eHandle, *event);
@@ -76,18 +76,18 @@ void SInput::updatePointables()
 	const EntityId prevPointedEntityId = m_pointedEntityId;
 	m_pointedEntityId = {};
 
-	for (EntityPointer entity : m_queries[Q::Pointables])
+	for (auto [entity, cPointable, cPosition, cConvexPolygon] : m_queries[Q::Pointables].getAll<EntityPointer, CPointable, CPosition, CConvexPolygon>())
 	{
 		const EntityId eId = Entity::getId(entity);
 		const bool wasPointed = (eId == prevPointedEntityId);
 		const bool isPointed = !m_pointedEntityId && m_mousePos && viewIsNotEmpty
-		                    && entity.get<CConvexPolygon>().contains(mouseWorldPos - entity.get<CPosition>().val());
+		                    && cConvexPolygon.contains(mouseWorldPos - cPosition.val());
 		EntityHandle eHandle = entityManager()->makeHandle(entity);
 
 		if (!wasPointed && isPointed)
-			entity.get<CPointable>().notify(CPointable::PointerEntered, eHandle);
+			cPointable.notify(CPointable::PointerEntered, eHandle);
 		else if (wasPointed && !isPointed)
-			entity.get<CPointable>().notify(CPointable::PointerLeft, eHandle);
+			cPointable.notify(CPointable::PointerLeft, eHandle);
 
 		if (isPointed)
 			m_pointedEntityId = eId;

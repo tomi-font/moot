@@ -26,9 +26,9 @@ SCallback::SCallback()
 
 void SCallback::update()
 {
-	for (EntityPointer entity : m_queries[Q::Callbacks])
+	for (auto [entity, cCallback] : m_queries[Q::Callbacks].getAll<EntityPointer, CCallback>())
 	{
-		if (const auto* onUpdate = entity.get<CCallback>().get(CCallback::OnUpdate))
+		if (const auto* onUpdate = cCallback.get(CCallback::OnUpdate))
 		{
 			EntityHandle eHandle = entityManager()->makeHandle(entity);
 			(*onUpdate)(eHandle);
