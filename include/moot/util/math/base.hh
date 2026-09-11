@@ -10,10 +10,10 @@ template<typename T> T absDiff(T left, T right)
 	return std::abs(left - right);
 }
 
-// Returns the maximum of the absolute values of two numbers.
-template<typename T> T maxAbs(T a, T b)
+// Returns the maximum of the absolute values of the given numbers.
+auto maxAbs(auto... args)
 {
-	return std::max(std::abs(a), std::abs(b));
+	return std::max({std::abs(args)...});
 }
 
 // Returns the epsilon of two numbers.
