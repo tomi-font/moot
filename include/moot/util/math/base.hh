@@ -37,7 +37,7 @@ bool equal(T left, T right)
 }
 
 // Returns 1, -1 or 0 depending on whether num is (strictly) positive, negative, or zero.
-template<typename T> int normalize(T num)
+template<typename T> constexpr int normalize(T num)
 {
 	if (num > 0)
 		return 1;
