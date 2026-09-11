@@ -3,11 +3,11 @@
 #include <moot/Global/Clock.hh>
 #include <utility>
 
-template<typename T> class [[gnu::packed]] TrackedValue  
+template<typename T> class TrackedValue  
 {
 public:
 
-	explicit TrackedValue(T value = {}) : m_lastChangeTicks(), m_value(std::move(value)) {}
+	explicit TrackedValue(T value = {}) : m_value(std::move(value)), m_lastChangeTicks() {}
 
 	const T& val() const { return m_value; }
 	operator const T&() const { return m_value; }
@@ -23,6 +23,6 @@ public:
 
 private:
 
-	GlobalClock::Ticks m_lastChangeTicks;
 	T m_value;
+	GlobalClock::Ticks m_lastChangeTicks;
 };

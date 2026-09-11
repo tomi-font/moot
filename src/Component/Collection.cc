@@ -58,7 +58,7 @@ void ComponentCollection::erase(unsigned index)
 
 void ComponentCollection::add(ComponentId cId, const Operations* ops)
 {
-	assert(m_size == 1 || m_size == 0 && m_comp.empty());
+	assert(m_size == 1 || (m_size == 0 && m_comp.empty()));
 	m_size = 1;
 
 	m_comp += cId;
