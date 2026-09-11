@@ -33,6 +33,7 @@ set(DISABLED_WARNINGS
 	switch-default
 	switch-enum
 	unsafe-buffer-usage
+	shadow-field-in-constructor
 )
 list(TRANSFORM DISABLED_WARNINGS PREPEND "-Wno-")
 
