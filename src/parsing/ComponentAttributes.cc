@@ -71,7 +71,7 @@ template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollect
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& fillColorObj = map["fillColor"];
 	const auto& outlineColorObj = map["outlineColor"];
-	assert(mapSize == 1 + fillColorObj.valid() + outlineColorObj.valid());
+	assert(mapSize == 1u + fillColorObj.valid() + outlineColorObj.valid());
 
 	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
@@ -116,7 +116,7 @@ template<> void parser<CView>(const sol::object& data, ComponentCollection* coll
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
 	const auto& limitsObj = map["limits"];
-	assert(mapSize == sizeObj.valid() + limitsObj.valid());
+	assert(int(mapSize) == sizeObj.valid() + limitsObj.valid());
 	Vector2f size;
 	FloatRect limits;
 
@@ -132,7 +132,7 @@ template<> void parser<CHudRender>(const sol::object& data, ComponentCollection*
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
-	assert(mapSize == 2 + sizeObj.valid());
+	assert(mapSize == 2u + sizeObj.valid());
 	const auto size = sizeObj.valid() ? asVector2f(sizeObj) : sf::Vector2f();
 	collection->add<CHudRender>(asVector2f(map["pos"]), size, asColor(map["color"]));
 }

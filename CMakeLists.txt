@@ -13,6 +13,11 @@ target_include_directories(moot SYSTEM INTERFACE include)
 target_compile_features(moot PUBLIC cxx_std_26)
 
 set(DISABLED_WARNINGS
+	missing-field-initializers
+)
+list(TRANSFORM DISABLED_WARNINGS PREPEND "-Wno-")
+
+set(DISABLED_CLANG_WARNINGS
 	c++98-compat
 	c++98-compat-pedantic
 	gnu-anonymous-struct
@@ -26,7 +31,6 @@ set(DISABLED_WARNINGS
 	exit-time-destructors
 	global-constructors
 	implicit-int-float-conversion
-	missing-field-initializers
 	packed-non-pod
 	pre-c++20-compat-pedantic
 	switch
@@ -35,13 +39,13 @@ set(DISABLED_WARNINGS
 	unsafe-buffer-usage
 	shadow-field-in-constructor
 )
-list(TRANSFORM DISABLED_WARNINGS PREPEND "-Wno-")
+list(TRANSFORM DISABLED_CLANG_WARNINGS PREPEND "-Wno-")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	target_compile_options(moot PRIVATE
 		-Weverything
-		-Winvalid-constexpr
-		${DISABLED_WARNINGS}
+		-Wlarge-by-value-copy
+		${DISABLED_CLANG_WARNINGS}
 	)
 else()
 	target_compile_options(moot PRIVATE
@@ -49,6 +53,12 @@ else()
 		-Wextra
 	)
 endif()
+
+target_compile_options(moot PRIVATE
+	-Winvalid-constexpr
+	-Wframe-larger-than=4096
+	${DISABLED_WARNINGS}
+)
 
 file(GLOB_RECURSE source_files src/*.cc)
 target_sources(moot PRIVATE ${source_files})
