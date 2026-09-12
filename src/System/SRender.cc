@@ -13,6 +13,7 @@
 #include <limits>
 #include <numbers>
 #include <ranges>
+#include <optional>
 
 static constexpr std::string ClearColor = "clearColor";
 static constexpr std::string AmbientLight = "ambientLight";
@@ -155,25 +156,48 @@ void SRender::drawLights()
 	std::vector<sf::Vertex> lightVertices;
 	lightVertices.reserve(3 * FillerRaysPerCircle * m_queries[Q::Lights].getEntityCount() * 2);
 
+	// The occluders are the polygons, one segment per edge. Segments are stored per occluder, contiguously.
+	struct Occluder
+	{
+		const CConvexPolygon* polygon;
+		sf::Vector2f position;
+		unsigned firstSegment;
+		bool containsLight; // Per light; an occluder around the light does not occlude it.
+		float seenAngle; // Per light; the angle its rays cover, out of the angle the occluder spans from it.
+	};
+	constexpr unsigned NoOccluder = -1u;
+	std::vector<Occluder> occluders;
+	occluders.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
 	std::vector<Segment> occluderSegments;
-	occluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount() * 2);
+	occluderSegments.reserve(4 * occluders.capacity());
+	std::vector<unsigned> segmentOccluders; // Index of the occluder each segment belongs to.
+	segmentOccluders.reserve(occluderSegments.capacity());
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		const auto& vertices = cConvexPolygon.vertices();
+		occluders.emplace_back(&cConvexPolygon, cPosition.val(), unsigned(occluderSegments.size()), false, 0.f);
 		for (unsigned i = 0; i != vertices.size(); ++i)
 		{
 			occluderSegments.emplace_back(cPosition.val() + vertices[i],
 			                              cPosition.val() + vertices[(i + 1) % vertices.size()]);
+			segmentOccluders.push_back(unsigned(occluders.size()) - 1);
 		}
 	}
 
 	std::vector<float> rayAngles;
 	std::vector<sf::Vertex> rayVertices;
+	std::vector<unsigned> rayOccluders; // The one each ray hits, or NoOccluder when the ray reaches the radius.
 
 	for (auto [cPosition, cLight] : m_queries[Q::Lights].getAll<CPosition, CLight>())
 	{
 		const float lightRadiusSquared = cLight.radius() * cLight.radius();
+
+		for (Occluder& occluder : occluders)
+		{
+			occluder.containsLight = occluder.polygon->contains(cPosition.val() - occluder.position);
+			occluder.seenAngle = 0;
+		}
 
 		rayAngles.clear();
 
@@ -199,8 +223,12 @@ void SRender::drawLights()
 			rayAngles.append_range(std::array{angle - angularClearance, angle, angle + angularClearance});
 		};
 		
-		for (const Segment& segment : occluderSegments)
+		for (const unsigned segmentIndex : std::views::iota(0u, occluderSegments.size()))
 		{
+			if (occluders[segmentOccluders[segmentIndex]].containsLight)
+				continue;
+			const Segment& segment = occluderSegments[segmentIndex];
+
 			// Find where the segment crosses the light's circle: points lightToSegmentStart + fraction * segment.vector
 			// whose distance to the light equals the radius. Squaring both sides gives a quadratic in the fraction.
 			const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val(); 
@@ -254,48 +282,109 @@ void SRender::drawLights()
 		}
 
 		rayVertices.resize(rayAngles.size());
+		rayOccluders.resize(rayAngles.size());
 
 		for (const unsigned i : std::views::iota(0u, rayAngles.size()))
 		{
 			const float rayAngle = rayAngles[i];
 			const sf::Vector2f rayDirection = {std::cos(rayAngle), std::sin(rayAngle)};
 
-			float closestHitDistance = cLight.radius();
-
-			for (const Segment& segment : occluderSegments)
+			// Where the ray hits the segment, if it does before maxDistance.
+			const auto hitDistance = [&](const Segment& segment, float maxDistance) -> std::optional<float>
 			{
 				// Can be 0 when the ray is parallel to the segment; using negated comparisons to handle that.
 				const float determinant = crossProduct(rayDirection, segment.vector);
-				
+
 				const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val();
-				
-				const float hitDistance = crossProduct(lightToSegmentStart, segment.vector) / determinant;
-				if (!(hitDistance >= 0 && hitDistance < closestHitDistance))
-					continue;
-				
+
+				const float distance = crossProduct(lightToSegmentStart, segment.vector) / determinant;
+				if (!(distance >= 0 && distance < maxDistance))
+					return {};
+
 				const float segmentFraction = crossProduct(lightToSegmentStart, rayDirection) / determinant;
 				if (!(segmentFraction >= 0 && segmentFraction <= 1))
+					return {};
+
+				return distance;
+			};
+
+			// The nearest hit and the occluder it is on.
+			float nearestDistance = cLight.radius();
+			unsigned nearestOccluder = NoOccluder;
+
+			for (const unsigned segmentIndex : std::views::iota(0u, occluderSegments.size()))
+			{
+				const unsigned occluder = segmentOccluders[segmentIndex];
+				if (occluders[occluder].containsLight)
 					continue;
 
-				closestHitDistance = hitDistance;
+				const std::optional<float> distance = hitDistance(occluderSegments[segmentIndex], nearestDistance);
+				if (distance)
+				{
+					nearestDistance = *distance;
+					nearestOccluder = occluder;
+				}
 			}
 
-			const float brightness = 1 - closestHitDistance / cLight.radius();
+			// The ray stops at the first polygon it hits; that polygon is lit afterwards, as a whole.
+			rayOccluders[i] = nearestOccluder;
+			const float brightness = 1 - nearestDistance / cLight.radius();
 
 			rayVertices[i].color.r = std::uint8_t(cLight.emission().r * brightness);
 			rayVertices[i].color.g = std::uint8_t(cLight.emission().g * brightness);
 			rayVertices[i].color.b = std::uint8_t(cLight.emission().b * brightness);
 
-			rayVertices[i].position = cPosition.val() + rayDirection * closestHitDistance;
+			rayVertices[i].position = cPosition.val() + rayDirection * nearestDistance;
 		}
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
 		{
 			const unsigned next = (i + 1) % rayVertices.size();
 
+			// Between two rays hitting the same polygon, the light sees that polygon.
+			if (rayOccluders[i] != NoOccluder && rayOccluders[i] == rayOccluders[next])
+			{
+				// Negative for a corner straddling +- pi, like any small gap.
+				const float gap = (next != 0) ? rayAngles[next] - rayAngles[i]
+				                              : 2 * std::numbers::pi_v<float> - (rayAngles[i] - rayAngles[next]);
+				occluders[rayOccluders[i]].seenAngle += std::max(gap, 0.f);
+			}
+
 			lightVertices.emplace_back(cPosition.val(), cLight.emission());
 			lightVertices.emplace_back(rayVertices[i]);
 			lightVertices.emplace_back(rayVertices[next]);
+		}
+
+		// The polygons the rays hit stand in the light: each is lit over its whole footprint, as a thing of
+		// its own, with no shadow from the polygons around it, by as much of it as the light sees, the angle
+		// its rays cover out of the angle it spans from the light, so that a polygon sliding behind another
+		// fades rather than switching off with its last ray. Its faces and top show that. The light does not
+		// pass from one polygon into another: what the ray would have lit beyond the polygon stays dark.
+		for (const Occluder& occluder : occluders)
+		{
+			if (occluder.seenAngle <= 0)
+				continue;
+
+			// How far the vertices swing either side of the direction to the center.
+			const auto& vertices = occluder.polygon->vertices();
+			const sf::Vector2f toCenter = occluder.position + occluder.polygon->getCentroid() - cPosition.val();
+			float leftmost = 0, rightmost = 0;
+			for (const sf::Vector2f& vertex : vertices)
+			{
+				const float swing = toCenter.angleTo(occluder.position + vertex - cPosition.val()).asRadians();
+				leftmost = std::max(leftmost, swing);
+				rightmost = std::min(rightmost, swing);
+			}
+			const float seen = std::min(occluder.seenAngle / (leftmost - rightmost), 1.f);
+
+			const auto vertex = [&](std::size_t i)
+			{
+				const sf::Vector2f offset = occluder.position + vertices[i] - cPosition.val();
+				const float brightness = seen * std::max(1 - offset.length() / cLight.radius(), 0.f);
+				return sf::Vertex(cPosition.val() + offset, cLight.emission() * brightness);
+			};
+			for (std::size_t i = 1; i + 1 < vertices.size(); ++i)
+				lightVertices.append_range(std::array{vertex(0), vertex(i), vertex(i + 1)});
 		}
 	}
 
@@ -374,8 +463,9 @@ void SRender::drawExtrusions()
 	worldToLightMapTransform.scale(lightMapSize.componentWiseDiv(viewSize));
 	worldToLightMapTransform.translate(-viewTopLeft);
 	worldToLightMapTransform.combine(window()->worldToViewTransform());
-	// A face is lit by the ground at its foot, so it samples the light map just outside its footprint: the
-	// interior would lie about the light, and the edge itself is noisy. In world units, this many pixels out.
+	// A face is lit by the ground right at its foot, a top by the light drawn over the footprint (see
+	// drawLights); both are sampled a few pixels away from the footprint's edge, where the filtering mixes
+	// the two. In world units, this many pixels out.
 	constexpr float LightSamplePixels = 3;
 	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
 	// How much a unit of height rises on screen.
@@ -416,8 +506,8 @@ void SRender::drawExtrusions()
 			const sf::Vector2f b = points[j];
 			const sf::Vector2f edge = b - a;
 
-			// The top face samples the light just outside each corner, along the vertex normal (the mean of its edges' normals).
-			const sf::Vector2f cornerOffset = (edgeNormals[i] + edgeNormals[(i + vertexCount - 1) % vertexCount]).normalized() * lightSampleOffset;
+			// The top face samples the light just inside each corner, along the vertex normal (the mean of its edges' normals).
+			const sf::Vector2f cornerOffset = (edgeNormals[i] + edgeNormals[(i + vertexCount - 1) % vertexCount]).normalized() * -lightSampleOffset;
 			topVertices[i] = {a + up, topColor, worldToLightMapTransform.transformPoint(worldPoints[i] + cornerOffset)};
 			if (i >= 2)
 				m_passVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
