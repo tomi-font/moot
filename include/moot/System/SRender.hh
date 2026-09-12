@@ -23,6 +23,7 @@ private:
 	void updateLightMap();
 	void drawLights();
 	void drawLightMap();
+	void drawExtrusions();
 	void drawHud();
 
 	std::unordered_map<EntityId, struct Drawable> m_drawables;

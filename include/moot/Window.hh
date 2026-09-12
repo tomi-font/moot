@@ -7,8 +7,8 @@ class Window : public sf::RenderWindow
 {
 public:
 
-	auto& worldTransform() const { return m_worldTransform; }
-	void setWorldTransform(const sf::Transform& transform) { m_worldTransform = transform; }
+	auto& worldToViewTransform() const { return m_worldToViewTransform; }
+	void setWorldToViewTransform(const sf::Transform& transform) { m_worldToViewTransform = transform; }
 
 	Vector2f mapPixelToWorld(const Vector2i& pos) const;
 	Vector2f mapPixelToHud(const Vector2i& pos) const;
@@ -21,5 +21,5 @@ private:
 	void mapPixelToCoords();
 	void mapCoordsToPixel();
 
-	sf::Transform m_worldTransform;
+	sf::Transform m_worldToViewTransform;
 };
