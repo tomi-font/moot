@@ -17,6 +17,7 @@ private:
 
 	void update() override;
 	void updateCameras();
+	void updateCamera(const EntityPointer&);
 	void drawPolygons();
 	void updateLightMap();
 	void drawLights();

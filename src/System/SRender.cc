@@ -37,7 +37,7 @@ static sf::Transform groundToViewTransform(const sf::Vector2f& viewSize)
 	return transform;
 }
 
-static void updateCamera(const EntityPointer& entity, Window* window)
+void SRender::updateCamera(const EntityPointer& entity)
 {
 	sf::Vector2f center = entity.get<CPosition>();
 	const auto& cCamera = entity.get<CCamera>();
@@ -59,12 +59,22 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldToViewTransform = groundToViewTransform(size) * cCamera.getGroundTransform();
+	const sf::Transform ground = cCamera.getGroundTransform();
+	const sf::Transform flip = groundToViewTransform(size);
+	center = ground.transformPoint(center);
 
-	center = worldToViewTransform.transformPoint(center);
+	// The lower the camera, the more of the plane ahead of the entity (up the screen) is shown: centered when
+	// looking straight down, up to this fraction of the view towards the horizon, most of it coming in the
+	// last degrees (a view height shows size.y / sin(elevation) of plane, so that is where the depth behind
+	// the entity would balloon).
+	constexpr float MaxLookAheadFraction = 0.3f;
+	const float lookAhead = MaxLookAheadFraction * size.y * (1 - std::sin(cCamera.elevation()));
+	center.y += lookAhead;
 
-	window->setView({center, size});
-	window->setWorldToViewTransform(worldToViewTransform);
+	center = flip.transformPoint(center);
+
+	window()->setView({center, size});
+	window()->setWorldToViewTransform(flip * ground);
 }
 
 SRender::SRender()
@@ -74,7 +84,7 @@ SRender::SRender()
 	m_queries[Q::Camera] = {{ .required = {CId<CCamera>},
 		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			updateCamera(entity, window());
+			updateCamera(entity);
 		}
 	}};
 
@@ -93,14 +103,15 @@ void SRender::initializeProperties()
 
 void SRender::updateCameras()
 {
-	for (auto [entity, cPosition, cCamera] : m_queries[Q::Camera].getAll<EntityPointer, CPosition, CCamera>())
+	for (EntityPointer entity : m_queries[Q::Camera])
 	{
-		if (hasChangedSinceLastUpdate(cPosition)
+		const auto& cCamera = entity.get<CCamera>();
+		if (hasChangedSinceLastUpdate(entity.get<CPosition>())
 		 || hasChangedSinceLastUpdate(cCamera.size())
 		 || hasChangedSinceLastUpdate(cCamera.elevation())
 		 || hasChangedSinceLastUpdate(cCamera.rotation()))
 		{
-			updateCamera(entity, window());
+			updateCamera(entity);
 		}
 	}
 	assert(m_queries[Q::Camera].getEntityCount() == 1);
