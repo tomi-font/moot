@@ -125,7 +125,7 @@ ComponentCollection* EntityManager::addComponentTo(const EntityPointer& entity, 
 
 	EntityToChange* entityToChange = registerEntityToChange(entity);
 	assert(!entityToChange->toRemove.has(cId));
-	checkComponentComposition(entity.comp() += cId + entityToChange->toAdd.comp() - entityToChange->toRemove + cId);
+	checkComponentComposition(entity.comp() + entityToChange->toAdd.comp() - entityToChange->toRemove + ComponentComposition(cId));
 
 	return &entityToChange->toAdd;
 }
