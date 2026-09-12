@@ -39,6 +39,7 @@ set(DISABLED_CLANG_WARNINGS
 	unsafe-buffer-usage
 	shadow-field-in-constructor
 	weak-vtables
+	float-equal
 )
 list(TRANSFORM DISABLED_CLANG_WARNINGS PREPEND "-Wno-")
 

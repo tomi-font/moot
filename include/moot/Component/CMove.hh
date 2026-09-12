@@ -5,15 +5,15 @@
 // This component handles voluntary moving only.
 struct CMove
 {
-	CMove(unsigned short speed) : m_speed(speed) {}
+	CMove(float speed) : m_speed(speed) {}
 
 	auto& velocity() const { return m_velocity; }
 
-	void setXMotion(int direction);
+	void setMotion(const sf::Vector2f& direction);
 
 private:
 
 	sf::Vector2f m_velocity;
 
-	unsigned short m_speed;
+	float m_speed;
 };
