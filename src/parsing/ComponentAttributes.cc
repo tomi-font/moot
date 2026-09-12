@@ -12,6 +12,7 @@
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
+#include <SFML/System/Angle.hpp>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
 
@@ -116,16 +117,27 @@ template<> void parser<CCamera>(const sol::object& data, ComponentCollection* co
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
 	const auto& limitsObj = map["limits"];
-	assert(int(mapSize) == sizeObj.valid() + limitsObj.valid());
+	const auto& elevationObj = map["elevation"];
+	const auto& rotationObj = map["rotation"];
+	assert(int(mapSize) == sizeObj.valid() + limitsObj.valid() + elevationObj.valid() + rotationObj.valid());
+
 	Vector2f size;
 	FloatRect limits;
+	float elevation = CCamera::MaxElevation;
+	float rotation = 0;
 
 	if (sizeObj.valid())
 		size = asVector2f(sizeObj);
 	if (limitsObj.valid())
 		limits = asFloatRect(limitsObj);
 
-	collection->add<CCamera>(size, limits);
+	// Angles are given in degrees.
+	if (elevationObj.valid())
+		elevation = sf::degrees(as<float>(elevationObj)).asRadians();
+	if (rotationObj.valid())
+		rotation = sf::degrees(as<float>(rotationObj)).asRadians();
+
+	collection->add<CCamera>(size, limits, elevation, rotation);
 }
 
 template<> void parser<CHudRender>(const sol::object& data, ComponentCollection* collection)
@@ -133,6 +145,7 @@ template<> void parser<CHudRender>(const sol::object& data, ComponentCollection*
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
 	assert(mapSize == 2u + sizeObj.valid());
+
 	const auto size = sizeObj.valid() ? asVector2f(sizeObj) : sf::Vector2f();
 	collection->add<CHudRender>(asVector2f(map["pos"]), size, asColor(map["color"]));
 }

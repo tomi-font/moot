@@ -1,10 +1,24 @@
 #include <moot/Component/CCamera.hh>
 #include <moot/struct/Vector2.hh>
+#include <algorithm>
 #include <cassert>
+#include <cmath>
+
+CCamera::CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation, float rotation) :
+	m_size(size),
+	m_rotation(rotation),
+	m_limits(limits)
+{
+	setElevation(elevation);
+	calculateNewSize();
+}
 
 void CCamera::calculateNewSize()
 {
-	Vector2f viewSize(m_size);
+	Vector2f viewSize = m_size;
+
+	if (viewSize.min() <= 0)
+		return;
 
 	if (!m_limits.isEmpty())
 	{
@@ -43,4 +57,19 @@ void CCamera::setLimits(const FloatRect& limits)
 	assert(limits.hasPositiveArea());
 	m_limits = limits;
 	calculateNewSize();
+}
+
+void CCamera::setElevation(float radians)
+{
+	assert(radians >= MinElevation && radians <= MaxElevation);
+	m_elevation = radians;
+}
+
+sf::Transform CCamera::getGroundTransform() const
+{
+	// SFML post-multiplies: the rotation below is applied to points first.
+	sf::Transform transform;
+	transform.scale({1, std::sin(m_elevation)});
+	transform.rotate(sf::radians(m_rotation));
+	return transform;
 }
