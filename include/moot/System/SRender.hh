@@ -4,6 +4,7 @@
 #include <vector>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/Transform.hpp>
 
 class SRender final : public System
 {
@@ -22,8 +23,14 @@ private:
 	void updateLightMap();
 	void drawLights();
 	void drawLightMap();
+	sf::Transform lightMapTransform() const;
+	sf::View lightMapView() const;
 	void drawExtrusions();
 	void drawHud();
+
+	// The part of the plane the light map covers, in rotated but not squashed coordinates (see updateCamera).
+	sf::Vector2f m_lightMapCenter;
+	sf::Vector2f m_lightMapSize;
 
 	// The vertices of the pass being drawn, kept to spare the allocation.
 	std::vector<sf::Vertex> m_passVertices;

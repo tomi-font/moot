@@ -2,6 +2,7 @@
 
 #include <moot/TrackedValue.hh>
 #include <moot/struct/Rect.hh>
+#include <cmath>
 #include <numbers>
 #include <SFML/Graphics/Transform.hpp>
 
@@ -9,9 +10,14 @@ class CCamera
 {
 public:
 
+	// How far the camera sees along the plane, in view heights: the light map covers that much, no more.
+	static constexpr float MaxShownViewHeights = 10;
+
 	// The angle between the ground and the line of sight, in radians: pi/2 looks straight at the world plane
-	// (top-down or side view), smaller angles tilt the camera towards the horizon (oblique, isometric).
-	static constexpr float MinElevation = std::numbers::pi_v<float> / 180; // 1 degree
+	// (top-down or side view), smaller angles tilt the camera towards the horizon (oblique, isometric). A view
+	// height shows 1 / sin(elevation) view heights of plane, so the camera stops where that reaches how far it
+	// sees: lower, the far part of the screen would go unlit.
+	inline static const float MinElevation = std::asin(1 / MaxShownViewHeights); // About 5.7 degrees.
 	static constexpr float MaxElevation = std::numbers::pi_v<float> / 2;
 
 	CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation, float rotation);

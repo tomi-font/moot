@@ -8,7 +8,9 @@
 #include <moot/util/math/geometry.hh>
 #include <moot/util/math/Segment.hh>
 #include <moot/Window.hh>
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -60,8 +62,6 @@ void SRender::updateCamera(const EntityPointer& entity)
 	}
 
 	const sf::Transform ground = cCamera.getGroundTransform();
-	const sf::Transform flip = groundToViewTransform(size);
-	center = ground.transformPoint(center);
 
 	// The lower the camera, the more of the plane ahead of the entity (up the screen) is shown: centered when
 	// looking straight down, up to this fraction of the view towards the horizon, most of it coming in the
@@ -69,6 +69,18 @@ void SRender::updateCamera(const EntityPointer& entity)
 	// the entity would balloon).
 	constexpr float MaxLookAheadFraction = 0.3f;
 	const float lookAhead = MaxLookAheadFraction * size.y * (1 - std::sin(cCamera.elevation()));
+
+	// The light map is computed on the plane itself, rotated but not squashed, so that the light keeps its area
+	// however low the camera is; it covers what the screen shows of the plane, which is deeper the lower the camera.
+	// Capped (at about 6 degrees) since it is infinite at the horizon.
+	const float squash = std::max(std::sin(cCamera.elevation()), 1 / CCamera::MaxShownViewHeights);
+	sf::Transform rotation;
+	rotation.rotate(sf::radians(cCamera.rotation()));
+	m_lightMapCenter = rotation.transformPoint(center) + sf::Vector2f(0, lookAhead / squash);
+	m_lightMapSize = {size.x, size.y / squash};
+
+	const sf::Transform flip = groundToViewTransform(size);
+	center = ground.transformPoint(center);
 	center.y += lookAhead;
 
 	center = flip.transformPoint(center);
@@ -146,17 +158,40 @@ void SRender::drawPolygons()
 	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
 }
 
+// Maps the world onto the light map, like the world-to-view transform but without the squash.
+sf::Transform SRender::lightMapTransform() const
+{
+	const auto& cCamera = m_queries[Q::Camera].getSingleEntity().get<CCamera>();
+	sf::Transform rotation;
+	rotation.rotate(sf::radians(cCamera.rotation()));
+	return groundToViewTransform(m_lightMapSize) * rotation;
+}
+
+sf::View SRender::lightMapView() const
+{
+	// Flipped like the window's view (see updateCamera).
+	return {{m_lightMapCenter.x, m_lightMapSize.y - m_lightMapCenter.y}, m_lightMapSize};
+}
+
 void SRender::updateLightMap()
 {
+	// The deeper the plane the light map covers, the taller its texture, to keep its texels about square:
+	// the extrusions sample it right by their footprint, where a texel straddling the edge shows as stripes.
+	// In powers of two, so that a moving camera does not resize it every frame.
+	constexpr unsigned MaxHeight = 4096;
 	const sf::Vector2u& windowSize = window()->getSize();
-	if (m_lightMap.getSize() != windowSize)
+	const float depthRatio = m_lightMapSize.y / window()->getView().getSize().y;
+	const auto wantedHeight = std::min(MaxHeight, std::max(windowSize.y, unsigned(windowSize.y * depthRatio)));
+	const sf::Vector2u size = {windowSize.x, std::bit_ceil(wantedHeight)};
+	if (m_lightMap.getSize() != size)
 	{
-		bool success = m_lightMap.resize(windowSize);
+		bool success = m_lightMap.resize(size);
 		assert(success);
+		m_lightMap.setSmooth(true);
 	}
 
 	m_lightMap.clear(m_properties->get<Color>(AmbientLight));
-	m_lightMap.setView(window()->getView());
+	m_lightMap.setView(lightMapView());
 }
 
 void SRender::drawLights()
@@ -401,33 +436,60 @@ void SRender::drawLights()
 
 	sf::RenderStates states;
 	states.blendMode = sf::BlendAdd;
-	states.transform = window()->worldToViewTransform();
+	states.transform = lightMapTransform();
 
 	m_lightMap.draw(lightVertices.data(), lightVertices.size(), sf::PrimitiveType::Triangles, states);
 }
 
+// Multiplies the screen by the light map where the plane it covers shows, and by the ambient light elsewhere
+// (above and below it, once the camera is low enough for the light map's cap to leave some screen uncovered).
 void SRender::drawLightMap()
 {
+	const auto& cCamera = m_queries[Q::Camera].getSingleEntity().get<CCamera>();
 	m_lightMap.display();
 
 	const sf::View& view = window()->getView();
 	const sf::Vector2f viewSize = view.getSize();
-	const sf::Vector2f viewPos = view.getCenter() - viewSize / 2.f;
-	const sf::Vector2f windowSize = sf::Vector2f(window()->getSize());
+	const sf::Vector2f viewTopLeft = view.getCenter() - viewSize / 2.f;
+	const sf::Vector2f textureSize = sf::Vector2f(m_lightMap.getSize());
+
+	// The light map's rectangle on screen: squashed by the elevation (it is already rotated), then flipped like the world.
+	sf::Transform toScreen = groundToViewTransform(viewSize);
+	toScreen.scale({1, std::sin(cCamera.elevation())});
+	const sf::Vector2f halfSize = m_lightMapSize / 2.f;
+	const auto corner = [&](float dx, float dy) { return toScreen.transformPoint(m_lightMapCenter + sf::Vector2f(dx * halfSize.x, dy * halfSize.y)); };
 
 	const std::array<sf::Vertex, 4> corners =
 	{
-		sf::Vertex{.position = {viewPos},                           .texCoords = {0.f, 0.f}},
-		sf::Vertex{.position = {viewPos.x + viewSize.x, viewPos.y}, .texCoords = {windowSize.x, 0.f}},
-		sf::Vertex{.position = {viewPos + viewSize},                .texCoords = {windowSize}},
-		sf::Vertex{.position = {viewPos.x, viewPos.y + viewSize.y}, .texCoords = {0.f, windowSize.y}},
+		sf::Vertex{.position = corner(-1, +1), .texCoords = {0.f, 0.f}},
+		sf::Vertex{.position = corner(+1, +1), .texCoords = {textureSize.x, 0.f}},
+		sf::Vertex{.position = corner(+1, -1), .texCoords = {textureSize}},
+		sf::Vertex{.position = corner(-1, -1), .texCoords = {0.f, textureSize.y}},
 	};
 
 	sf::RenderStates states;
 	states.blendMode = sf::BlendMultiply;
 	states.texture = &m_lightMap.getTexture();
-
 	window()->draw(corners.data(), corners.size(), sf::PrimitiveType::TriangleFan, states);
+
+	const float top = corners[0].position.y;
+	const float bottom = corners[3].position.y;
+	const float viewBottom = viewTopLeft.y + viewSize.y;
+	states.texture = nullptr;
+	sf::RectangleShape band;
+	band.setFillColor(m_properties->get<Color>(AmbientLight));
+	if (top > viewTopLeft.y)
+	{
+		band.setPosition(viewTopLeft);
+		band.setSize({viewSize.x, top - viewTopLeft.y});
+		window()->draw(band, states);
+	}
+	if (bottom < viewBottom)
+	{
+		band.setPosition({viewTopLeft.x, bottom});
+		band.setSize({viewSize.x, viewBottom - bottom});
+		window()->draw(band, states);
+	}
 }
 
 // Raises the polygons that have a height above the world plane, as seen from the camera's elevation:
@@ -498,20 +560,21 @@ void SRender::drawExtrusions()
 	}
 	constexpr std::uint8_t HidingAlpha = 90;
 
-	const sf::View& view = window()->getView();
-	const sf::Vector2f viewSize = view.getSize();
-	const sf::Vector2f viewTopLeft = view.getCenter() - viewSize / 2.f;
-	const sf::Vector2f lightMapSize(m_lightMap.getSize());
-	// From world coordinates to light-map texels, in one go: into the view, then into the map.
+	const sf::Transform toLightMap = lightMapTransform();
+	const sf::View lightMapView = this->lightMapView();
+	const sf::Vector2f lightMapTopLeft = lightMapView.getCenter() - lightMapView.getSize() / 2.f;
+	const sf::Vector2f textureSize(m_lightMap.getSize());
+	// From world coordinates to light-map texels, in one go: onto the plane the map covers, then into the map.
 	sf::Transform worldToLightMapTransform;
-	worldToLightMapTransform.scale(lightMapSize.componentWiseDiv(viewSize));
-	worldToLightMapTransform.translate(-viewTopLeft);
-	worldToLightMapTransform.combine(window()->worldToViewTransform());
+	worldToLightMapTransform.scale(textureSize.componentWiseDiv(m_lightMapSize));
+	worldToLightMapTransform.translate(-lightMapTopLeft);
+	worldToLightMapTransform.combine(toLightMap);
 	// A face is lit by the ground right at its foot, a top by the light drawn over the footprint (see
-	// drawLights); both are sampled a few pixels away from the footprint's edge, where the filtering mixes
-	// the two. In world units, this many pixels out.
-	constexpr float LightSamplePixels = 3;
-	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
+	// drawLights); both are sampled a few texels away from the footprint's edge, where the filtering mixes
+	// the two. In world units, this many texels out, along the larger texel side.
+	constexpr float LightSampleTexels = 3;
+	const sf::Vector2f texelSize = m_lightMapSize.componentWiseDiv(textureSize);
+	const float lightSampleOffset = LightSampleTexels * std::max(texelSize.x, texelSize.y);
 
 	m_passVertices.clear();
 	m_passVertices.reserve((6 + 3) * 4 * extrusions.size() * 2);
@@ -576,7 +639,7 @@ void SRender::drawExtrusions()
 	}
 
 	sf::RenderStates states;
-	states.transform = groundToViewTransform(viewSize);
+	states.transform = groundToViewTransform(window()->getView().getSize());
 	states.texture = &m_lightMap.getTexture();
 
 	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, states);
