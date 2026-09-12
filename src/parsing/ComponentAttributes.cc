@@ -28,13 +28,27 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	et["MouseButtonPress"] = [](sf::Mouse::Button button) -> sf::Event { return sf::Event::MouseButtonPressed{.button = button}; };
 	et["MouseButtonRelease"] = [](sf::Mouse::Button button) -> sf::Event { return sf::Event::MouseButtonReleased{.button = button}; };
 
-	lua->new_enum("Key",
-		"A", sf::Keyboard::Key::A,
-		"D", sf::Keyboard::Key::D,
-		"Q", sf::Keyboard::Key::Q,
-		"S", sf::Keyboard::Key::S,
-		"W", sf::Keyboard::Key::W
-	);
+	using Key = sf::Keyboard::Key;
+	auto keys = lua->create_table("Key");
+
+	static_assert(int(Key::Z) - int(Key::A) == 'Z' - 'A');
+	for (char letter = 'A'; letter <= 'Z'; ++letter)
+		keys[std::string(1, letter)] = Key(int(Key::A) + letter - 'A');
+
+	static_assert(int(Key::Num9) - int(Key::Num0) == 9);
+	for (char digit = '0'; digit <= '9'; ++digit)
+		keys["Num" + std::string(1, digit)] = Key(int(Key::Num0) + digit - '0');
+
+	keys["Left"] = Key::Left;
+	keys["Right"] = Key::Right;
+	keys["Up"] = Key::Up;
+	keys["Down"] = Key::Down;
+	keys["Space"] = Key::Space;
+	keys["Enter"] = Key::Enter;
+	keys["Escape"] = Key::Escape;
+	keys["LShift"] = Key::LShift;
+	keys["LControl"] = Key::LControl;
+
 	lua->new_enum("MouseButton",
 		"Left", sf::Mouse::Button::Left,
 		"Right", sf::Mouse::Button::Right
