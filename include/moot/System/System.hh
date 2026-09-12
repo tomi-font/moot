@@ -20,7 +20,7 @@ public:
 	System(const System&) = delete;
 	System& operator=(const System&) = delete;
 
-	virtual ~System() override;
+	~System() override;
 
 	auto& schedule() const { return m_schedule; }
 
@@ -34,7 +34,7 @@ protected:
 
 	System();
 
-	template<typename T> inline bool hasChangedSinceLastUpdate(const TrackedValue<T>& tv)
+	template<typename T> bool hasChangedSinceLastUpdate(const TrackedValue<T>& tv)
 	{
 		return tv.hasChangedSince(m_lastUpdateTicks);
 	}
