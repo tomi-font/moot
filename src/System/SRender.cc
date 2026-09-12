@@ -562,9 +562,10 @@ void SRender::drawExtrusions()
 				continue;
 
 			// Shaded by how much the face turns towards the camera, as if it were a light: a face
-			// is as dark as it is thin. That is the share of the edge running across the screen.
-			// A stand-in until faces are lit by the actual lights.
-			const sf::Color sideColor = topColor * (edge.x / edge.length());
+			// is as dark as it is thin. That is the share of the edge running across the screen, out of
+			// its length before the squash: the squashed length shrinks to that share as the camera nears
+			// the horizon. A stand-in until faces are lit by the actual lights.
+			const sf::Color sideColor = topColor * (edge.x / (vertices[j] - vertices[i]).length());
 			const sf::Vector2f offset = edgeNormals[i] * lightSampleOffset;
 			const sf::Vertex baseA = {a, sideColor, worldToLightMapTransform.transformPoint(worldPoints[i] + offset)};
 			const sf::Vertex baseB = {b, sideColor, worldToLightMapTransform.transformPoint(worldPoints[j] + offset)};
