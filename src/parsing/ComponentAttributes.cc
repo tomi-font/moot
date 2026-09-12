@@ -86,7 +86,7 @@ template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollect
 template<> void parser<CMove>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& map = asLuaMap<1>(data);
-	collection->add<CMove>(as<unsigned short>(map["speed"]));
+	collection->add<CMove>(as<float>(map["speed"]));
 }
 
 template<> void parser<CInput>(const sol::object& data, ComponentCollection* collection)
