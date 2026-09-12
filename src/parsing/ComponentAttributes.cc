@@ -8,7 +8,7 @@
 #include <moot/Component/CPointable.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CView.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
@@ -111,7 +111,7 @@ template<> void parser<CRigidbody>(const sol::object& data, ComponentCollection*
 	collection->add<CRigidbody>();
 }
 
-template<> void parser<CView>(const sol::object& data, ComponentCollection* collection)
+template<> void parser<CCamera>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& sizeObj = map["size"];
@@ -125,7 +125,7 @@ template<> void parser<CView>(const sol::object& data, ComponentCollection* coll
 	if (limitsObj.valid())
 		limits = asFloatRect(limitsObj);
 
-	collection->add<CView>(size, limits);
+	collection->add<CCamera>(size, limits);
 }
 
 template<> void parser<CHudRender>(const sol::object& data, ComponentCollection* collection)
@@ -191,7 +191,7 @@ static struct Init
 		registerComponent<CInput>("Input");
 		registerComponent<CCollisionBox>("CollisionBox");
 		registerComponent<CRigidbody>("Rigidbody");
-		registerComponent<CView>("View");
+		registerComponent<CCamera>("Camera");
 		registerComponent<CHudRender>("HudRender");
 		registerComponent<CPointable>("Pointable");
 		registerComponent<CLight>("Light");

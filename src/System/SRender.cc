@@ -3,7 +3,7 @@
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CPosition.hh>
-#include <moot/Component/CView.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
 #include <moot/util/iota_view.hh>
 #include <moot/util/math/geometry.hh>
@@ -27,23 +27,23 @@ static constexpr std::string AmbientLight = "ambientLight";
 // Indices for this system's queries.
 enum Q
 {
-	View,
+	Camera,
 	ConvexPolygons,
 	HudRendered,
 	Lights,
 	COUNT
 };
 
-static void updateWindowView(const EntityPointer& entity, Window* window)
+static void updateCamera(const EntityPointer& entity, Window* window)
 {
 	sf::Vector2f center = entity.get<CPosition>();
-	const auto& cView = entity.get<CView>();
-	const sf::Vector2f& size = cView.size();
+	const auto& cCamera = entity.get<CCamera>();
+	const sf::Vector2f& size = cCamera.size();
 
 	if (entity.has<CConvexPolygon>())
 		center += entity.get<CConvexPolygon>().getCentroid();
 
-	if (const FloatRect& limits = cView.limits(); !limits.isEmpty())
+	if (const FloatRect& limits = cCamera.limits(); !limits.isEmpty())
 	{
 		center.x = std::min(
 			std::max(center.x, limits.left + size.x / 2),
@@ -130,10 +130,10 @@ SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
 
-	m_queries[Q::View] = {{ .required = {CId<CView>},
+	m_queries[Q::Camera] = {{ .required = {CId<CCamera>},
 		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			updateWindowView(entity, window());
+			updateCamera(entity, window());
 		}
 	}};
 
@@ -177,17 +177,17 @@ void SRender::initializeProperties()
 	m_properties->set(AmbientLight, Color::White);
 }
 
-void SRender::updateViews()
+void SRender::updateCameras()
 {
-	for (EntityPointer entity : m_queries[Q::View])
+	for (EntityPointer entity : m_queries[Q::Camera])
 	{
 		if (hasChangedSinceLastUpdate(entity.get<CPosition>())
-		 || hasChangedSinceLastUpdate(entity.get<CView>().size()))
+		 || hasChangedSinceLastUpdate(entity.get<CCamera>().size()))
 		{
-			updateWindowView(entity, window());
+			updateCamera(entity, window());
 		}
 	}
-	assert(m_queries[Q::View].getEntityCount() == 1);
+	assert(m_queries[Q::Camera].getEntityCount() == 1);
 }
 
 void SRender::updateConvexPolygons()
@@ -437,7 +437,7 @@ void SRender::update()
 {
 	window()->clear(m_properties->get<Color>(ClearColor));
 
-	updateViews();
+	updateCameras();
 
 	updateConvexPolygons();
 	drawWorld();
