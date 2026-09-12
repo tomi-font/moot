@@ -247,7 +247,8 @@ void SRender::drawLights()
 
 		rayAngles.clear();
 
-		auto addRaysToward = [&cPosition, &rayAngles](const sf::Vector2f& point)
+		// A ray toward a point of the outline; two rays just either side of it where the ray length jumps there.
+		auto addRaysToward = [&cPosition, &rayAngles](const sf::Vector2f& point, bool eitherSide)
 		{
 			constexpr float RayClearanceUlps = 64;
 			constexpr float MaxAngularClearance = 0.01f;
@@ -266,14 +267,25 @@ void SRender::drawLights()
 			if (!(angularClearance < MaxAngularClearance))
 				return;
 
-			rayAngles.append_range(std::array{angle - angularClearance, angle, angle + angularClearance});
+			if (eitherSide)
+				rayAngles.append_range(std::array{angle - angularClearance, angle + angularClearance});
+			else
+				rayAngles.push_back(angle);
+		};
+		// Whether the light is on the left of the segment's line, that is, whether the segment faces it or not.
+		const auto lightOnLeft = [&cPosition](const Segment& segment)
+		{
+			return crossProduct(segment.vector, cPosition.val() - segment.a) > 0;
 		};
 		
 		for (const unsigned segmentIndex : std::views::iota(0u, occluderSegments.size()))
 		{
-			if (occluders[segmentOccluders[segmentIndex]].containsLight)
+			const Occluder& occluder = occluders[segmentOccluders[segmentIndex]];
+			if (occluder.containsLight)
 				continue;
 			const Segment& segment = occluderSegments[segmentIndex];
+			const unsigned segmentCount = unsigned(occluder.polygon->vertices().size());
+			const Segment& previousSegment = occluderSegments[occluder.firstSegment + (segmentIndex - occluder.firstSegment + segmentCount - 1) % segmentCount];
 
 			// Find where the segment crosses the light's circle: points lightToSegmentStart + fraction * segment.vector
 			// whose distance to the light equals the radius. Squaring both sides gives a quadratic in the fraction.
@@ -282,8 +294,11 @@ void SRender::drawLights()
 			const float segmentLengthSquared = segment.vector.dot(segment.vector);
 			const float startAlongSegmentTwice = 2 * lightToSegmentStart.dot(segment.vector);
 
+			// Every vertex appears once as some segment's A. The ray length only jumps at the vertices where
+			// the outline turns away from the light (one edge faces it, the other does not): those need a ray
+			// on either side. At the others, and where the outline crosses the light's circle, it merely bends.
 			if (startDistanceSquared < lightRadiusSquared)
-				addRaysToward(segment.a); // Every vertex appears once as some segment's A.
+				addRaysToward(segment.a, lightOnLeft(previousSegment) != lightOnLeft(segment));
 
 			const float discriminant = startAlongSegmentTwice * startAlongSegmentTwice
 			                         - 4 * segmentLengthSquared * (startDistanceSquared - lightRadiusSquared);
@@ -295,7 +310,7 @@ void SRender::drawLights()
 			                                    (-startAlongSegmentTwice + root) / (2 * segmentLengthSquared)})
 			{
 				if (segmentFraction > 0 && segmentFraction < 1) // Only crossings strictly inside the segment.
-					addRaysToward(segment.a + segmentFraction * segment.vector);
+					addRaysToward(segment.a + segmentFraction * segment.vector, false);
 			}
 		}
 		std::ranges::sort(rayAngles);
