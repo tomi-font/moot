@@ -449,5 +449,6 @@ void SRender::update()
 
 	drawHud();
 
+	window()->saveRequestedScreenshot();
 	window()->display();
 }

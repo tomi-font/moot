@@ -1,6 +1,7 @@
 #include <moot/parsing/GlobalFunctions.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/Entity/PrototypeStore.hh>
+#include <moot/Event/Engine.hh>
 #include <moot/Event/Event.hh>
 #include <moot/Game.hh>
 #include <moot/parsing/PrototypeAttributes.hh>
@@ -120,4 +121,8 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 		{
 			game->eventManager()->trigger({eventId, entity});
 		});
+
+	lua->set_function("quit", [game]() { game->eventManager()->trigger({EngineEvent::GameClose}); });
+
+	lua->set_function("saveScreenshot", &Window::requestScreenshot, window);
 }

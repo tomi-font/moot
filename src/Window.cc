@@ -1,5 +1,8 @@
 #include <moot/Window.hh>
 #include <cassert>
+#include <iostream>
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Texture.hpp>
 #ifdef __linux__
 #include <xcb/xcb.h>
 #endif
@@ -54,3 +57,16 @@ void Window::createHidden(const sf::Vector2u& size)
 	setVisible(false);
 }
 #endif
+
+void Window::saveRequestedScreenshot()
+{
+	if (m_screenshotPath.empty())
+		return;
+
+	sf::Texture texture(getSize());
+	texture.update(*this);
+	if (!texture.copyToImage().saveToFile(m_screenshotPath))
+		std::cerr << "Could not save the screenshot to \"" << m_screenshotPath << "\"." << std::endl;
+
+	m_screenshotPath.clear();
+}

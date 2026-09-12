@@ -2,6 +2,7 @@
 
 #include <moot/struct/Vector2.hh>
 #include <cstdint>
+#include <filesystem>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 class Window : public sf::RenderWindow
@@ -47,11 +48,18 @@ public:
 		return mapPixelToWorld(mapHudToPixel(pos));
 	}
 
+	// The next frame will be saved to that file once fully drawn.
+	void requestScreenshot(std::string path) { m_screenshotPath = std::move(path); }
+	// To be called once the frame is drawn but before display(): the back buffer is undefined after the swap.
+	void saveRequestedScreenshot();
+
 private:
 
 	// Functions from the base class that must not be used.
 	void mapPixelToCoords();
 	void mapCoordsToPixel();
+
+	std::filesystem::path m_screenshotPath;
 
 #ifdef __linux__
 	void createHidden(const sf::Vector2u& size);
