@@ -1,6 +1,9 @@
 #include <moot/Window.hh>
 #include <cassert>
+#include <chrono>
+#include <cstdlib>
 #include <iostream>
+#include <thread>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #ifdef __linux__
@@ -50,10 +53,25 @@ void Window::createHidden(const sf::Vector2u& size)
 	xcb_create_window(m_hiddenWindowConnection, std::uint8_t(XCB_COPY_FROM_PARENT), m_hiddenWindowId, screen->root,
 	                  std::int16_t(-20000), std::int16_t(-20000), std::uint16_t(size.x), std::uint16_t(size.y), 0,
 	                  XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
-	xcb_flush(m_hiddenWindowConnection);
+	// SFML talks to the server on its own connection, and the server orders requests across connections by
+	// arrival, not by when they were sent: wait for the window to actually exist before handing it over, or
+	// SFML's first request about it may fail with BadWindow. Any request with a reply is a round trip.
+	free(xcb_get_input_focus_reply(m_hiddenWindowConnection, xcb_get_input_focus(m_hiddenWindowConnection), nullptr));
 
 	sf::RenderWindow::create(static_cast<sf::WindowHandle>(m_hiddenWindowId));
-	// SFML maps every window it initializes; unmap this one again.
+
+	// SFML maps every window it initializes; unmap this one again. Same ordering issue the other way round:
+	// an unmap sent right after may be processed before the map. Wait for the map to have happened, within reason.
+	for (int tries = 0; tries != 100; ++tries)
+	{
+		xcb_get_window_attributes_reply_t* attributes = xcb_get_window_attributes_reply(
+			m_hiddenWindowConnection, xcb_get_window_attributes(m_hiddenWindowConnection, m_hiddenWindowId), nullptr);
+		const bool mapped = attributes && attributes->map_state != XCB_MAP_STATE_UNMAPPED;
+		free(attributes);
+		if (mapped)
+			break;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
 	setVisible(false);
 }
 #endif
