@@ -439,6 +439,8 @@ void SRender::drawExtrusions()
 		const CConvexPolygon* polygon;
 		sf::Vector2f position;
 		float depth; // In transformed coordinates, larger is farther from the viewer.
+		sf::FloatRect screenBounds; // In transformed coordinates too.
+		bool hidesCameraEntity;
 	};
 	std::vector<Extrusion> extrusions;
 	extrusions.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
@@ -448,22 +450,53 @@ void SRender::drawExtrusions()
 		return; // Looking straight at the plane, the extrusions are hidden behind their footprint.
 
 	const sf::Transform groundTransform = cCamera.getGroundTransform();
+	// How much a unit of height rises on screen.
+	const float rise = std::cos(cCamera.elevation());
+	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
+
+	// The screen area of a polygon and its extrusion, and its depth, in transformed coordinates.
+	const auto measure = [&](const CConvexPolygon& cConvexPolygon, const sf::Vector2f& position)
+	{
+		sf::Vector2f min(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+		sf::Vector2f max = -min;
+		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
+		{
+			const sf::Vector2f point = groundTransform.transformPoint(position + vertex);
+			min = {std::min(min.x, point.x), std::min(min.y, point.y)};
+			max = {std::max(max.x, point.x), std::max(max.y, point.y)};
+		}
+		return std::pair(max.y, sf::FloatRect(min, {max.x - min.x, max.y - min.y + cConvexPolygon.height() * rise}));
+	};
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		if (cConvexPolygon.height() <= 0)
 			continue;
 
-		float depth = -std::numeric_limits<float>::infinity();
-		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
-			depth = std::max(depth, groundTransform.transformPoint(cPosition.val() + vertex).y);
-
-		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth);
+		const auto [depth, screenBounds] = measure(cConvexPolygon, cPosition.val());
+		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth, screenBounds, false);
 	}
 
 	// Painter's algorithm: an extrusion only covers screen space above its footprint, so the farther
 	// ones must be drawn first. Good enough for footprints that do not overlap.
 	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::depth);
+
+	// The extrusions that come between the viewer and the entity the camera follows get see-through.
+	for (const EntityPointer cameraEntity : m_queries[Q::Camera])
+	{
+		if (!cameraEntity.has<CConvexPolygon>())
+			break;
+		const CConvexPolygon& cameraPolygon = cameraEntity.get<CConvexPolygon>();
+		const auto [cameraDepth, cameraBounds] = measure(cameraPolygon, cameraEntity.get<CPosition>());
+
+		for (Extrusion& extrusion : extrusions)
+		{
+			extrusion.hidesCameraEntity = extrusion.polygon != &cameraPolygon
+			                         && extrusion.depth < cameraDepth
+			                         && extrusion.screenBounds.findIntersection(cameraBounds).has_value();
+		}
+	}
+	constexpr std::uint8_t HidingAlpha = 90;
 
 	const sf::View& view = window()->getView();
 	const sf::Vector2f viewSize = view.getSize();
@@ -479,9 +512,6 @@ void SRender::drawExtrusions()
 	// the two. In world units, this many pixels out.
 	constexpr float LightSamplePixels = 3;
 	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
-	// How much a unit of height rises on screen.
-	const float rise = std::cos(cCamera.elevation());
-	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
 
 	m_passVertices.clear();
 	m_passVertices.reserve((6 + 3) * 4 * extrusions.size() * 2);
@@ -496,7 +526,9 @@ void SRender::drawExtrusions()
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
 		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
-		const Color topColor = extrusion.polygon->fillColor();
+		Color topColor = extrusion.polygon->fillColor();
+		if (extrusion.hidesCameraEntity)
+			topColor.a = HidingAlpha;
 
 		points.resize(vertexCount);
 		worldPoints.resize(vertexCount);
