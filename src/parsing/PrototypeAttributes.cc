@@ -20,7 +20,8 @@ void PrototypeAttributes::parse(const std::pair<sol::object, sol::object>& attri
 	}
 	else
 	{
-		CCallback* cCallback = proto->has<CCallback>() ? proto->get<CCallback*>() : proto->add<CCallback>();
+		// get<CCallback*>() would look up the component storage of the pointer type, which does not exist.
+		CCallback* cCallback = proto->has<CCallback>() ? &proto->getAll<CCallback>().front() : proto->add<CCallback>();
 		cCallback->add(s_callbackTypes.at(name), as<CCallback::Callback>(attribute.second));
 	}
 }
