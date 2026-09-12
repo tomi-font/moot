@@ -38,6 +38,7 @@ set(DISABLED_CLANG_WARNINGS
 	switch-enum
 	unsafe-buffer-usage
 	shadow-field-in-constructor
+	weak-vtables
 )
 list(TRANSFORM DISABLED_CLANG_WARNINGS PREPEND "-Wno-")
 

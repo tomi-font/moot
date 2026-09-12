@@ -60,6 +60,11 @@ static void updateWindowView(const EntityPointer& entity, Window* window)
 	center.y += size.y;
 
 	window->setView({center, size});
+
+	sf::Transform worldTransform;
+	worldTransform.translate({0, size.y}); // Move the origin from the top-left to the bottom-left corner.
+	worldTransform.scale({1, -1}); // Make the Y axis grow upwards.
+	window->setWorldTransform(worldTransform);
 }
 
 static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, const EntityPointer& entity,
@@ -201,12 +206,12 @@ void SRender::updateConvexPolygons()
 	}
 }
 
-void SRender::drawWorld(const sf::Transform& worldTransform)
+void SRender::drawWorld()
 {
 	for (const auto& [_, drawable] : m_drawables)
 	{
 		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
-			window()->draw(drawable.vertices.data() + vertexView.front(), vertexView.size(), vertexType, worldTransform);
+			window()->draw(&drawable.vertices[vertexView.front()], vertexView.size(), vertexType, window()->worldTransform());
 	}
 }
 
@@ -223,7 +228,7 @@ void SRender::updateLightMap()
 	m_lightMap.setView(window()->getView());
 }
 
-void SRender::drawLights(const sf::Transform& worldTransform)
+void SRender::drawLights()
 {
 	constexpr unsigned FillerRaysPerCircle = 64;
 	constexpr float MaxFillerAngle = 2 * std::numbers::pi_v<float> / FillerRaysPerCircle;
@@ -377,7 +382,7 @@ void SRender::drawLights(const sf::Transform& worldTransform)
 
 	sf::RenderStates states;
 	states.blendMode = sf::BlendAdd;
-	states.transform = worldTransform;
+	states.transform = window()->worldTransform();
 
 	m_lightMap.draw(lightVertices.data(), lightVertices.size(), sf::PrimitiveType::Triangles, states);
 }
@@ -434,17 +439,11 @@ void SRender::update()
 
 	updateViews();
 
-	sf::Transform worldTransform;
-	// Move the origin from the top-left to the bottom-left corner.
-	worldTransform.translate({0, window()->getView().getSize().y});
-	// Make the Y axis grow upwards.
-	worldTransform.scale({1, -1});
-
 	updateConvexPolygons();
-	drawWorld(worldTransform);
+	drawWorld();
 
 	updateLightMap();
-	drawLights(worldTransform);
+	drawLights();
 	drawLightMap();
 
 	drawHud();
