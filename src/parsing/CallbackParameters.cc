@@ -53,6 +53,11 @@ void CallbackParameters::registerAll(sol::state* lua)
 						assert(false);
 					});
 			}),
+		"mouseDelta", sol::property(
+			[](const sf::Event& event)
+			{
+				return Vector2i(event.getIf<sf::Event::MouseMovedRaw>()->delta);
+			}),
 		"mouseWheelScroll", sol::property(
 			[](const sf::Event& event)
 			{

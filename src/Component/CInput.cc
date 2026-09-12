@@ -9,6 +9,9 @@ static bool operator==(const sf::Event& lhs, const sf::Event& rhs)
 	if (lhs.is<sf::Event::MouseMoved>())
 		return rhs.is<sf::Event::MouseMoved>();
 
+	if (lhs.is<sf::Event::MouseMovedRaw>())
+		return rhs.is<sf::Event::MouseMovedRaw>();
+
 	if (lhs.is<sf::Event::KeyPressed>())
 	{
 		return rhs.is<sf::Event::KeyPressed>()

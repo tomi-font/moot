@@ -23,6 +23,8 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	et["WindowClose"] = sf::Event(sf::Event::Closed{});
 	et["MouseWheelScroll"] = sf::Event(sf::Event::MouseWheelScrolled{.wheel = sf::Mouse::Wheel::Vertical});
 	et["MouseMove"] = sf::Event(sf::Event::MouseMoved{});
+	// Relative motion, unbounded by the screen: for driving a camera. See event.mouseDelta.
+	et["MouseMoveRaw"] = sf::Event(sf::Event::MouseMovedRaw{});
 	et["KeyPress"] = [](sf::Keyboard::Key keyCode) -> sf::Event { return sf::Event::KeyPressed{.code = keyCode}; };
 	et["KeyRelease"] = [](sf::Keyboard::Key keyCode) -> sf::Event { return sf::Event::KeyReleased{.code = keyCode}; };
 	et["MouseButtonPress"] = [](sf::Mouse::Button button) -> sf::Event { return sf::Event::MouseButtonPressed{.button = button}; };

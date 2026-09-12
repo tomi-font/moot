@@ -93,6 +93,11 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 			return Vector2i(sf::Mouse::getPosition(*window));
 		});
 
+	// Both together make a mouse-driven camera: the cursor stays put and hidden, and the motion comes
+	// through InputEvent.MouseMoveRaw. Grabbing only holds while the window has the focus.
+	lua->set_function("setMouseCursorVisible", &Window::setMouseCursorVisible, window);
+	lua->set_function("setMouseCursorGrabbed", &Window::setMouseCursorGrabbed, window);
+
 	lua->set_function("mapHudToWorld", &Window::mapHudToWorld, window);
 	lua->set_function("mapPixelToHud", &Window::mapPixelToHud, window);
 	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld, window);
