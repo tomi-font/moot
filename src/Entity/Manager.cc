@@ -9,7 +9,7 @@
 #include <moot/Component/CPointable.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CView.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
 
 EntityManager::EntityManager() :
@@ -21,7 +21,7 @@ EntityManager::EntityManager() :
 static void checkComponentComposition(ComponentComposable entity)
 {
 	if (!entity.has<CPosition>())
-		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CView, CMove, CRigidbody, CPointable, CLight>()));
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());

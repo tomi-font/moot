@@ -1,8 +1,8 @@
-#include <moot/Component/CView.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/struct/Vector2.hh>
 #include <cassert>
 
-void CView::calculateNewSize()
+void CCamera::calculateNewSize()
 {
 	Vector2f viewSize(m_size);
 
@@ -25,20 +25,20 @@ void CView::calculateNewSize()
 	assert(viewSize.min() > 0);
 }
 
-void CView::setSize(const sf::Vector2f& size)
+void CCamera::setSize(const sf::Vector2f& size)
 {
 	m_size = size;
 	calculateNewSize();
 }
 
-void CView::zoom(float factor)
+void CCamera::zoom(float factor)
 {
 	assert(factor > 0);
 	m_size.mut() *= factor;
 	calculateNewSize();
 }
 
-void CView::setLimits(const FloatRect& limits)
+void CCamera::setLimits(const FloatRect& limits)
 {
 	assert(limits.hasPositiveArea());
 	m_limits = limits;

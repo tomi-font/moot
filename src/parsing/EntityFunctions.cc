@@ -4,7 +4,7 @@
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CView.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/Entity/util.hh>
 #include <moot/parsing/ComponentAttributes.hh>
@@ -54,10 +54,10 @@ static void registerComponentTypes(sol::state* lua)
 	auto rigidbody = registerComponent<CRigidbody>(ct);
 	rigidbody["applyYForce"] = &CRigidbody::applyYForce;
 
-	auto view = registerComponent<CView>(ct);
-	view["zoom"] = &CView::zoom;
-	view["setSize"] = [](CView* cView, sol::object size) { cView->setSize(asVector2f(size)); };
-	view["setLimits"] = [](CView* cView, sol::object size) { cView->setLimits(asFloatRect(size)); };
+	auto camera = registerComponent<CCamera>(ct);
+	camera["zoom"] = &CCamera::zoom;
+	camera["setSize"] = [](CCamera* cCamera, sol::object size) { cCamera->setSize(asVector2f(size)); };
+	camera["setLimits"] = [](CCamera* cCamera, sol::object size) { cCamera->setLimits(asFloatRect(size)); };
 
 	auto position = registerComponent<CPosition>(ct);
 	position["x"] = sol::property([](const CPosition& pos) { return pos.val().x; },

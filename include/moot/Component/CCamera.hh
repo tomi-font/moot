@@ -3,11 +3,11 @@
 #include <moot/TrackedValue.hh>
 #include <moot/struct/Rect.hh>
 
-class CView
+class CCamera
 {
 public:
 
-	CView(const sf::Vector2f& size, const FloatRect& limits) : m_size(size), m_limits(limits) {}
+	CCamera(const sf::Vector2f& size, const FloatRect& limits) : m_size(size), m_limits(limits) {}
 
 	void setSize(const sf::Vector2f&);
 	void zoom(float factor);
