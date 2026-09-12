@@ -17,7 +17,7 @@ private:
 	void initializeProperties() override;
 
 	void update() override;
-	void updateViews();
+	void updateCameras();
 	void updateConvexPolygons();
 	void drawWorld();
 	void updateLightMap();
