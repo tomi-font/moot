@@ -10,6 +10,8 @@ struct CMove
 	auto& velocity() const { return m_velocity; }
 
 	void setXMotion(int direction);
+	// Moves at full speed in the given direction, or stops if it is zero.
+	void setMotion(const sf::Vector2f& direction);
 
 private:
 

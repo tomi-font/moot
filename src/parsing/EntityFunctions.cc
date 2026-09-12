@@ -51,6 +51,7 @@ static void registerComponentTypes(sol::state* lua)
 
 	auto move = registerComponent<CMove>(ct);
 	move["setXMotion"] = &CMove::setXMotion;
+	move["setMotion"] = [](CMove* cMove, const sol::object& direction) { cMove->setMotion(asVector2f(direction)); };
 
 	auto rigidbody = registerComponent<CRigidbody>(ct);
 	rigidbody["applyYForce"] = &CRigidbody::applyYForce;
