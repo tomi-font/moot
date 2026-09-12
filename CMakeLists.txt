@@ -64,6 +64,10 @@ target_compile_options(moot PRIVATE
 file(GLOB_RECURSE source_files src/*.cc)
 target_sources(moot PRIVATE ${source_files})
 
+# The renderer's light rays are a loop of small vector calls that dominates the frame when nothing is
+# inlined: optimize that one file even in debug builds (about 7 times faster; -O3 adds a third more).
+set_source_files_properties(src/System/SRender.cc PROPERTIES COMPILE_OPTIONS "$<$<CONFIG:Debug>:-O1>")
+
 target_link_libraries(moot
 	PUBLIC
 		sfml-graphics
