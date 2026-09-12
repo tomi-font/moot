@@ -12,6 +12,7 @@
 #include <moot/parsing/types.hh>
 #include <ranges>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <SFML/System/Angle.hpp>
 
 std::vector<EntityFunctions::ComponentGetter> EntityFunctions::s_m_componentGetters;
 
@@ -58,6 +59,11 @@ static void registerComponentTypes(sol::state* lua)
 	camera["zoom"] = &CCamera::zoom;
 	camera["setSize"] = [](CCamera* cCamera, sol::object size) { cCamera->setSize(asVector2f(size)); };
 	camera["setLimits"] = [](CCamera* cCamera, sol::object size) { cCamera->setLimits(asFloatRect(size)); };
+	// Angles are exposed in degrees.
+	camera["elevation"] = sol::property([](const CCamera& cCamera) { return sf::radians(cCamera.elevation()).asDegrees(); },
+	                                    [](CCamera* cCamera, float degrees) { cCamera->setElevation(sf::degrees(degrees).asRadians()); });
+	camera["rotation"] = sol::property([](const CCamera& cCamera) { return sf::radians(cCamera.rotation()).asDegrees(); },
+	                                   [](CCamera* cCamera, float degrees) { cCamera->setRotation(sf::degrees(degrees).asRadians()); });
 
 	auto position = registerComponent<CPosition>(ct);
 	position["x"] = sol::property([](const CPosition& pos) { return pos.val().x; },

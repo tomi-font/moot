@@ -34,6 +34,15 @@ enum Q
 	COUNT
 };
 
+// Makes the Y axis grow upwards, with the origin at the bottom-left corner instead of the top-left one.
+static sf::Transform flipTransform(const sf::Vector2f& viewSize)
+{
+	sf::Transform transform;
+	transform.translate({0, viewSize.y});
+	transform.scale({1, -1});
+	return transform;
+}
+
 static void updateCamera(const EntityPointer& entity, Window* window)
 {
 	sf::Vector2f center = entity.get<CPosition>();
@@ -43,6 +52,7 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 	if (entity.has<CConvexPolygon>())
 		center += entity.get<CConvexPolygon>().getCentroid();
 
+	// The limits are in world coordinates, so they only make sense when the ground is not transformed.
 	if (const FloatRect& limits = cCamera.limits(); !limits.isEmpty())
 	{
 		center.x = std::min(
@@ -55,15 +65,11 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	// Flip the Y axis of the view because the same is done for rendering the entities to make the Y coordinates grow upwards.
-	center.y *= -1;
-	center.y += size.y;
+	const sf::Transform worldTransform = flipTransform(size) * cCamera.getGroundTransform();
+
+	center = worldTransform.transformPoint(center);
 
 	window->setView({center, size});
-
-	sf::Transform worldTransform;
-	worldTransform.translate({0, size.y}); // Move the origin from the top-left to the bottom-left corner.
-	worldTransform.scale({1, -1}); // Make the Y axis grow upwards.
 	window->setWorldTransform(worldTransform);
 }
 
@@ -179,10 +185,12 @@ void SRender::initializeProperties()
 
 void SRender::updateCameras()
 {
-	for (EntityPointer entity : m_queries[Q::Camera])
+	for (auto [entity, cPosition, cCamera] : m_queries[Q::Camera].getAll<EntityPointer, CPosition, CCamera>())
 	{
-		if (hasChangedSinceLastUpdate(entity.get<CPosition>())
-		 || hasChangedSinceLastUpdate(entity.get<CCamera>().size()))
+		if (hasChangedSinceLastUpdate(cPosition)
+		 || hasChangedSinceLastUpdate(cCamera.size())
+		 || hasChangedSinceLastUpdate(cCamera.elevation())
+		 || hasChangedSinceLastUpdate(cCamera.rotation()))
 		{
 			updateCamera(entity, window());
 		}
