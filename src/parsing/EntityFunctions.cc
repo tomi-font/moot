@@ -2,6 +2,7 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CMove.hh>
+#include <moot/Component/CParent.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
 #include <moot/Component/CCamera.hh>
@@ -106,6 +107,15 @@ static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 	et->set("position", sol::property(
 		[](const EntityHandle& entity) { return entity.get<CPosition*>(); },
 		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CPosition*>() = pos; }));
+
+	// Parenting is not a component from Lua's point of view: the child just follows the parent at an offset.
+	et->set("setParent", [](EntityHandle* child, EntityHandle* parent, sol::optional<sol::object> offset)
+	{
+		Entity::setParent(child, parent, offset ? asVector2f(*offset) : sf::Vector2f());
+	});
+	et->set("parentOffset", sol::property(
+		[](const EntityHandle& entity) { return Vector2f(entity.get<CParent>().offset()); },
+		[](const EntityHandle& entity, const sol::object& offset) { entity.get<CParent*>()->setOffset(asVector2f(offset)); }));
 }
 
 void EntityFunctions::registerAll(sol::state* lua)

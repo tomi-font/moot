@@ -12,5 +12,6 @@ namespace Entity
 
 	FloatRect getBoundingBox(EntityHandle);
 
-	void setParent(EntityHandle* child, EntityHandle* parent, EntityId parentEId = {});
+	// The child then follows the parent, staying at the given offset from it.
+	void setParent(EntityHandle* child, EntityHandle* parent, const sf::Vector2f& offset = {}, EntityId parentEId = {});
 }

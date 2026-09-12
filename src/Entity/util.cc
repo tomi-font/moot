@@ -49,11 +49,11 @@ FloatRect Entity::getBoundingBox(EntityHandle entity)
 	return boundingCoords.toRect();
 }
 
-void Entity::setParent(EntityHandle* child, EntityHandle* parent, EntityId parentEId)
+void Entity::setParent(EntityHandle* child, EntityHandle* parent, const sf::Vector2f& offset, EntityId parentEId)
 {
 	if (!parentEId)
 		parentEId = Entity::getId(*parent);
-	child->add<CParent>(parentEId);
+	child->add<CParent>(parentEId, offset);
 
 	CChildren* cChildren = parent->has<CChildren>() ? parent->get<CChildren*>() : parent->add<CChildren>();
 	cChildren->add(Entity::getId(*child));
