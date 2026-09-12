@@ -6,6 +6,7 @@
 #include <moot/System/SPhysics.hh>
 #include <moot/System/SRender.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
+#include <cstdlib>
 #include <SFML/Window/Event.hpp>
 
 unsigned ComponentIdRegistry::s_m_nextId = 0;
@@ -30,7 +31,7 @@ Game::Game(std::source_location location) :
 
 	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
 	halfScreen.size /= 2u;
-	m_window.create(halfScreen, "a moot game");
+	m_window.create(halfScreen, "a moot game", std::getenv("MOOT_HIDDEN_WINDOW") != nullptr);
 	m_window.setPosition(sf::Vector2i(halfScreen.size));
 	m_window.setFramerateLimit(60);
 	m_window.setVerticalSyncEnabled(true);

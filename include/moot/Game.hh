@@ -20,6 +20,7 @@ class Game final :
 public:
 
 	Game(std::source_location = std::source_location::current());
+	~Game() override final = default;
 
 	Game(const Game&) = delete;
 	Game& operator=(const Game&) = delete;

@@ -38,6 +38,7 @@ set(DISABLED_CLANG_WARNINGS
 	switch-enum
 	unsafe-buffer-usage
 	shadow-field-in-constructor
+	overloaded-virtual
 )
 list(TRANSFORM DISABLED_CLANG_WARNINGS PREPEND "-Wno-")
 
@@ -71,3 +72,9 @@ target_link_libraries(moot
 	PRIVATE
 		lua
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	# For the hidden window (see Window::create).
+	find_package(X11 REQUIRED COMPONENTS xcb)
+	target_link_libraries(moot PRIVATE xcb)
+endif()
