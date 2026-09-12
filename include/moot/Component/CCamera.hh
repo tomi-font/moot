@@ -26,7 +26,7 @@ public:
 	void zoom(float factor);
 	void setLimits(const FloatRect&);
 	void setElevation(float radians);
-	void setRotation(float radians) { m_rotation = radians; }
+	void setRotation(float radians);
 
 	auto& size() const { return m_size; }
 	auto& limits() const { return m_limits; }
@@ -35,6 +35,9 @@ public:
 
 	// Maps the world plane onto the screen as seen from the camera's elevation and rotation.
 	sf::Transform getGroundTransform() const;
+	// The size of the axis-aligned box of plane that a screen rectangle of the given size shows: the rectangle
+	// itself when looking straight down, wider and deeper once the camera is rotated and tilted.
+	sf::Vector2f shownPlaneSize(const sf::Vector2f& screenSize) const;
 
 private:
 
@@ -44,6 +47,6 @@ private:
 	TrackedValue<float> m_elevation;
 	TrackedValue<float> m_rotation;
 
-	// The borders, in world coordinates, of the area this view is limited to show.
+	// The borders, in world coordinates, of the area this camera is limited to show.
 	FloatRect m_limits;
 };

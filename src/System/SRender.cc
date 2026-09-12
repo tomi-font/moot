@@ -48,19 +48,6 @@ void SRender::updateCamera(const EntityPointer& entity)
 	if (entity.has<CConvexPolygon>())
 		center += entity.get<CConvexPolygon>().getCentroid();
 
-	// The limits are in world coordinates, so they only make sense when the ground is not transformed.
-	if (const FloatRect& limits = cCamera.limits(); !limits.isEmpty())
-	{
-		center.x = std::min(
-			std::max(center.x, limits.left + size.x / 2),
-			limits.left + limits.width - size.x / 2
-		);
-		center.y = std::min(
-			std::max(center.y, limits.bottom + size.y / 2),
-			limits.bottom + limits.height - size.y / 2
-		);
-	}
-
 	const sf::Transform ground = cCamera.getGroundTransform();
 
 	// The lower the camera, the more of the plane ahead of the entity (up the screen) is shown: centered when
@@ -69,6 +56,16 @@ void SRender::updateCamera(const EntityPointer& entity)
 	// the entity would balloon).
 	constexpr float MaxLookAheadFraction = 0.3f;
 	const float lookAhead = MaxLookAheadFraction * size.y * (1 - std::sin(cCamera.elevation()));
+
+	// Keep what the screen shows of the plane inside the limits: the box the screen covers on the plane,
+	// pushed ahead of the entity by the look-ahead. CCamera keeps the box no bigger than the limits.
+	if (const FloatRect& limits = cCamera.limits(); !limits.isEmpty())
+	{
+		const sf::Vector2f half = cCamera.shownPlaneSize(size) / 2.f;
+		const sf::Vector2f ahead = ground.getInverse().transformPoint({0, lookAhead});
+		center.x = std::min(std::max(center.x, limits.left + half.x - ahead.x), limits.right() - half.x - ahead.x);
+		center.y = std::min(std::max(center.y, limits.bottom + half.y - ahead.y), limits.top() - half.y - ahead.y);
+	}
 
 	// The light map is computed on the plane itself, rotated but not squashed, so that the light keeps its area
 	// however low the camera is; it covers what the screen shows of the plane, which is deeper the lower the camera.

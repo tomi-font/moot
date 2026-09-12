@@ -13,30 +13,33 @@ CCamera::CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevat
 	calculateNewSize();
 }
 
+sf::Vector2f CCamera::shownPlaneSize(const sf::Vector2f& screenSize) const
+{
+	// The screen's corners land on the plane at plus and minus the images of its two half diagonals,
+	// so the box is spanned, on each axis, by whichever of the two reaches farther.
+	const sf::Transform toPlane = getGroundTransform().getInverse();
+	const sf::Vector2f diagonal = toPlane.transformPoint(screenSize / 2.f);
+	const sf::Vector2f antidiagonal = toPlane.transformPoint({screenSize.x / 2, -screenSize.y / 2});
+
+	return {2 * std::max(std::abs(diagonal.x), std::abs(antidiagonal.x)),
+	        2 * std::max(std::abs(diagonal.y), std::abs(antidiagonal.y))};
+}
+
 void CCamera::calculateNewSize()
 {
 	Vector2f viewSize = m_size;
 
 	if (viewSize.min() <= 0)
-		return;
+		return; // Not sized yet (the size may be set after spawning).
 
 	if (!m_limits.isEmpty())
 	{
-		// The ratio of the actual view size to the maximum size allowed.
-		const Vector2f actualToMaxRatio = viewSize / m_limits.size;
-		if (actualToMaxRatio.max() > 1)
-		{
-			const auto aspectRatio = viewSize.x / viewSize.y;
-
-			if (actualToMaxRatio.x > actualToMaxRatio.y)
-				viewSize = {m_limits.width, m_limits.width / aspectRatio};
-			else
-				viewSize = {m_limits.height * aspectRatio, m_limits.height};
-		
-			m_size = viewSize;
-		}
+		// Shrink the screen, keeping its aspect ratio, until what it shows of the plane fits in the limits.
+		const Vector2f shownToLimits = Vector2f(shownPlaneSize(m_size)) / m_limits.size;
+		if (shownToLimits.max() > 1)
+			m_size.mut() /= shownToLimits.max();
 	}
-	assert(viewSize.min() > 0);
+	assert(Vector2f(m_size).min() > 0);
 }
 
 void CCamera::setSize(const sf::Vector2f& size)
@@ -62,6 +65,13 @@ void CCamera::setLimits(const FloatRect& limits)
 void CCamera::setElevation(float radians)
 {
 	m_elevation = std::clamp(radians, MinElevation, MaxElevation);
+	calculateNewSize(); // The angles change how much plane the screen shows.
+}
+
+void CCamera::setRotation(float radians)
+{
+	m_rotation = radians;
+	calculateNewSize();
 }
 
 // Think of the screen as a window pane facing the camera. Looking straight down, the plane is parallel
