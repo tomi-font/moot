@@ -70,15 +70,19 @@ template<> void parser<CPosition>(const sol::object& data, ComponentCollection* 
 template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& heightObj = map["height"];
 	const auto& fillColorObj = map["fillColor"];
 	const auto& outlineColorObj = map["outlineColor"];
-	assert(mapSize == 1u + fillColorObj.valid() + outlineColorObj.valid());
+	assert(mapSize == 1u + heightObj.valid() + fillColorObj.valid() + outlineColorObj.valid());
 
 	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
 		vertices.push_back(asVector2f(value));
 
-	collection->add<CConvexPolygon>(std::move(vertices), asParsedOr<Color>(fillColorObj), asParsedOr<Color>(outlineColorObj));
+	collection->add<CConvexPolygon>(std::move(vertices),
+	                                asOptionalParsed<float>(heightObj, 0),
+	                                asOptionalParsed<Color>(fillColorObj),
+	                                asOptionalParsed<Color>(outlineColorObj));
 }
 
 template<> void parser<CMove>(const sol::object& data, ComponentCollection* collection)

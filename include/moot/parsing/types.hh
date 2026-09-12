@@ -104,7 +104,7 @@ template<typename T> static inline T asParsed(const sol::object& var) { return a
 template<> inline Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
 template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
 
-template<typename T> static inline T asParsedOr(const sol::object& var, T orVal = {})
+template<typename T> static inline T asOptionalParsed(const sol::object& var, T defaultValue = {})
 {
-	return var.valid() ? asParsed<T>(var) : orVal;
+	return var.valid() ? asParsed<T>(var) : defaultValue;
 }
