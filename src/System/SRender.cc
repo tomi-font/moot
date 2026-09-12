@@ -11,6 +11,7 @@
 #include <moot/Window.hh>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <map>
 #include <numbers>
 
@@ -35,7 +36,7 @@ enum Q
 };
 
 // Makes the Y axis grow upwards, with the origin at the bottom-left corner instead of the top-left one.
-static sf::Transform flipTransform(const sf::Vector2f& viewSize)
+static sf::Transform groundToViewTransform(const sf::Vector2f& viewSize)
 {
 	sf::Transform transform;
 	transform.translate({0, viewSize.y});
@@ -65,12 +66,12 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldTransform = flipTransform(size) * cCamera.getGroundTransform();
+	const sf::Transform worldToViewTransform = groundToViewTransform(size) * cCamera.getGroundTransform();
 
-	center = worldTransform.transformPoint(center);
+	center = worldToViewTransform.transformPoint(center);
 
 	window->setView({center, size});
-	window->setWorldTransform(worldTransform);
+	window->setWorldToViewTransform(worldToViewTransform);
 }
 
 static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, const EntityPointer& entity,
@@ -219,7 +220,7 @@ void SRender::drawWorld()
 	for (const auto& [_, drawable] : m_drawables)
 	{
 		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
-			window()->draw(&drawable.vertices[vertexView.front()], vertexView.size(), vertexType, window()->worldTransform());
+			window()->draw(&drawable.vertices[vertexView.front()], vertexView.size(), vertexType, window()->worldToViewTransform());
 	}
 }
 
@@ -245,7 +246,7 @@ void SRender::drawLights()
 	lightVertices.reserve(3 * FillerRaysPerCircle * m_queries[Q::Lights].getEntityCount() * 2);
 
 	std::vector<Segment> occluderSegments;
-	occluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount());
+	occluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount() * 2);
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
@@ -390,7 +391,7 @@ void SRender::drawLights()
 
 	sf::RenderStates states;
 	states.blendMode = sf::BlendAdd;
-	states.transform = window()->worldTransform();
+	states.transform = window()->worldToViewTransform();
 
 	m_lightMap.draw(lightVertices.data(), lightVertices.size(), sf::PrimitiveType::Triangles, states);
 }
@@ -417,6 +418,124 @@ void SRender::drawLightMap()
 	states.texture = &m_lightMap.getTexture();
 
 	window()->draw(corners.data(), corners.size(), sf::PrimitiveType::TriangleFan, states);
+}
+
+// Raises the polygons that have a height above the world plane, as seen from the camera's elevation:
+// side faces towards the viewer plus a top face, all lit by the light map where they stand.
+void SRender::drawExtrusions()
+{
+	struct Extrusion
+	{
+		const CConvexPolygon* polygon;
+		sf::Vector2f position;
+		float depth; // In transformed coordinates, larger is farther from the viewer.
+	};
+	std::vector<Extrusion> extrusions;
+	extrusions.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
+
+	const auto& cCamera = m_queries[Q::Camera].getSingleEntity().get<CCamera>();
+	if (cCamera.elevation() >= CCamera::MaxElevation)
+		return; // Looking straight at the plane, the extrusions are hidden behind their footprint.
+
+	const sf::Transform groundTransform = cCamera.getGroundTransform();
+
+	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
+	{
+		if (cConvexPolygon.height() <= 0)
+			continue;
+
+		float depth = -std::numeric_limits<float>::infinity();
+		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
+			depth = std::max(depth, groundTransform.transformPoint(cPosition.val() + vertex).y);
+
+		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth);
+	}
+
+	// Painter's algorithm: an extrusion only covers screen space above its footprint, so the farther
+	// ones must be drawn first. Good enough for footprints that do not overlap.
+	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::depth);
+
+	const sf::View& view = window()->getView();
+	const sf::Vector2f viewSize = view.getSize();
+	const sf::Vector2f viewTopLeft = view.getCenter() - viewSize / 2.f;
+	const sf::Vector2f lightMapSize(m_lightMap.getSize());
+	// From world coordinates to light-map texels, in one go: into the view, then into the map.
+	sf::Transform worldToLightMapTransform;
+	worldToLightMapTransform.scale(lightMapSize.componentWiseDiv(viewSize));
+	worldToLightMapTransform.translate(-viewTopLeft);
+	worldToLightMapTransform.combine(window()->worldToViewTransform());
+	// A face is lit by the ground at its foot, so it samples the light map just outside its footprint: the
+	// interior would lie about the light, and the edge itself is noisy. In world units, this many pixels out.
+	constexpr float LightSamplePixels = 3;
+	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
+	// How much a unit of height rises on screen.
+	const float rise = std::cos(cCamera.elevation());
+	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
+
+	std::vector<sf::Vertex> extrusionVertices;
+	extrusionVertices.reserve((6 + 3) * 4 * extrusions.size() * 2);
+
+	std::vector<sf::Vector2f> points;
+	std::vector<sf::Vector2f> worldPoints;
+	std::vector<sf::Vector2f> edgeNormals;
+	std::vector<sf::Vertex> topVertices;
+
+	for (const Extrusion& extrusion : extrusions)
+	{
+		const auto& vertices = extrusion.polygon->vertices();
+		const std::size_t vertexCount = vertices.size();
+		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
+		const Color topColor = extrusion.polygon->fillColor();
+
+		points.resize(vertexCount);
+		worldPoints.resize(vertexCount);
+		edgeNormals.resize(vertexCount);
+		for (std::size_t i = 0; i != vertexCount; ++i)
+		{
+			worldPoints[i] = extrusion.position + vertices[i];
+			points[i] = groundTransform.transformPoint(worldPoints[i]);
+			edgeNormals[i] = extrusion.polygon->getEdgeNormal(i);
+		}
+		assert(crossProduct(points[0], points[1], points[2]) > 0); // Still counter-clockwise: the ground transform never mirrors.
+		topVertices.resize(vertexCount);
+
+		for (std::size_t i = 0; i != vertexCount; ++i)
+		{
+			const std::size_t j = (i + 1) % vertexCount;
+			const sf::Vector2f a = points[i];
+			const sf::Vector2f b = points[j];
+			const sf::Vector2f edge = b - a;
+
+			// The top face samples the light just outside each corner, along the vertex normal (the mean of its edges' normals).
+			const sf::Vector2f cornerOffset = (edgeNormals[i] + edgeNormals[(i + vertexCount - 1) % vertexCount]).normalized() * lightSampleOffset;
+			topVertices[i] = {a + up, topColor, worldToLightMapTransform.transformPoint(worldPoints[i] + cornerOffset)};
+			if (i >= 2)
+				extrusionVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
+
+			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so a face's outside
+			// is on the right of its edge, and it faces the viewer, who looks from the bottom of the screen,
+			// only when the edge runs left to right.
+			if (edge.x <= 0)
+				continue;
+
+			// Shaded by how much the face turns towards the camera, as if it were a light: a face
+			// is as dark as it is thin. That is the share of the edge running across the screen.
+			// A stand-in until faces are lit by the actual lights.
+			const sf::Color sideColor = topColor * (edge.x / edge.length());
+			const sf::Vector2f offset = edgeNormals[i] * lightSampleOffset;
+			const sf::Vertex baseA = {a, sideColor, worldToLightMapTransform.transformPoint(worldPoints[i] + offset)};
+			const sf::Vertex baseB = {b, sideColor, worldToLightMapTransform.transformPoint(worldPoints[j] + offset)};
+			const sf::Vertex topA = {topVertices[i].position, sideColor, baseA.texCoords};
+			const sf::Vertex topB = {b + up, sideColor, baseB.texCoords};
+			extrusionVertices.append_range(std::array{baseA, baseB, topB, baseA, topB, topA});
+		}
+	}
+
+	sf::RenderStates states;
+	states.transform = groundToViewTransform(viewSize);
+	states.texture = &m_lightMap.getTexture();
+
+	window()->draw(extrusionVertices.data(), extrusionVertices.size(), sf::PrimitiveType::Triangles, states);
 }
 
 void SRender::drawHud()
@@ -453,6 +572,8 @@ void SRender::update()
 	updateLightMap();
 	drawLights();
 	drawLightMap();
+
+	drawExtrusions();
 
 	drawHud();
 

@@ -1,4 +1,5 @@
 #include <moot/Entity/Query.hh>
+#include <utility>
 
 EntityQuery::EntityQuery(Parameters&& params) :
 	m_params(std::move(params))
@@ -36,4 +37,15 @@ unsigned EntityQuery::getEntityCount() const
 		count += collection->size();
 
 	return count;
+}
+
+EntityPointer EntityQuery::getSingleEntity() const
+{
+	assert(getEntityCount() == 1);
+
+	for (ComponentCollection* collection : m_matchingCollections)
+		if (collection->size())
+			return {collection, 0};
+
+	std::unreachable();
 }

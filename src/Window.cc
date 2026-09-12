@@ -60,7 +60,7 @@ void Window::createHidden(const sf::Vector2u& size)
 
 Vector2f Window::mapPixelToWorld(const Vector2i& pos) const
 {
-	return m_worldTransform.getInverse().transformPoint(sf::RenderWindow::mapPixelToCoords({pos.x, pos.y}));
+	return m_worldToViewTransform.getInverse().transformPoint(sf::RenderWindow::mapPixelToCoords({pos.x, pos.y}));
 }
 
 Vector2f Window::mapPixelToHud(const Vector2i& pos) const
