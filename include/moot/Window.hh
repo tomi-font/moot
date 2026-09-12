@@ -19,34 +19,14 @@ public:
 	// (for unattended runs). It ignores setTitle(), setPosition() and setSize(). Linux only.
 	void create(sf::VideoMode, const sf::String& title, bool hidden);
 
-	Vector2f mapPixelToWorld(const Vector2i& pos) const
-	{
-		Vector2f worldCoord = sf::RenderWindow::mapPixelToCoords({pos.x, pos.y});
-		// Flip the Y axis so that it grows upwards and starts at the bottom.
-		worldCoord.y *= -1;
-		worldCoord.y += getView().getSize().y;
-		return worldCoord;
-	}
+	// The transform applied to world coordinates when rendering. Set by the renderer along with the view.
+	void setWorldTransform(const sf::Transform& transform) { m_worldTransform = transform; }
+	auto& worldTransform() const { return m_worldTransform; }
 
-	Vector2f mapPixelToHud(const Vector2i& pos) const
-	{
-		const Vector2f windowSize(getSize());
-		// Flip the Y axis so that it grows upwards and starts at the bottom.
-		return {pos.x / windowSize.x, (windowSize.y - pos.y) / windowSize.y};
-	}
-
-	Vector2i mapHudToPixel(const Vector2f& pos) const
-	{
-		const Vector2f windowSize(getSize());
-		// Flip the Y axis back to growing downwards and starting at the top.
-		return {static_cast<int>(pos.x * windowSize.x),
-		        static_cast<int>(windowSize.y - pos.y * windowSize.y)};
-	}
-
-	Vector2f mapHudToWorld(const Vector2f& pos) const
-	{
-		return mapPixelToWorld(mapHudToPixel(pos));
-	}
+	Vector2f mapPixelToWorld(const Vector2i& pos) const;
+	Vector2f mapPixelToHud(const Vector2i& pos) const;
+	Vector2i mapHudToPixel(const Vector2f& pos) const;
+	Vector2f mapHudToWorld(const Vector2f& pos) const { return mapPixelToWorld(mapHudToPixel(pos));	}
 
 	// The next frame will be saved to that file once fully drawn.
 	void requestScreenshot(std::string path) { m_screenshotPath = std::move(path); }
@@ -58,6 +38,8 @@ private:
 	// Functions from the base class that must not be used.
 	void mapPixelToCoords();
 	void mapCoordsToPixel();
+
+	sf::Transform m_worldTransform;
 
 	std::filesystem::path m_screenshotPath;
 
