@@ -18,6 +18,7 @@ public:
 	// A hidden window renders like any other but never shows on screen nor takes the focus
 	// (for unattended runs). It ignores setTitle(), setPosition() and setSize(). Linux only.
 	void create(sf::VideoMode, const sf::String& title, bool hidden);
+	bool isHidden() const { return m_hidden; }
 
 	// The transform from world coordinates to the view's, applied when rendering.
 	auto& worldToViewTransform() const { return m_worldToViewTransform; }
@@ -42,6 +43,8 @@ private:
 	sf::Transform m_worldToViewTransform;
 
 	std::filesystem::path m_screenshotPath;
+
+	bool m_hidden = false;
 
 #ifdef __linux__
 	void createHidden(const sf::Vector2u& size);

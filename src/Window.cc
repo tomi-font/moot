@@ -24,6 +24,7 @@ Window::~Window()
 
 void Window::create(sf::VideoMode mode, const sf::String& title, bool hidden)
 {
+	m_hidden = hidden;
 	if (hidden)
 	{
 #ifdef __linux__

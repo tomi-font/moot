@@ -32,6 +32,15 @@ void SInput::initializeProperties()
 
 void SInput::update()
 {
+	// A window no one can see takes no input: raw mouse motion reaches it whatever has the focus, and
+	// would steer an unattended run from the desktop.
+	if (window()->isHidden())
+	{
+		while (window()->pollEvent())
+			continue;
+		return;
+	}
+
 	while (const auto event = window()->pollEvent())
 	{
 		if (event->is<sf::Event::MouseEntered>())
