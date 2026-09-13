@@ -591,9 +591,83 @@ void SRender::drawExtrusions()
 		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth, screenBounds, false);
 	}
 
-	// Painter's algorithm: an extrusion only covers screen space above its footprint, so the farther
-	// ones must be drawn first. Good enough for footprints that do not overlap.
+	// Whether an edge faces the viewer, who looks from the bottom of the screen: its normal, turned with the
+	// plane, points down. For the ordering below; the faces themselves go by their edge's direction on screen.
+	sf::Transform rotation;
+	rotation.rotate(sf::radians(cCamera.rotation()));
+	const auto facesViewer = [&](const sf::Vector2f& normal) { return rotation.transformPoint(normal).y < 0; };
+
+	// Painter's algorithm: an extrusion only covers screen space above its footprint, so what is nearer is
+	// drawn later. Farthest point first is right for footprints that keep apart, but not for two walls
+	// meeting at a corner: the one reaching farther back gets covered at the corner by the other's face.
+	// So, among the extrusions whose screen areas overlap, pairs are ordered by the line that keeps their
+	// footprints apart: two convex shapes that do not overlap have such a line along an edge of one of them,
+	// and the shape standing on the viewer's side of it is in front, wherever the two share a screen column.
+	// Footprints that do overlap (a tree grown into a wall) have no such edge; the one the other shape
+	// crosses the least stands in, so that the order only turns over when the viewer looks along that
+	// edge, where the faces on it are edge-on anyway, rather than jumping about with the camera.
+	const auto isInFront = [&](const Extrusion& a, const Extrusion& b)
+	{
+		// The edge of p that q crosses the least: how far past it q reaches (not at all when negative),
+		// and whether q is in front by it, which it is when the edge faces the viewer.
+		const auto leastCrossedEdge = [&](const Extrusion& p, const Extrusion& q)
+		{
+			std::pair<float, bool> least(std::numeric_limits<float>::infinity(), false);
+			const auto& vertices = p.polygon->vertices();
+			for (std::size_t i = 0; i != vertices.size(); ++i)
+			{
+				const sf::Vector2f normal = p.polygon->getEdgeNormal(i);
+				const sf::Vector2f origin = p.position + vertices[i];
+				float reach = -std::numeric_limits<float>::infinity();
+				for (const sf::Vector2f& vertex : q.polygon->vertices())
+				{
+					reach = std::max(reach, (origin - q.position - vertex).dot(normal));
+					if (reach >= least.first)
+						break; // Crossed more than the least already.
+				}
+				least = std::min(least, std::pair(reach, facesViewer(normal)));
+				if (least.first <= 0)
+					break; // Not crossed at all: any such edge settles the order the same way.
+			}
+			return least;
+		};
+		const auto [reachIntoA, bInFrontByA] = leastCrossedEdge(a, b);
+		if (reachIntoA <= 0)
+			return !bInFrontByA;
+		const auto [reachIntoB, aInFrontByB] = leastCrossedEdge(b, a);
+		return reachIntoA < reachIntoB ? !bInFrontByA : aInFrontByB;
+	};
+
 	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::depth);
+	std::vector<std::vector<unsigned>> behind(extrusions.size()); // What each extrusion must be drawn after.
+	for (const unsigned i : std::views::iota(0u, unsigned(extrusions.size())))
+	{
+		for (const unsigned j : std::views::iota(i + 1, unsigned(extrusions.size())))
+		{
+			if (!extrusions[i].screenBounds.findIntersection(extrusions[j].screenBounds))
+				continue;
+			if (isInFront(extrusions[i], extrusions[j]))
+				behind[i].push_back(j);
+			else
+				behind[j].push_back(i);
+		}
+	}
+	// The draw order: farthest first, each preceded by what stands behind it. Long shapes that circle each
+	// other (a pinwheel of walls) have no right order; they get drawn as they come.
+	std::vector<unsigned> order;
+	order.reserve(extrusions.size());
+	std::vector<bool> visited(extrusions.size(), false);
+	const auto visit = [&](this const auto& self, unsigned index) -> void
+	{
+		if (visited[index])
+			return;
+		visited[index] = true;
+		for (const unsigned other : behind[index])
+			self(other);
+		order.push_back(index);
+	};
+	for (const unsigned i : std::views::iota(0u, unsigned(extrusions.size())))
+		visit(i);
 
 	// The extrusions that come between the viewer and the entity the camera follows get see-through.
 	for (const EntityPointer cameraEntity : m_queries[Q::Camera])
@@ -636,8 +710,9 @@ void SRender::drawExtrusions()
 	std::vector<sf::Vector2f> edgeNormals;
 	std::vector<sf::Vertex> topVertices;
 
-	for (const Extrusion& extrusion : extrusions)
+	for (const unsigned index : order)
 	{
+		const Extrusion& extrusion = extrusions[index];
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
 		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
