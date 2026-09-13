@@ -4,6 +4,7 @@
 #include <vector>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Transform.hpp>
 
 class SRender final : public System
@@ -36,4 +37,6 @@ private:
 	std::vector<sf::Vertex> m_passVertices;
 
 	sf::RenderTexture m_lightMap;
+	// The picture of a light, mapped onto every light's fan.
+	sf::Texture m_lightFalloff;
 };

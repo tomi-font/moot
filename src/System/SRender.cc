@@ -8,6 +8,7 @@
 #include <moot/util/math/geometry.hh>
 #include <moot/util/math/Segment.hh>
 #include <moot/Window.hh>
+#include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <algorithm>
 #include <bit>
@@ -86,7 +87,39 @@ void SRender::updateCamera(const EntityPointer& entity)
 	window()->setWorldToViewTransform(flip * ground);
 }
 
-SRender::SRender()
+// A light is drawn as a fan over what it sees, textured with the picture of a light: bright at the center, dark at
+// the radius, the brightness falling off as the square of the remaining distance, (1 - d / r)^2, which reaches
+// zero at the radius with a zero slope too, so that the rim does not show. The picture is radial, so only its
+// resolution across the radius matters; and the outermost ring stays black so that the filtering clamps to
+// darkness past it. Generated rather than loaded: a few thousand square roots, quicker than decoding a file.
+static constexpr unsigned LightFalloffSize = 256;
+static constexpr float LightFalloffRadius = LightFalloffSize / 2.f - 1;
+static constexpr sf::Vector2f LightFalloffCenter = {LightFalloffSize / 2.f, LightFalloffSize / 2.f};
+
+static sf::Texture makeLightFalloffTexture()
+{
+	sf::Image image({LightFalloffSize, LightFalloffSize}, sf::Color::Black);
+	for (unsigned y = 0; y != LightFalloffSize; ++y)
+	{
+		for (unsigned x = 0; x != LightFalloffSize; ++x)
+		{
+			const sf::Vector2f texelCenter = {x + 0.5f, y + 0.5f};
+			const float distance = (texelCenter - LightFalloffCenter).length() / LightFalloffRadius;
+			if (distance >= 1)
+				continue;
+
+			const auto brightness = std::uint8_t(std::lround(255 * (1 - distance) * (1 - distance)));
+			image.setPixel({x, y}, {brightness, brightness, brightness});
+		}
+	}
+
+	sf::Texture texture(image);
+	texture.setSmooth(true);
+	return texture;
+}
+
+SRender::SRender() :
+	m_lightFalloff(makeLightFalloffTexture())
 {
 	m_queries.resize(Q::COUNT);
 
@@ -242,6 +275,12 @@ void SRender::drawLights()
 			occluder.seenAngle = 0;
 		}
 
+		// Where a point at some offset from the light falls on the picture of a light.
+		const auto lightFalloffCoords = [&cLight](const sf::Vector2f& offset)
+		{
+			return LightFalloffCenter + offset * (LightFalloffRadius / cLight.radius());
+		};
+
 		rayAngles.clear();
 
 		// A ray toward a point of the outline; two rays just either side of it where the ray length jumps there.
@@ -386,13 +425,8 @@ void SRender::drawLights()
 
 			// The ray stops at the first polygon it hits; that polygon is lit afterwards, as a whole.
 			rayOccluders[i] = nearestOccluder;
-			const float brightness = 1 - nearestDistance / cLight.radius();
-
-			rayVertices[i].color.r = std::uint8_t(cLight.emission().r * brightness);
-			rayVertices[i].color.g = std::uint8_t(cLight.emission().g * brightness);
-			rayVertices[i].color.b = std::uint8_t(cLight.emission().b * brightness);
-
-			rayVertices[i].position = cPosition.val() + rayDirection * nearestDistance;
+			const sf::Vector2f rayEnd = rayDirection * nearestDistance;
+			rayVertices[i] = {cPosition.val() + rayEnd, cLight.emission(), lightFalloffCoords(rayEnd)};
 		}
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
@@ -408,7 +442,7 @@ void SRender::drawLights()
 				occluders[rayOccluders[i]].seenAngle += std::max(gap, 0.f);
 			}
 
-			lightVertices.emplace_back(cPosition.val(), cLight.emission());
+			lightVertices.emplace_back(cPosition.val(), cLight.emission(), lightFalloffCoords({}));
 			lightVertices.emplace_back(rayVertices[i]);
 			lightVertices.emplace_back(rayVertices[next]);
 		}
@@ -433,13 +467,12 @@ void SRender::drawLights()
 				leftmost = std::max(leftmost, swing);
 				rightmost = std::min(rightmost, swing);
 			}
-			const float seen = std::min(occluder.seenAngle / (leftmost - rightmost), 1.f);
+			const Color color = cLight.emission() * std::min(occluder.seenAngle / (leftmost - rightmost), 1.f);
 
 			const auto vertex = [&](std::size_t i)
 			{
 				const sf::Vector2f offset = occluder.position + vertices[i] - cPosition.val();
-				const float brightness = seen * std::max(1 - offset.length() / cLight.radius(), 0.f);
-				return sf::Vertex(cPosition.val() + offset, cLight.emission() * brightness);
+				return sf::Vertex(cPosition.val() + offset, color, lightFalloffCoords(offset));
 			};
 			for (std::size_t i = 1; i + 1 < vertices.size(); ++i)
 				lightVertices.append_range(std::array{vertex(0), vertex(i), vertex(i + 1)});
@@ -448,6 +481,7 @@ void SRender::drawLights()
 
 	sf::RenderStates states;
 	states.blendMode = sf::BlendAdd;
+	states.texture = &m_lightFalloff;
 	states.transform = lightMapTransform();
 
 	m_lightMap.draw(lightVertices.data(), lightVertices.size(), sf::PrimitiveType::Triangles, states);
