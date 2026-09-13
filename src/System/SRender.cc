@@ -582,13 +582,18 @@ void SRender::drawExtrusions()
 		return std::pair(max.y, sf::FloatRect(min, {max.x - min.x, max.y - min.y + cConvexPolygon.height() * rise}));
 	};
 
+	// Only what shows on screen is drawn, or ordered. The window's view is flipped (see updateCamera).
+	const sf::View& view = window()->getView();
+	const sf::FloatRect shownArea({view.getCenter().x - view.getSize().x / 2, view.getSize().y / 2 - view.getCenter().y}, view.getSize());
+
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		if (cConvexPolygon.height() <= 0)
 			continue;
 
 		const auto [depth, screenBounds] = measure(cConvexPolygon, cPosition.val());
-		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth, screenBounds, false);
+		if (screenBounds.findIntersection(shownArea))
+			extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth, screenBounds, false);
 	}
 
 	// Whether an edge faces the viewer, who looks from the bottom of the screen: its normal, turned with the
