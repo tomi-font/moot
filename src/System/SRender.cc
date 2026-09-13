@@ -226,11 +226,12 @@ void SRender::updateLightMap()
 
 void SRender::drawLights()
 {
-	constexpr unsigned FillerRaysPerCircle = 64;
-	constexpr float MaxFillerAngle = 2 * std::numbers::pi_v<float> / FillerRaysPerCircle;
+	// The rim of a light is round: between two rays reaching the radius it is drawn as an arc, in pieces this small.
+	constexpr unsigned ArcStepsPerCircle = 64;
+	constexpr float MaxArcStep = 2 * std::numbers::pi_v<float> / ArcStepsPerCircle;
 
 	std::vector<sf::Vertex> lightVertices;
-	lightVertices.reserve(3 * FillerRaysPerCircle * m_queries[Q::Lights].getEntityCount() * 2);
+	lightVertices.reserve(3 * ArcStepsPerCircle * m_queries[Q::Lights].getEntityCount() * 2);
 
 	// The occluders are the polygons, one segment per edge. Segments are stored per occluder, contiguously.
 	struct Occluder
@@ -261,9 +262,14 @@ void SRender::drawLights()
 		}
 	}
 
+	struct Ray
+	{
+		float angle;
+		sf::Vertex end;
+		unsigned occluder; // The one hit, or NoOccluder when the ray reaches the radius.
+	};
 	std::vector<float> rayAngles;
-	std::vector<sf::Vertex> rayVertices;
-	std::vector<unsigned> rayOccluders; // The one each ray hits, or NoOccluder when the ray reaches the radius.
+	std::vector<Ray> rays;
 
 	for (auto [cPosition, cLight] : m_queries[Q::Lights].getAll<CPosition, CLight>())
 	{
@@ -356,30 +362,11 @@ void SRender::drawLights()
 		
 		if (rayAngles.empty())
 		{
-			// No occluder within radius: throw a dummy ray to trigger the filling below.
+			// No occluder within radius: a single ray reaching the radius, and an arc all around from it to itself.
 			rayAngles = {0.f};
 		}
 
-		// Insert the filler rays, in place and sorted. For that, start from the end.
-		for (const unsigned i : std::views::iota(0u, rayAngles.size()) | std::views::reverse)
-		{
-			const unsigned next = (i + 1) % rayAngles.size();
-			const float angleDiff = (next != 0) ? rayAngles[next] - rayAngles[i]
-			                                    : 2 * std::numbers::pi_v<float> - (rayAngles[i] - rayAngles[next]);
-			if (angleDiff <= MaxFillerAngle)
-				continue; // Also skips the negative gap a corner straddling +- pi might produce.
-
-			const auto fillerRays = static_cast<unsigned>(angleDiff / MaxFillerAngle);
-			const float angleIncrement = angleDiff / (fillerRays + 1);
-			const float angle = rayAngles[i];
-
-			rayAngles.insert_range(rayAngles.begin() + ssize_t(i) + 1,
-			                       std::views::iota(0u, fillerRays)
-								   | std::views::transform([=](unsigned n) { return angle + n * angleIncrement; }));
-		}
-
-		rayVertices.resize(rayAngles.size());
-		rayOccluders.resize(rayAngles.size());
+		rays.resize(rayAngles.size());
 
 		for (const unsigned i : std::views::iota(0u, rayAngles.size()))
 		{
@@ -424,27 +411,46 @@ void SRender::drawLights()
 			}
 
 			// The ray stops at the first polygon it hits; that polygon is lit afterwards, as a whole.
-			rayOccluders[i] = nearestOccluder;
 			const sf::Vector2f rayEnd = rayDirection * nearestDistance;
-			rayVertices[i] = {cPosition.val() + rayEnd, cLight.emission(), lightFalloffCoords(rayEnd)};
+			rays[i] = {rayAngle, {cPosition.val() + rayEnd, cLight.emission(), lightFalloffCoords(rayEnd)}, nearestOccluder};
 		}
 
-		for (unsigned i = 0; i != rayVertices.size(); ++i)
+		// The fan: a triangle from the light to the ends of each two neighboring rays. Between two rays the
+		// outline followed is straight, since every corner and every crossing of the radius has its ray,
+		// except where both reach the radius: there it is the circle, drawn as an arc.
+		const sf::Vertex center(cPosition.val(), cLight.emission(), lightFalloffCoords({}));
+		const auto pointAtRadius = [&](float angle)
 		{
-			const unsigned next = (i + 1) % rayVertices.size();
+			const sf::Vector2f offset = sf::Vector2f(std::cos(angle), std::sin(angle)) * cLight.radius();
+			return sf::Vertex(cPosition.val() + offset, cLight.emission(), lightFalloffCoords(offset));
+		};
+
+		for (unsigned i = 0; i != rays.size(); ++i)
+		{
+			const unsigned next = (i + 1) % rays.size();
+			const Ray& ray = rays[i];
+			const Ray& nextRay = rays[next];
+			// Negative for a corner straddling +- pi, which then gets no arc, like any small gap.
+			const float gap = (next != 0) ? nextRay.angle - ray.angle
+			                              : 2 * std::numbers::pi_v<float> - (ray.angle - nextRay.angle);
 
 			// Between two rays hitting the same polygon, the light sees that polygon.
-			if (rayOccluders[i] != NoOccluder && rayOccluders[i] == rayOccluders[next])
-			{
-				// Negative for a corner straddling +- pi, like any small gap.
-				const float gap = (next != 0) ? rayAngles[next] - rayAngles[i]
-				                              : 2 * std::numbers::pi_v<float> - (rayAngles[i] - rayAngles[next]);
-				occluders[rayOccluders[i]].seenAngle += std::max(gap, 0.f);
-			}
+			if (ray.occluder != NoOccluder && ray.occluder == nextRay.occluder)
+				occluders[ray.occluder].seenAngle += std::max(gap, 0.f);
 
-			lightVertices.emplace_back(cPosition.val(), cLight.emission(), lightFalloffCoords({}));
-			lightVertices.emplace_back(rayVertices[i]);
-			lightVertices.emplace_back(rayVertices[next]);
+			sf::Vertex previous = ray.end;
+			if (ray.occluder == NoOccluder && nextRay.occluder == NoOccluder && gap > MaxArcStep)
+			{
+				const auto steps = static_cast<unsigned>(gap / MaxArcStep);
+				const float step = gap / (steps + 1);
+				for (const unsigned n : std::views::iota(1u, steps + 1))
+				{
+					const sf::Vertex point = pointAtRadius(ray.angle + n * step);
+					lightVertices.append_range(std::array{center, previous, point});
+					previous = point;
+				}
+			}
+			lightVertices.append_range(std::array{center, previous, nextRay.end});
 		}
 
 		// The polygons the rays hit stand in the light: each is lit over its whole footprint, as a thing of
