@@ -476,10 +476,11 @@ void SRender::update()
 
 	updateCameras();
 
-	drawPolygons();
-
+	// The light map first: the frame is then drawn under it.
 	updateLightMap();
 	drawLights();
+
+	drawPolygons();
 	drawLightMap();
 
 	drawExtrusions();
