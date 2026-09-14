@@ -1,16 +1,15 @@
 #pragma once
 
 #include <moot/System/System.hh>
-#include <moot/Entity/Id.hh>
-#include <unordered_map>
+#include <vector>
 #include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Vertex.hpp>
 
 class SRender final : public System
 {
 public:
 
 	SRender();
-	~SRender() override;
 
 private:
 
@@ -18,15 +17,14 @@ private:
 
 	void update() override;
 	void updateCameras();
-	void updateConvexPolygons();
-	void drawWorld();
+	void drawPolygons();
 	void updateLightMap();
 	void drawLights();
 	void drawLightMap();
 	void drawExtrusions();
 	void drawHud();
 
-	std::unordered_map<EntityId, struct Drawable> m_drawables;
+	std::vector<sf::Vertex> m_passVertices;
 
 	sf::RenderTexture m_lightMap;
 };

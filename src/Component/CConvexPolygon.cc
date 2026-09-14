@@ -4,11 +4,10 @@
 #include <cassert>
 #include <span>
 
-CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor, Color outlineColor) :
+CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor) :
 	m_vertices(std::move(vertices)),
 	m_height(height),
-	m_fillColor(fillColor),
-	m_outlineColor(outlineColor)
+	m_fillColor(fillColor)
 {
 	const std::size_t vertexCount = m_vertices.size();
 	assert(vertexCount >= 3);
