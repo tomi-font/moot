@@ -1,6 +1,5 @@
 #pragma once
 
-#include <moot/TrackedValue.hh>
 #include <moot/struct/Color.hh>
 #include <moot/struct/BoundCoords.hh>
 #include <moot/struct/Rect.hh>
@@ -10,12 +9,11 @@ class CConvexPolygon
 {
 public:
 
-	CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor, Color outlineColor);
+	CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor);
 
 	auto& vertices() const { return m_vertices; }
 	auto& height() const { return m_height; }
 	auto& fillColor() const { return m_fillColor; }
-	auto& outlineColor() const { return m_outlineColor; }
 
 	void setFillColor(Color color) { m_fillColor = color; }
 
@@ -32,6 +30,5 @@ private:
 
 	std::vector<Vector2f> m_vertices;
 	float m_height;
-	TrackedValue<Color> m_fillColor;
-	Color m_outlineColor;
+	Color m_fillColor;
 };
