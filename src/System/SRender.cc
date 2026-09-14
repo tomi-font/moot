@@ -5,22 +5,14 @@
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
-#include <moot/util/iota_view.hh>
 #include <moot/util/math/geometry.hh>
 #include <moot/util/math/Segment.hh>
 #include <moot/Window.hh>
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <map>
 #include <numbers>
-
-struct Drawable
-{
-	std::vector<sf::Vertex> vertices;
-	// Ordered such that lines are after triangles so that they are drawn on top.
-	std::map<sf::PrimitiveType, std::ranges::iota_view<unsigned, unsigned>, std::greater<>> vertexViews;
-};
+#include <ranges>
 
 static constexpr std::string ClearColor = "clearColor";
 static constexpr std::string AmbientLight = "ambientLight";
@@ -74,65 +66,6 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 	window->setWorldToViewTransform(worldToViewTransform);
 }
 
-static void updateConvexPolygonVerticesPosition(sf::PrimitiveType vertexType, const EntityPointer& entity,
-                                                const CConvexPolygon& cConvexPolygon, Drawable* drawable)
-{
-	const auto& vertexView = drawable->vertexViews.at(vertexType);
-	const std::span<sf::Vertex> vertices = span(&drawable->vertices, vertexView);
-	const sf::Vector2f& entityPos = entity.get<CPosition>();
-	const auto& polygonVertices = cConvexPolygon.vertices();
-
-	switch (vertexType)
-	{
-	case sf::PrimitiveType::LineStrip:
-		for (const auto [vertex, polygonVertex] : std::views::zip(vertices, polygonVertices))
-			vertex.position = entityPos + polygonVertex;
-		vertices.back().position = entityPos + polygonVertices.front();
-		break;
-	case sf::PrimitiveType::TriangleStrip:
-		for (unsigned i = 0; i != vertices.size(); ++i)
-		{
-			const unsigned steps = (i + 1) / 2;
-			const std::size_t polygonVertexIndex = (i % 2) ? polygonVertices.size() - steps : steps;
-			vertices[i].position = entityPos + polygonVertices[polygonVertexIndex];
-		}
-		break;
-	default:
-		assert(false);
-	}
-}
-
-static void updateConvexPolygonFillColor(const EntityPointer& entity, const CConvexPolygon& cConvexPolygon, Drawable* drawable)
-{
-	const Color fillColor = cConvexPolygon.fillColor();
-	const auto vertexViewIt = fillColor
-	                          ? drawable->vertexViews.try_emplace(sf::PrimitiveType::TriangleStrip).first
-	                          : drawable->vertexViews.find(sf::PrimitiveType::TriangleStrip);
-	auto* vertexView = (vertexViewIt != drawable->vertexViews.end()) ? &vertexViewIt->second : nullptr;
-	const bool hadTriangleVertices = vertexView && !vertexView->empty();
-
-	if (fillColor)
-	{
-		if (hadTriangleVertices)
-			for (sf::Vertex& vertex : span(&drawable->vertices, *vertexView))
-				vertex.color = fillColor;
-		else
-		{
-			const std::size_t triangleVertexCount = cConvexPolygon.vertices().size();
-			*vertexView = iota_view<unsigned>(drawable->vertices.size(), drawable->vertices.size() + triangleVertexCount);
-			drawable->vertices.insert(drawable->vertices.end(), triangleVertexCount, sf::Vertex({}, fillColor));
-			
-			updateConvexPolygonVerticesPosition(sf::PrimitiveType::TriangleStrip, entity, cConvexPolygon, drawable);
-		}
-	}
-	else if (hadTriangleVertices)
-	{
-		drawable->vertices.erase(drawable->vertices.begin() + vertexView->front(), drawable->vertices.begin() + vertexView->back());
-		drawable->vertexViews.erase(vertexViewIt);
-		assert(drawable->vertices.empty() == drawable->vertexViews.empty());
-	}
-}
-
 SRender::SRender()
 {
 	m_queries.resize(Q::COUNT);
@@ -146,36 +79,9 @@ SRender::SRender()
 
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 	
-	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>},
-		.onEntityAdded = [this](const EntityPointer& entity)
-		{
-			const auto& cConvexPolygon = entity.get<CConvexPolygon>();
-			const EntityId entityId = Entity::getId(entity);
-			assert(!m_drawables.contains(entityId));
-			Drawable& drawable = m_drawables[entityId];
-
-			if (const Color outlineColor = cConvexPolygon.outlineColor())
-			{
-				const std::size_t vertexCount = cConvexPolygon.vertices().size() + 1;
-				drawable.vertices = {vertexCount, sf::Vertex({}, outlineColor)};
-				drawable.vertexViews.try_emplace(sf::PrimitiveType::LineStrip, 0u, vertexCount);
-				
-				updateConvexPolygonVerticesPosition(sf::PrimitiveType::LineStrip, entity, cConvexPolygon, &drawable);
-			}
-
-			updateConvexPolygonFillColor(entity, cConvexPolygon, &drawable);
-		},
-		.onEntityRemoved = [this](const EntityPointer& entity)
-		{
-			m_drawables.erase(Entity::getId(entity));
-		}
-	}};
+	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>} }};
 
 	m_queries[Q::Lights] = {{ .required = {CId<CLight>} }};
-}
-
-SRender::~SRender()
-{
 }
 
 void SRender::initializeProperties()
@@ -199,29 +105,33 @@ void SRender::updateCameras()
 	assert(m_queries[Q::Camera].getEntityCount() == 1);
 }
 
-void SRender::updateConvexPolygons()
+// Draws every polygon flat on the world plane, as triangle fans, in one call. Where flat polygons overlap,
+// the later spawned one shows: they are drawn in entity order.
+void SRender::drawPolygons()
 {
+	struct Flat
+	{
+		EntityId id;
+		const CConvexPolygon* polygon;
+		sf::Vector2f position;
+	};
+	std::vector<Flat> flats;
+
 	for (auto [entity, cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<EntityPointer, CConvexPolygon, CPosition>())
-	{
-		if (hasChangedSinceLastUpdate(cConvexPolygon.fillColor()))
-			updateConvexPolygonFillColor(entity, cConvexPolygon, &m_drawables.at(Entity::getId(entity)));
+		if (cConvexPolygon.fillColor())
+			flats.emplace_back(Entity::getId(entity), &cConvexPolygon, cPosition.val());
+	std::ranges::sort(flats, {}, &Flat::id);
 
-		if (hasChangedSinceLastUpdate(cPosition))
-		{
-			Drawable& drawable = m_drawables.at(Entity::getId(entity));
-			for (const auto& [vertexType, _] : drawable.vertexViews)
-				updateConvexPolygonVerticesPosition(vertexType, entity, cConvexPolygon, &drawable);
-		}
-	}
-}
-
-void SRender::drawWorld()
-{
-	for (const auto& [_, drawable] : m_drawables)
+	m_passVertices.clear();
+	for (const Flat& flat : flats)
 	{
-		for (const auto& [vertexType, vertexView] : drawable.vertexViews)
-			window()->draw(&drawable.vertices[vertexView.front()], vertexView.size(), vertexType, window()->worldToViewTransform());
+		const auto& polygon = flat.polygon->vertices();
+		for (std::size_t i = 1; i + 1 < polygon.size(); ++i)
+			for (const std::size_t k : {std::size_t(0), i, i + 1})
+				m_passVertices.emplace_back(flat.position + polygon[k], flat.polygon->fillColor());
 	}
+
+	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
 }
 
 void SRender::updateLightMap()
@@ -472,8 +382,8 @@ void SRender::drawExtrusions()
 	const float rise = std::cos(cCamera.elevation());
 	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
 
-	std::vector<sf::Vertex> extrusionVertices;
-	extrusionVertices.reserve((6 + 3) * 4 * extrusions.size() * 2);
+	m_passVertices.clear();
+	m_passVertices.reserve((6 + 3) * 4 * extrusions.size() * 2);
 
 	std::vector<sf::Vector2f> points;
 	std::vector<sf::Vector2f> worldPoints;
@@ -510,7 +420,7 @@ void SRender::drawExtrusions()
 			const sf::Vector2f cornerOffset = (edgeNormals[i] + edgeNormals[(i + vertexCount - 1) % vertexCount]).normalized() * lightSampleOffset;
 			topVertices[i] = {a + up, topColor, worldToLightMapTransform.transformPoint(worldPoints[i] + cornerOffset)};
 			if (i >= 2)
-				extrusionVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
+				m_passVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
 
 			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so a face's outside
 			// is on the right of its edge, and it faces the viewer, who looks from the bottom of the screen,
@@ -527,7 +437,7 @@ void SRender::drawExtrusions()
 			const sf::Vertex baseB = {b, sideColor, worldToLightMapTransform.transformPoint(worldPoints[j] + offset)};
 			const sf::Vertex topA = {topVertices[i].position, sideColor, baseA.texCoords};
 			const sf::Vertex topB = {b + up, sideColor, baseB.texCoords};
-			extrusionVertices.append_range(std::array{baseA, baseB, topB, baseA, topB, topA});
+			m_passVertices.append_range(std::array{baseA, baseB, topB, baseA, topB, topA});
 		}
 	}
 
@@ -535,7 +445,7 @@ void SRender::drawExtrusions()
 	states.transform = groundToViewTransform(viewSize);
 	states.texture = &m_lightMap.getTexture();
 
-	window()->draw(extrusionVertices.data(), extrusionVertices.size(), sf::PrimitiveType::Triangles, states);
+	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, states);
 }
 
 void SRender::drawHud()
@@ -566,8 +476,7 @@ void SRender::update()
 
 	updateCameras();
 
-	updateConvexPolygons();
-	drawWorld();
+	drawPolygons();
 
 	updateLightMap();
 	drawLights();
