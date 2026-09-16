@@ -3,6 +3,7 @@
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CEntity.hh>
+#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CParent.hh>
@@ -21,10 +22,13 @@ EntityManager::EntityManager() :
 static void checkComponentComposition(ComponentComposable entity)
 {
 	if (!entity.has<CPosition>())
-		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight>()));
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight, CLocalPosition>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());
+
+	if (entity.has<CLocalPosition>())
+		assert(!entity.has<CCollisionBox>());
 }
 
 EntityHandle EntityManager::processEntityToSpawn(ComponentCollection* entity, std::optional<sf::Vector2f> pos)
@@ -68,9 +72,14 @@ void EntityManager::remove(const EntityHandle& entity)
 
 EntityHandle EntityManager::getEntity(EntityId eId)
 {
+	return makeHandle(getEntityPointer(eId));
+}
+
+EntityPointer EntityManager::getEntityPointer(EntityId eId)
+{
 	try
 	{
-		return makeHandle(m_entityIdMap.at(eId));
+		return m_entityIdMap.at(eId);
 	}
 	catch (const std::out_of_range&)
 	{
@@ -78,7 +87,7 @@ EntityHandle EntityManager::getEntity(EntityId eId)
 		{
 			const EntityPointer entity = {&collection, 0};
 			if (Entity::getId(entity) == eId)
-				return makeHandle(entity);
+				return entity;
 		}
 		assert(false);
 	}

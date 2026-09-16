@@ -8,11 +8,13 @@ SystemManager::~SystemManager()
 
 void SystemManager::addSystem(std::unique_ptr<System> addedSystem, SystemSchedule addedSchedule)
 {
+	assert(!addedSchedule.order.before || !addedSchedule.order.after);
+
 	addedSystem->setSchedule(addedSchedule);
 	onSystemAdded(addedSystem.get());
 
 	auto systemIt = m_systems.begin();
-	while (systemIt != m_systems.end())
+	for (; systemIt != m_systems.end(); ++systemIt)
 	{
 		System* system = systemIt->get();
 
@@ -25,9 +27,15 @@ void SystemManager::addSystem(std::unique_ptr<System> addedSystem, SystemSchedul
 		 	goto insert;
 		}
 
-		++systemIt;
+		if (addedSchedule.order.after && *addedSchedule.order.after == typeid(*system))
+		{
+			assert(addedSchedule.phase == system->schedule().phase);
+			++systemIt;
+			goto insert;
+		}
 	}
 	assert(!addedSchedule.order.before);
+	assert(!addedSchedule.order.after);
 
 insert:
 	m_systems.insert(systemIt, std::move(addedSystem));

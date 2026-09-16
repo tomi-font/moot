@@ -2,6 +2,7 @@
 #include <moot/Component/Id.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/System/SCallback.hh>
+#include <moot/System/SHierarchy.hh>
 #include <moot/System/SInput.hh>
 #include <moot/System/SPhysics.hh>
 #include <moot/System/SRender.hh>
@@ -14,13 +15,14 @@ Game::Game(std::source_location location) :
 	m_frameNumber(0),
 	m_running(true)
 {
-	assert(location.function_name()[0] && "Game must not be a global");
+	assert(*location.function_name() && "Game must not be a global");
 
 	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
 
 	addSystem<SInput>(SystemSchedule::Phase::Input);
 	addSystem<SPhysics>(SystemSchedule::Phase::Update);
 	addSystem<SCallback>(SystemSchedule::Phase::Update, SystemSchedule::before<SPhysics>());
+	addSystem<SHierarchy>(SystemSchedule::Phase::Update, SystemSchedule::after<SPhysics>());
 	addSystem<SRender>(SystemSchedule::Phase::Render);
 
 	setEventManager(&m_eventManager);

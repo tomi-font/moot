@@ -23,9 +23,10 @@ public:
 	void remove(const EntityHandle&);
 
 	EntityHandle getEntity(EntityId);
+	EntityPointer getEntityPointer(EntityId);
 
 	EntityHandle makeHandle(EntityPointer);
-	template<typename C> inline C* addComponentTo(const EntityPointer& entity, auto&&... args)
+	template<typename C> C* addComponentTo(const EntityPointer& entity, auto&&... args)
 	{
 		return addComponentTo(entity, CId<C>)->template add<C>(std::forward<decltype(args)>(args)...);
 	}
