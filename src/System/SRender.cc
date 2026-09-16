@@ -10,6 +10,7 @@
 #include <moot/Window.hh>
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <numbers>
 #include <ranges>
@@ -149,40 +150,55 @@ void SRender::drawLights()
 	std::vector<sf::Vertex> lightVertices;
 	lightVertices.reserve(3 * FillerRaysPerCircle * m_queries[Q::Lights].getEntityCount() * 2);
 
-	std::vector<Segment> occluderSegments;
-	occluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount() * 2);
+	std::vector<Segment> worldOccluderSegments;
+	worldOccluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount() * 2);
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		const auto& vertices = cConvexPolygon.vertices();
 		for (unsigned i = 0; i != vertices.size(); ++i)
 		{
-			occluderSegments.emplace_back(cPosition.val() + vertices[i],
-			                              cPosition.val() + vertices[(i + 1) % vertices.size()]);
+			worldOccluderSegments.emplace_back(cPosition.val() + vertices[i],
+			                                   cPosition.val() + vertices[(i + 1) % vertices.size()]);
 		}
 	}
 
 	std::vector<float> rayAngles;
 	std::vector<sf::Vertex> rayVertices;
+	std::vector<Segment> occluderSegments;
 
-	for (auto [cPosition, cLight] : m_queries[Q::Lights].getAll<CPosition, CLight>())
+	for (auto [cLightPosition, cLight] : m_queries[Q::Lights].getAll<CPosition, CLight>())
 	{
 		const float lightRadiusSquared = cLight.radius() * cLight.radius();
 
+		// A polygon containing the light does not occlude it, so a light held inside a body or pushed into a
+		// wall still lights the world. Same query, same order as when the segments were built.
+		occluderSegments = worldOccluderSegments;
+		auto segmentIt = occluderSegments.begin();
+		for (auto [cConvexPolygon, cPolygonPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
+		{
+			const auto count = std::ssize(cConvexPolygon.vertices());
+
+			if (cConvexPolygon.contains(cLightPosition.val() - cPolygonPosition.val()))
+				segmentIt = occluderSegments.erase(segmentIt, segmentIt + count);
+			else
+				segmentIt += count;
+		}
+
 		rayAngles.clear();
 
-		auto addRaysToward = [&cPosition, &rayAngles](const sf::Vector2f& point)
+		auto addRaysToward = [&cLightPosition, &rayAngles](const sf::Vector2f& point)
 		{
 			constexpr float RayClearanceUlps = 64;
 			constexpr float MaxAngularClearance = 0.01f;
 
-			const sf::Vector2f lightToPoint = point - cPosition.val();
+			const sf::Vector2f lightToPoint = point - cLightPosition.val();
 			const float distance = std::hypot(lightToPoint.x, lightToPoint.y);
 			const float angle = std::atan2(lightToPoint.y, lightToPoint.x);
 
 			// Positions are only accurate to a few ULPs of the largest number involved,
 			// so nudge the side rays by that much to make sure they clear the corner.
-			const float largestOperand = maxAbs(cPosition.val().x, cPosition.val().y, point.x, point.y, distance);
+			const float largestOperand = maxAbs(cLightPosition.val().x, cLightPosition.val().y, point.x, point.y, distance);
 			const float positionError = RayClearanceUlps * largestOperand * std::numeric_limits<float>::epsilon();
 			const float angularClearance = positionError / distance;
 
@@ -197,7 +213,7 @@ void SRender::drawLights()
 		{
 			// Find where the segment crosses the light's circle: points lightToSegmentStart + fraction * segment.vector
 			// whose distance to the light equals the radius. Squaring both sides gives a quadratic in the fraction.
-			const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val(); 
+			const sf::Vector2f lightToSegmentStart = segment.a - cLightPosition.val(); 
 			const float startDistanceSquared = lightToSegmentStart.dot(lightToSegmentStart);
 			const float segmentLengthSquared = segment.vector.dot(segment.vector);
 			const float startAlongSegmentTwice = 2 * lightToSegmentStart.dot(segment.vector);
@@ -261,7 +277,7 @@ void SRender::drawLights()
 				// Can be 0 when the ray is parallel to the segment; using negated comparisons to handle that.
 				const float determinant = crossProduct(rayDirection, segment.vector);
 				
-				const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val();
+				const sf::Vector2f lightToSegmentStart = segment.a - cLightPosition.val();
 				
 				const float hitDistance = crossProduct(lightToSegmentStart, segment.vector) / determinant;
 				if (!(hitDistance >= 0 && hitDistance < closestHitDistance))
@@ -280,14 +296,14 @@ void SRender::drawLights()
 			rayVertices[i].color.g = std::uint8_t(cLight.emission().g * brightness);
 			rayVertices[i].color.b = std::uint8_t(cLight.emission().b * brightness);
 
-			rayVertices[i].position = cPosition.val() + rayDirection * closestHitDistance;
+			rayVertices[i].position = cLightPosition.val() + rayDirection * closestHitDistance;
 		}
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
 		{
 			const unsigned next = (i + 1) % rayVertices.size();
 
-			lightVertices.emplace_back(cPosition.val(), cLight.emission());
+			lightVertices.emplace_back(cLightPosition.val(), cLight.emission());
 			lightVertices.emplace_back(rayVertices[i]);
 			lightVertices.emplace_back(rayVertices[next]);
 		}
