@@ -49,12 +49,27 @@ FloatRect Entity::getBoundingBox(EntityHandle entity)
 	return boundingCoords.toRect();
 }
 
-void Entity::setParent(EntityHandle* child, EntityHandle* parent, EntityId parentEId)
+#ifndef NDEBUG
+static bool isDescendantOf(EntityHandle entity, EntityId ancestorEId)
 {
-	if (!parentEId)
-		parentEId = Entity::getId(*parent);
+	while (const CParent* cParent = entity.find<CParent*>())
+	{
+		if (cParent->eId() == ancestorEId)
+			return true;
+		entity = entity.manager->getEntity(cParent->eId());
+	}
+	return false;
+}
+#endif
+
+void Entity::setParent(EntityHandle* child, EntityHandle* parent)
+{
+	const EntityId childEId = Entity::getId(*child);
+	const EntityId parentEId = Entity::getId(*parent);
+	assert(parentEId != childEId && !isDescendantOf(*parent, childEId));
+
 	child->add<CParent>(parentEId);
 
 	CChildren* cChildren = parent->has<CChildren>() ? parent->get<CChildren*>() : parent->add<CChildren>();
-	cChildren->add(Entity::getId(*child));
+	cChildren->add(childEId);
 }

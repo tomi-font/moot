@@ -12,5 +12,5 @@ namespace Entity
 
 	FloatRect getBoundingBox(EntityHandle);
 
-	void setParent(EntityHandle* child, EntityHandle* parent, EntityId parentEId = {});
+	void setParent(EntityHandle* child, EntityHandle* parent);
 }

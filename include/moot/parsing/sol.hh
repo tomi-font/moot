@@ -1,10 +1,11 @@
 #pragma once
 
+#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CPosition.hh>
 #include <sol/sol.hpp>
 
-// Lets a CPosition userdata be passed to anything expecting a Vector2f,
-// so scripts can treat an entity's position as a normal vector.
+// Lets a CPosition or CLocalPosition userdata be passed to anything expecting a Vector2f,
+// so scripts can treat an entity's positions as normal vectors.
 // Must be included by every translation unit that binds or fetches Vector2f through sol.
 
 namespace sol::stack
@@ -14,7 +15,8 @@ namespace sol::stack
 		template<typename Handler>
 		static bool check(lua_State* L, int index, Handler&& handler, record& tracking)
 		{
-			if (type_of(L, index) == type::userdata && stack::check<CPosition*>(L, index))
+			if (type_of(L, index) == type::userdata
+			    && (stack::check<CPosition*>(L, index) || stack::check<CLocalPosition*>(L, index)))
 			{
 				tracking.use(1);
 				return true;
@@ -27,8 +29,13 @@ namespace sol::stack
 	{
 		static Vector2f get(lua_State* L, int index, record& tracking)
 		{
-			if (type_of(L, index) == type::userdata && stack::check<CPosition*>(L, index))
-				return stack::get<CPosition*>(L, index, tracking)->val();
+			if (type_of(L, index) == type::userdata)
+			{
+				if (stack::check<CPosition*>(L, index))
+					return stack::get<CPosition*>(L, index, tracking)->val();
+				if (stack::check<CLocalPosition*>(L, index))
+					return *stack::get<CLocalPosition*>(L, index, tracking);
+			}
 			return stack::unqualified_get<detail::as_value_tag<Vector2f>>(L, index, tracking);
 		}
 	};

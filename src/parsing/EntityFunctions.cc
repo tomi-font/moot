@@ -1,6 +1,7 @@
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CHudRender.hh>
+#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
@@ -71,6 +72,10 @@ static void registerComponentTypes(sol::state* lua)
 	position["y"] = sol::property([](const CPosition& pos) { return pos.val().y; },
 	                              [](CPosition* pos, float y) { pos->mut().y = y; });
 
+	auto localPosition = registerComponent<CLocalPosition>(ct);
+	localPosition["x"] = &CLocalPosition::x;
+	localPosition["y"] = &CLocalPosition::y;
+
 	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
 }
@@ -105,6 +110,12 @@ static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 	et->set("position", sol::property(
 		[](const EntityHandle& entity) { return entity.get<CPosition*>(); },
 		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CPosition*>() = pos; }));
+
+	et->set("localPosition", sol::property(
+		[](const EntityHandle& entity) { return entity.get<CLocalPosition*>(); },
+		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CLocalPosition*>() = pos; }));
+
+	et->set("setParent", Entity::setParent);
 }
 
 void EntityFunctions::registerAll(sol::state* lua)
