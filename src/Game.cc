@@ -2,6 +2,7 @@
 #include <moot/Component/Id.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/System/SCallback.hh>
+#include <moot/System/SHierarchy.hh>
 #include <moot/System/SInput.hh>
 #include <moot/System/SPhysics.hh>
 #include <moot/System/SRender.hh>
@@ -22,6 +23,7 @@ Game::Game(std::source_location location) :
 	addSystem<SInput>(SystemSchedule::Phase::Input);
 	addSystem<SPhysics>(SystemSchedule::Phase::Update);
 	addSystem<SCallback>(SystemSchedule::Phase::Update, SystemSchedule::before<SPhysics>());
+	addSystem<SHierarchy>(SystemSchedule::Phase::Update); // After the physics, so that children follow the final positions.
 	addSystem<SRender>(SystemSchedule::Phase::Render);
 
 	setEventManager(&m_eventManager);

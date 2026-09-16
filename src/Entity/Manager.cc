@@ -3,6 +3,7 @@
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CEntity.hh>
+#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CParent.hh>
@@ -21,10 +22,13 @@ EntityManager::EntityManager() :
 static void checkComponentComposition(ComponentComposable entity)
 {
 	if (!entity.has<CPosition>())
-		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight>()));
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight, CLocalPosition>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());
+
+	if (entity.has<CLocalPosition>())
+		assert(!entity.has<CCollisionBox>());
 }
 
 EntityHandle EntityManager::processEntityToSpawn(ComponentCollection* entity, std::optional<sf::Vector2f> pos)

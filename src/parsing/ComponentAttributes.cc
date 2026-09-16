@@ -4,6 +4,7 @@
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CInput.hh>
 #include <moot/Component/CLight.hh>
+#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPointable.hh>
 #include <moot/Component/CPosition.hh>
@@ -79,6 +80,11 @@ template<typename C> static void parser(const sol::object&, ComponentCollection*
 template<> void parser<CPosition>(const sol::object& data, ComponentCollection* collection)
 {
 	collection->add<CPosition>(asVector2f(data));
+}
+
+template<> void parser<CLocalPosition>(const sol::object& data, ComponentCollection* collection)
+{
+	collection->add<CLocalPosition>(asVector2f(data));
 }
 
 template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollection* collection)
@@ -215,6 +221,7 @@ static struct Init
 	Init()
 	{
 		registerComponent<CPosition>("Position");
+		registerComponent<CLocalPosition>("LocalPosition");
 		registerComponent<CConvexPolygon>("ConvexPolygon");
 		registerComponent<CMove>("Move");
 		registerComponent<CInput>("Input");
