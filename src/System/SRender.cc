@@ -37,7 +37,7 @@ static sf::Transform groundToViewTransform(const sf::Vector2f& viewSize)
 	return transform;
 }
 
-static void updateCamera(const EntityPointer& entity, Window* window)
+void SRender::updateCamera(const EntityPointer& entity)
 {
 	sf::Vector2f center = entity.get<CPosition>();
 	const auto& cCamera = entity.get<CCamera>();
@@ -59,12 +59,21 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldToViewTransform = groundToViewTransform(size) * cCamera.getGroundTransform();
+	const sf::Transform groundTransform = cCamera.getGroundTransform();
+	const sf::Transform flipTransform = groundToViewTransform(size);
+	center = groundTransform.transformPoint(center);
 
-	center = worldToViewTransform.transformPoint(center);
+	// The lower the camera, the more of the plane ahead of the entity (up the screen) is shown: centered when
+	// looking straight down, up to this fraction of the view towards the horizon, most of it coming in the
+	// last degrees (a view height shows size.y / sin(elevation) of plane, so that is where the depth behind
+	// the entity would balloon).
+	constexpr float MaxLookAheadFraction = 0.3f;
+	center.y += MaxLookAheadFraction * size.y * (1 - std::sin(cCamera.elevation()));
 
-	window->setView({center, size});
-	window->setWorldToViewTransform(worldToViewTransform);
+	center = flipTransform.transformPoint(center);
+
+	window()->setView({center, size});
+	window()->setWorldToViewTransform(flipTransform * groundTransform);
 }
 
 SRender::SRender()
@@ -74,7 +83,7 @@ SRender::SRender()
 	m_queries[Q::Camera] = {{ .required = {CId<CCamera>},
 		.onEntityAdded = [this](const EntityPointer& entity)
 		{
-			updateCamera(entity, window());
+			updateCamera(entity);
 		}
 	}};
 
@@ -100,7 +109,7 @@ void SRender::updateCameras()
 		 || hasChangedSinceLastUpdate(cCamera.elevation())
 		 || hasChangedSinceLastUpdate(cCamera.rotation()))
 		{
-			updateCamera(entity, window());
+			updateCamera(entity);
 		}
 	}
 	assert(m_queries[Q::Camera].getEntityCount() == 1);
