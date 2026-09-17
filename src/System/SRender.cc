@@ -360,27 +360,60 @@ void SRender::drawExtrusions()
 		const CConvexPolygon* polygon;
 		sf::Vector2f position;
 		float depth; // In transformed coordinates, larger is farther from the viewer.
+		FloatRect screenBounds;
+		bool hidesCameraEntity;
 	};
 	std::vector<Extrusion> extrusions;
 	extrusions.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
 
 	const sf::Transform groundTransform = cCamera.getGroundTransform();
+	// How much a unit of height rises on screen.
+	const float rise = std::cos(cCamera.elevation());
+	assert(rise >= 0);
+
+	// The depth of a polygon and the screen area of its extrusion, in transformed coordinates.
+	const auto measure = [&](const CConvexPolygon& cConvexPolygon, const sf::Vector2f& position)
+	{
+		sf::Vector2f min(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+		sf::Vector2f max = -min;
+		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
+		{
+			const sf::Vector2f point = groundTransform.transformPoint(position + vertex);
+			min = {std::min(min.x, point.x), std::min(min.y, point.y)};
+			max = {std::max(max.x, point.x), std::max(max.y, point.y)};
+		}
+		return std::pair(max.y, FloatRect(min, {max.x - min.x, max.y - min.y + cConvexPolygon.height() * rise}));
+	};
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		if (cConvexPolygon.height() <= 0)
 			continue;
 
-		float depth = -std::numeric_limits<float>::infinity();
-		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
-			depth = std::max(depth, groundTransform.transformPoint(cPosition.val() + vertex).y);
-
-		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth);
+		const auto [depth, screenBounds] = measure(cConvexPolygon, cPosition.val());
+		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth, screenBounds, false);
 	}
 
 	// Painter's algorithm: an extrusion only covers screen space above its footprint, so the farther
 	// ones must be drawn first. Good enough for footprints that do not overlap.
 	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::depth);
+
+	// The extrusions that come between the viewer and the entity the camera follows get see-through.
+	for (auto [entity, cPosition] : m_queries[Q::Camera].getAll<EntityPointer, CPosition>())
+	{
+		if (!entity.has<CConvexPolygon>())
+			break;
+		const auto& cConvexPolygon = entity.get<CConvexPolygon>();
+		const auto [cameraDepth, cameraBounds] = measure(cConvexPolygon, cPosition);
+
+		for (Extrusion& extrusion : extrusions)
+		{
+			extrusion.hidesCameraEntity = (extrusion.polygon != &cConvexPolygon
+			                            && extrusion.depth < cameraDepth
+			                            && extrusion.screenBounds.intersects(cameraBounds));
+		}
+	}
+	constexpr std::uint8_t HidingAlpha = 90;
 
 	const sf::View& view = window()->getView();
 	const sf::Vector2f viewSize = view.getSize();
@@ -395,9 +428,6 @@ void SRender::drawExtrusions()
 	// interior would lie about the light, and the edge itself is noisy. In world units, this many pixels out.
 	constexpr float LightSamplePixels = 3;
 	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
-	// How much a unit of height rises on screen.
-	const float rise = std::cos(cCamera.elevation());
-	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
 
 	m_passVertices.clear();
 
@@ -411,7 +441,9 @@ void SRender::drawExtrusions()
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
 		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
-		const Color topColor = extrusion.polygon->fillColor();
+		Color topColor = extrusion.polygon->fillColor();
+		if (extrusion.hidesCameraEntity)
+			topColor.a = HidingAlpha;
 
 		points.resize(vertexCount);
 		worldPoints.resize(vertexCount);
