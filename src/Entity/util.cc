@@ -67,6 +67,7 @@ void Entity::setParent(EntityHandle* child, EntityHandle* parent)
 	const EntityId childEId = Entity::getId(*child);
 	const EntityId parentEId = Entity::getId(*parent);
 	assert(parentEId != childEId && !isDescendantOf(*parent, childEId));
+	assert(!parent->manager->isEntityToRemove(*parent)); // Its children were removed with it; a new child would outlive it.
 
 	child->add<CParent>(parentEId);
 

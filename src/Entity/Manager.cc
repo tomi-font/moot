@@ -70,11 +70,6 @@ void EntityManager::remove(const EntityHandle& entity)
 			remove(makeHandle(m_entityIdMap.at(childEId)));
 }
 
-EntityHandle EntityManager::getEntity(EntityId eId)
-{
-	return makeHandle(getEntityPointer(eId));
-}
-
 EntityPointer EntityManager::getEntityPointer(EntityId eId)
 {
 	try
@@ -91,6 +86,11 @@ EntityPointer EntityManager::getEntityPointer(EntityId eId)
 		}
 		assert(false);
 	}
+}
+
+EntityHandle EntityManager::getEntity(EntityId eId)
+{
+	return makeHandle(getEntityPointer(eId));
 }
 
 EntityHandle EntityManager::makeHandle(EntityPointer entity)
@@ -134,7 +134,7 @@ ComponentCollection* EntityManager::addComponentTo(const EntityPointer& entity, 
 
 	EntityToChange* entityToChange = registerEntityToChange(entity);
 	assert(!entityToChange->toRemove.has(cId));
-	checkComponentComposition(entity.comp() += cId + entityToChange->toAdd.comp() - entityToChange->toRemove + cId);
+	checkComponentComposition(entity.comp() + ComponentComposition(cId) + entityToChange->toAdd.comp() - entityToChange->toRemove);
 
 	return &entityToChange->toAdd;
 }
@@ -196,21 +196,12 @@ EntityManager::UpdateInfo EntityManager::updateEntities()
 			}
 		}
 
-		// Make sure there is no child that was added after this entity was scheduled for removal.
-		if (CChildren* cChildren = entity.find<CChildren*>())
-		{
-			for (EntityId childEId : cChildren->eIds())
-			{
-				assert(!m_entityIdMap.contains(childEId) || m_entitiesToRemove.contains(m_entityIdMap.at(childEId)));
-			}
-		}
-
 		const bool erased = m_entityIdMap.erase(eId);
 		assert(erased);
 	}
 	m_entitiesToRemove.clear();
 
-	for (const auto& [entity, entityToChange] : m_entitiesToChange)
+	for (auto& [entity, entityToChange] : m_entitiesToChange)
 	{
 		ComponentCollection& entityToSpawn = m_entitiesToSpawn.emplace_back(std::move(entityToChange.toAdd));
 		entityToSpawn.add(entity.comp() -= entityToChange.toRemove, entity.collection, entity.index);
