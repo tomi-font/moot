@@ -95,7 +95,7 @@ static void registerEntityComponentFunctions(sol::usertype<EntityHandle>* et)
 		assert(cId < ComponentIdRegistry::idCount());
 		const auto parser = ComponentAttributes::findParser(ComponentNames::get(cId));
 		assert(parser);
-		parser(data, entity->manager->getComponentsToAddOf(*entity));
+		parser(data, entity->manager->addComponentTo(*entity, cId));
 		*entity = {*entity, entity->comp() + ComponentComposition(cId), entity->manager};
 	});
 

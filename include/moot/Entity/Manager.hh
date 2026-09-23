@@ -21,16 +21,18 @@ public:
 	EntityHandle spawn(const Prototype&, std::optional<sf::Vector2f> = {});
 	EntityHandle spawnEmpty(std::optional<sf::Vector2f> = {});
 	void remove(const EntityHandle&);
+	bool isEntityToRemove(const EntityPointer& entity) const { return m_entitiesToRemove.contains(entity); }
 
-	EntityHandle getEntity(EntityId);
 	EntityPointer getEntityPointer(EntityId);
-
+	EntityHandle getEntity(EntityId);
 	EntityHandle makeHandle(EntityPointer);
+
 	template<typename C> C* addComponentTo(const EntityPointer& entity, auto&&... args)
 	{
 		return addComponentTo(entity, CId<C>)->template add<C>(std::forward<decltype(args)>(args)...);
 	}
-	ComponentCollection* getComponentsToAddOf(const EntityPointer& entity) { return &m_entitiesToChange[entity].toAdd; }
+	ComponentCollection* addComponentTo(const EntityPointer&, ComponentId);
+	ComponentCollection* getComponentsToAddOf(const EntityPointer& entity) { return &m_entitiesToChange.at(entity).toAdd; }
 	void removeComponentFrom(const EntityPointer&, ComponentId);
 
 protected:
@@ -62,7 +64,6 @@ private:
 	EntityHandle processEntityToSpawn(ComponentCollection* entity, std::optional<sf::Vector2f> pos);
 
 	EntityToChange* registerEntityToChange(const EntityPointer&);
-	ComponentCollection* addComponentTo(const EntityPointer&, ComponentId);
 
 	std::unordered_map<ComponentComposition::Bits, ComponentCollection> m_collections;
 	std::unordered_map<EntityId, EntityPointer> m_entityIdMap;
