@@ -2,10 +2,11 @@
 #include <moot/Event/Manager.hh>
 #include <cassert>
 
-void EventUser::setEventManager(EventManager* em)
+void EventUser::initializeEvents(EventManager* eventManager)
 {
-	assert(!m_eventManager && em);
-	m_eventManager = em;
+	assert(!m_eventManager && eventManager);
+	m_eventManager = eventManager;
+	listenToEvents();
 }
 
 void EventUser::listenToEvents()

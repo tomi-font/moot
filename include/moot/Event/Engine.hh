@@ -5,4 +5,5 @@
 enum EngineEvent : Event::Id
 {
 	GameClose = EventIdRange::Game.back() + 1,
+	ProfilingRequest,
 };

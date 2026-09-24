@@ -10,10 +10,12 @@ class GlobalClock
 
 public:
 
-	using Ticks = uint64_t;
+	using Ticks = std::int64_t;
 
-	static auto ticksSinceStart()
+	static constexpr bool TicksAreMicroseconds = true;
+
+	static Ticks ticksSinceStart()
 	{
-		return static_cast<Ticks>(s_m_clock.getElapsedTime().asMicroseconds());
+		return s_m_clock.getElapsedTime().asMicroseconds();
 	}
 };

@@ -33,6 +33,7 @@ public:
 private:
 
 	void onSystemAdded(System*) override;
+	void listenToEvents() override;
 	void onEvent(const Event&) override;
 
 	void preProcessEntities(EntityManager::PreUpdateInfo);

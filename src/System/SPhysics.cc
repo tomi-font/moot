@@ -6,8 +6,6 @@
 #include <moot/Entity/Pointer/operators.hh>
 #include <moot/util/math/base.hh>
 
-static const std::string GravitationalAcceleration = "gravitationalAcceleration";
-
 // Indices for this system's queries.
 enum Q
 {
@@ -28,9 +26,9 @@ SPhysics::SPhysics()
 	}};
 }
 
-void SPhysics::initializeProperties()
+void SPhysics::registerProperties()
 {
-	m_properties->set(GravitationalAcceleration, 0.f);
+	m_properties->set(Property::Gravity, 0.f);
 }
 
 static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
@@ -221,8 +219,8 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 
 void SPhysics::update()
 {
-	const float elapsedTime = m_properties->get<float>(Property::ElapsedTime);
-	const float gravitationalAcceleration = m_properties->get<float>(GravitationalAcceleration);
+	const auto elapsedTime = m_properties->get<float>(Property::ElapsedTime);
+	const auto gravity = m_properties->get<float>(Property::Gravity);
 	std::unordered_map<EntityPointer, CollidableProvisional> movingCollidables;
 
 	for (EntityPointer entity : m_queries[Q::Dynamic])
@@ -235,7 +233,7 @@ void SPhysics::update()
 		if (entity.has<CRigidbody>())
 		{
 			CRigidbody* cRigidbody = entity.get<CRigidbody*>();
-			cRigidbody->applyYForce(-gravitationalAcceleration * elapsedTime);
+			cRigidbody->applyYForce(-gravity * elapsedTime);
 			velocity += cRigidbody->velocity();
 		}
 

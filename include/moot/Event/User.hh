@@ -9,23 +9,24 @@ class EventUser
 public:
 
 	EventUser() = default;
+	virtual ~EventUser() = default;
+
 	EventUser(const EventUser&) = delete;
 	EventUser& operator=(const EventUser&) = delete;
 
-	void setEventManager(EventManager*);
-	virtual void listenToEvents();
+	void initializeEvents(EventManager*);
 
 	virtual void onEvent(const Event&);
 
 protected:
-
-	virtual ~EventUser() {}
 
 	void listenTo(Event::Id);
 
 	void trigger(const Event&) const;
 
 private:
+
+	virtual void listenToEvents();
 
 	EventManager* m_eventManager = nullptr;
 };

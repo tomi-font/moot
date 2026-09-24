@@ -25,8 +25,8 @@ Game::Game(std::source_location location) :
 	addSystem<SHierarchy>(SystemSchedule::Phase::Update, SystemSchedule::after<SPhysics>());
 	addSystem<SRender>(SystemSchedule::Phase::Render);
 
-	setEventManager(&m_eventManager);
-	listenTo(EngineEvent::GameClose);
+	initializeEvents(&m_eventManager);
+	m_profiler.initializeEvents(&m_eventManager);
 
 	initializeScriptContext(this);
 
@@ -34,7 +34,6 @@ Game::Game(std::source_location location) :
 	halfScreen.size /= 2u;
 	m_window.create(halfScreen, "a moot game");
 	m_window.setPosition(sf::Vector2i(halfScreen.size));
-	m_window.setFramerateLimit(60);
 	m_window.setVerticalSyncEnabled(true);
 	m_window.setKeyRepeatEnabled(false);
 }
@@ -46,11 +45,14 @@ void Game::onSystemAdded(System* system)
 	system->setEntityManager(this);
 	system->setWindow(&m_window);
 
-	system->setEventManager(&m_eventManager);
-	system->listenToEvents();
+	system->initializeEvents(&m_eventManager);
 
-	system->setProperties(&m_properties);
-	system->initializeProperties();
+	system->initializeProperties(&m_properties);
+}
+
+void Game::listenToEvents()
+{
+	listenTo(EngineEvent::GameClose);
 }
 
 void Game::onEvent(const Event& event)
@@ -92,20 +94,21 @@ void Game::play()
 
 	while (m_running)
 	{
+		m_profiler.beginFrame();
+
 		++m_frameNumber;
 
 		m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
 
-		bool needsAnotherEntityUpdate;
-		do
+		for (bool needsEntityUpdate = true; needsEntityUpdate;)
 		{
-			needsAnotherEntityUpdate = false;
+			needsEntityUpdate = false;
 
 			{
 				EntityManager::PreUpdateInfo preUpdateInfo = preUpdateEntities();
 
 				if (!preUpdateInfo.entitiesToChange.empty() || !preUpdateInfo.entitiesToRemove.empty())
-					needsAnotherEntityUpdate = true;
+					needsEntityUpdate = true;
 
 				preProcessEntities(preUpdateInfo);
 			}
@@ -116,13 +119,18 @@ void Game::play()
 				EntityManager::UpdateInfo updateInfo = updateEntities();
 
 				if (!updateInfo.addedEntities.empty() || !updateInfo.changedEntities.empty())
-					needsAnotherEntityUpdate = true;
+					needsEntityUpdate = true;
 
 				postProcessEntities(updateInfo);
 			}
 		}
-		while (needsAnotherEntityUpdate);
+
+		m_window.clear(m_properties.get<Color>(Property::ClearColor));
 
 		updateSystems();
+
+		m_profiler.endFrame();
+
+		m_window.display();
 	}
 }

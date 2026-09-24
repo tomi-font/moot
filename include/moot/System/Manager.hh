@@ -1,5 +1,6 @@
 #pragma once
 
+#include <moot/System/Profiler.hh>
 #include <moot/System/Schedule.hh>
 #include <memory>
 #include <vector>
@@ -19,9 +20,11 @@ public:
 
 protected:
 
-	void updateSystems() const;
+	void updateSystems();
 
 	std::vector<std::unique_ptr<System>> m_systems;
+
+	SystemProfiler m_profiler;
 
 private:
 

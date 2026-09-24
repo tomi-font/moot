@@ -30,11 +30,13 @@ void System::setSchedule(SystemSchedule schedule)
 	m_schedule = schedule;
 }
 
-void System::performUpdate()
+GlobalClock::Ticks System::performUpdate()
 {
 	const GlobalClock::Ticks thisUpdateTicks = GlobalClock::ticksSinceStart();
 
 	update();
 
 	m_lastUpdateTicks = thisUpdateTicks;
+
+	return GlobalClock::ticksSinceStart() - thisUpdateTicks;
 }

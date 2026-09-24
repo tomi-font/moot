@@ -28,7 +28,8 @@ public:
 	void setWindow(Window*);
 	void setSchedule(SystemSchedule);
 
-	void performUpdate();
+	// Returns how long the update took.
+	GlobalClock::Ticks performUpdate();
 
 protected:
 
