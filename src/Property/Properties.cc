@@ -1,11 +1,11 @@
 #include <moot/Property/Properties.hh>
 #include <cassert>
 
-void Properties::registerGetter(std::string&& name, Property::Getter&& getter)
+void Properties::registerGetter(const std::string& name, Property::Getter&& getter)
 {
 	assert(!m_values.contains(name));
 	assert(!m_getters.contains(name));
-	m_getters.emplace(std::move(name), std::move(getter));
+	m_getters.emplace(name, std::move(getter));
 }
 
 void Properties::set(const std::string& name, Property::Value&& value)

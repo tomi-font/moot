@@ -17,5 +17,9 @@ struct Property
 
 	using Getter = std::function<Property::Value()>;
 
-	static const std::string ElapsedTime;
+	static constexpr std::string AmbientLight = "ambientLight";
+	static constexpr std::string ClearColor = "clearColor";
+	static constexpr std::string ElapsedTime = "elapsedTime";
+	static constexpr std::string Gravity = "gravity";
+	static constexpr std::string WindowSize = "windowSize";
 };

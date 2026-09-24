@@ -13,7 +13,7 @@ public:
 
 private:
 
-	void initializeProperties() override;
+	void registerProperties() override;
 
 	void update() override;
 	void updateCameras();

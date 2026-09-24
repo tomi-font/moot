@@ -6,13 +6,15 @@ class PropertyUser
 {
 public:
 
-	void setProperties(Properties*);
+	virtual ~PropertyUser() = default;
 
-	virtual void initializeProperties();
+	void initializeProperties(Properties*);
 
 protected:
 
-	virtual ~PropertyUser() {}
-
 	Properties* m_properties = nullptr;
+
+private:
+
+	virtual void registerProperties();
 };

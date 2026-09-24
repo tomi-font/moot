@@ -17,6 +17,12 @@ enum Q
 	COUNT
 };
 
+static bool isKeyPress(const sf::Event& event, sf::Keyboard::Key key)
+{
+	const auto* const keyPressed = event.getIf<sf::Event::KeyPressed>();
+	return keyPressed && keyPressed->code == key;
+}
+
 SInput::SInput() :
 	m_pointedEntityId()
 {
@@ -25,9 +31,9 @@ SInput::SInput() :
 	m_queries[Q::Pointables] = {{ .required = {CId<CPointable>} }};
 }
 
-void SInput::initializeProperties()
+void SInput::registerProperties()
 {
-	m_properties->registerGetter("windowSize", [this](){ return Vector2f(window()->getSize()); });
+	m_properties->registerGetter(Property::WindowSize, [this](){ return Vector2f(window()->getSize()); });
 }
 
 void SInput::update()
@@ -59,11 +65,12 @@ void SInput::update()
 			}
 		}
 
-		if (!eventHasCallback
-		 && (event->is<sf::Event::Closed>()
-		  || (event->is<sf::Event::KeyPressed>() && event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Q)))
+		if (!eventHasCallback)
 		{
-			trigger({EngineEvent::GameClose});
+			if (event->is<sf::Event::Closed>() || isKeyPress(*event, sf::Keyboard::Key::Q))
+				trigger({EngineEvent::GameClose});
+			else if (isKeyPress(*event, sf::Keyboard::Key::P))
+				trigger({EngineEvent::ProfilingRequest});
 		}
 	}
 	updatePointables();

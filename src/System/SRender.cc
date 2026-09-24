@@ -14,9 +14,6 @@
 #include <numbers>
 #include <ranges>
 
-static constexpr std::string ClearColor = "clearColor";
-static constexpr std::string AmbientLight = "ambientLight";
-
 // Indices for this system's queries.
 enum Q
 {
@@ -84,10 +81,10 @@ SRender::SRender()
 	m_queries[Q::Lights] = {{ .required = {CId<CLight>} }};
 }
 
-void SRender::initializeProperties()
+void SRender::registerProperties()
 {
-	m_properties->set(ClearColor, Color::Black);
-	m_properties->set(AmbientLight, Color::White);
+	m_properties->set(Property::ClearColor, Color::Black);
+	m_properties->set(Property::AmbientLight, Color::White);
 }
 
 void SRender::updateCameras()
@@ -133,7 +130,7 @@ void SRender::updateLightMap()
 		assert(success);
 	}
 
-	m_lightMap.clear(m_properties->get<Color>(AmbientLight));
+	m_lightMap.clear(m_properties->get<Color>(Property::AmbientLight));
 	m_lightMap.setView(window()->getView());
 }
 
@@ -455,8 +452,6 @@ void SRender::drawHud()
 
 void SRender::update()
 {
-	window()->clear(m_properties->get<Color>(ClearColor));
-
 	updateCameras();
 
 	drawPolygons();
@@ -468,6 +463,4 @@ void SRender::update()
 	drawExtrusions();
 
 	drawHud();
-
-	window()->display();
 }
