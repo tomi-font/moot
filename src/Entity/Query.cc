@@ -39,13 +39,13 @@ unsigned EntityQuery::getEntityCount() const
 	return count;
 }
 
-EntityPointer EntityQuery::getSingleEntity() const
+std::vector<ComponentCollection*>::const_iterator EntityQuery::getSingleIterator() const
 {
 	assert(getEntityCount() == 1);
 
-	for (ComponentCollection* collection : m_matchingCollections)
-		if (collection->size())
-			return {collection, 0};
-
-	std::unreachable();
+	auto collectionIt = m_matchingCollections.begin();
+	while ((*collectionIt)->size() == 0)
+		++collectionIt;
+	
+	return collectionIt;
 }
