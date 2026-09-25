@@ -89,10 +89,9 @@ void SRender::registerProperties()
 
 void SRender::updateCameras()
 {
-	EntityPointer entity = m_queries[Q::Camera].getSingleEntity();
-	const auto& cCamera = entity.get<CCamera>();
+	auto [entity, cPosition, cCamera] = m_queries[Q::Camera].getSingle<EntityPointer, CPosition, CCamera>();
 
-	if (hasChangedSinceLastUpdate(entity.get<CPosition>())
+	if (hasChangedSinceLastUpdate(cPosition)
 	 || hasChangedSinceLastUpdate(cCamera.size())
 	 || hasChangedSinceLastUpdate(cCamera.elevation())
 	 || hasChangedSinceLastUpdate(cCamera.rotation()))
@@ -318,8 +317,8 @@ void SRender::drawLightMap()
 
 void SRender::drawExtrusions()
 {
-	const auto& cCamera = m_queries[Q::Camera].getSingleEntity().get<CCamera>();
-	if (cCamera.elevation() >= CCamera::MaxElevation)
+	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
+	if (cCamera.elevation() == CCamera::MaxElevation)
 		return; // Looking straight at the plane, the extrusions are hidden behind their footprint.
 
 	struct Extrusion

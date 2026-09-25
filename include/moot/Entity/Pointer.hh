@@ -11,20 +11,17 @@ struct EntityPointer : InstanceCounter<EntityPointer>
 
 	bool isValid() const { return collection; }
 
-	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
-	inline const C& get() const noexcept
-	{
+	template<typename C> const C& get() const noexcept requires (!std::is_pointer_v<C>) {
 		return collection->getAll<C>()[index];
 	}
 
-	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
-	inline CP get() const noexcept
+	template<typename CP> CP get() const noexcept requires (std::is_pointer_v<CP>)
 	{
 		using C = std::remove_pointer_t<CP>;
 		return &collection->getAll<C>()[index];
 	}
 
-	template<typename C> inline bool has() const
+	template<typename C> bool has() const
 	{
 		return collection->has<C>();
 	}

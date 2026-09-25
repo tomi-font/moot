@@ -35,11 +35,17 @@ public:
 
 	template<typename ...Cs> ComponentCollectionIterable<Cs...> getAll() const { return {m_matchingCollections}; }
 
+	// For queries meant to match a single entity.
+	template<typename ...Cs> decltype(auto) getSingle() const
+	{
+		return *ComponentCollectionIterator<Cs...>(getSingleIterator());
+	}
+
 	unsigned getEntityCount() const;
-	// The one entity matching the query, for queries meant to match a single entity.
-	EntityPointer getSingleEntity() const;
 
 private:
+
+	std::vector<ComponentCollection*>::const_iterator getSingleIterator() const;
 
 	std::vector<ComponentCollection*> m_matchingCollections;
 
