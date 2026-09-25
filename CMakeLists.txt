@@ -6,9 +6,8 @@ add_subdirectory(lib/SFML SYSTEM)
 
 add_library(moot STATIC)
 
-target_include_directories(moot PRIVATE include)
+target_include_directories(moot PUBLIC include)
 target_include_directories(moot SYSTEM PUBLIC lib)
-target_include_directories(moot SYSTEM INTERFACE include)
 
 target_compile_features(moot PUBLIC cxx_std_26)
 
