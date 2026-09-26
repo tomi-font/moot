@@ -18,12 +18,12 @@ public:
 
 	unsigned size() const { return m_size; }
 
-	template<typename C> inline auto& getAll()
+	template<typename C> auto& getAll()
 	{
 		return s_m_components<C>.at(m_id);
 	}
 
-	template<typename C> inline const auto& getAll() const noexcept
+	template<typename C> const auto& getAll() const noexcept
 	{
 		return s_m_components<C>.at(m_id);
 	}
