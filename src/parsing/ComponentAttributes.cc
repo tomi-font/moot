@@ -124,8 +124,11 @@ template<> void parser<CInput>(const sol::object& data, ComponentCollection* col
 
 template<> void parser<CCollisionBox>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& map = asLuaMap<1>(data);
-	collection->add<CCollisionBox>(asVector2f(map["size"]));
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& rectObj = map["rect"];
+	assert(mapSize == rectObj.valid());
+
+	collection->add<CCollisionBox>(asOptionalParsed<FloatRect>(rectObj));
 }
 
 template<> void parser<CRigidbody>(const sol::object& data, ComponentCollection* collection)

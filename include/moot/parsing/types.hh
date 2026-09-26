@@ -103,6 +103,7 @@ inline Color asColor(const sol::object& var)
 template<typename T> static inline T asParsed(const sol::object& var) { return as<T>(var); }
 template<> inline Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
 template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
+template<> inline FloatRect asParsed(const sol::object& var) { return asFloatRect(var); }
 
 template<typename T> static inline T asOptionalParsed(const sol::object& var, T defaultValue = {})
 {
