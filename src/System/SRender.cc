@@ -125,7 +125,7 @@ void SRender::updateLightMap()
 	const sf::Vector2u& windowSize = window()->getSize();
 	if (m_lightMap.getSize() != windowSize)
 	{
-		bool success = m_lightMap.resize(windowSize);
+		bool success = m_lightMap.resize(windowSize, window()->getSettings());
 		assert(success);
 	}
 

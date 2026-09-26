@@ -32,8 +32,8 @@ Game::Game(std::source_location location) :
 
 	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();
 	halfScreen.size /= 2u;
-	m_window.create(halfScreen, "a moot game");
-	m_window.setPosition(sf::Vector2i(halfScreen.size));
+	m_window.create(halfScreen, "a moot game", sf::State::Windowed, sf::ContextSettings{.antiAliasingLevel = 4});
+	m_window.setPosition(sf::Vector2i(halfScreen.size) / 2);
 	m_window.setVerticalSyncEnabled(true);
 	m_window.setKeyRepeatEnabled(false);
 }
