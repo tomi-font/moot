@@ -4,11 +4,11 @@
 #include <moot/Component/CParent.hh>
 #include <moot/Component/CPosition.hh>
 
-std::vector<EntityHandle> Entity::getChildren(EntityHandle entity)
+std::vector<EntityHandle> Entity::getChildren(const EntityHandle& entity)
 {
 	std::vector<EntityHandle> children;
 
-	if (CChildren* cChildren = entity.find<CChildren*>())
+	if (auto* cChildren = entity.find<CChildren*>())
 	{
 		const auto& childrenEIds = cChildren->eIds();
 		children.reserve(childrenEIds.size());
@@ -20,7 +20,7 @@ std::vector<EntityHandle> Entity::getChildren(EntityHandle entity)
 
 static void updateBoundCoords(const EntityHandle& entity, BoundCoords* coords)
 {
-	if (CConvexPolygon* cConvexPolygon = entity.find<CConvexPolygon*>())
+	if (auto* cConvexPolygon = entity.find<CConvexPolygon*>())
 	{
 		BoundCoords polygonBoundCoords = cConvexPolygon->getBoundingCoordinates();
 		polygonBoundCoords.move(entity.get<CPosition>());
@@ -40,9 +40,8 @@ static void recursivelyUpdateBoundCoords(const EntityHandle& entity, BoundCoords
 		recursivelyUpdateBoundCoords(child, coords);
 }
 
-FloatRect Entity::getBoundingBox(EntityHandle entity)
+FloatRect Entity::getHierarchyBoundingBox(const EntityHandle& entity)
 {
-	assert(entity.has<CChildren>());
 	BoundCoords boundingCoords;
 
 	recursivelyUpdateBoundCoords(entity, &boundingCoords);

@@ -8,9 +8,9 @@ namespace Entity
 {
 	inline EntityId getId(const EntityPointer& entity) { return entity.get<CEntity>().eId(); }
 
-	std::vector<EntityHandle> getChildren(EntityHandle);
+	std::vector<EntityHandle> getChildren(const EntityHandle&);
 
-	FloatRect getBoundingBox(EntityHandle);
+	FloatRect getHierarchyBoundingBox(const EntityHandle&);
 
 	void setParent(EntityHandle* child, EntityHandle* parent);
 }

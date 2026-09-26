@@ -1,5 +1,6 @@
 #include <moot/System/SPhysics.hh>
 #include <moot/Component/CCollisionBox.hh>
+#include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
@@ -21,7 +22,10 @@ SPhysics::SPhysics()
 	m_queries[Q::Collidable] = {{ .required = {CId<CCollisionBox>},
 		.onEntityAdded = [](const EntityPointer& entity)
 		{
-			entity.get<CCollisionBox*>()->bottomLeft = entity.get<CPosition>().val();
+			auto* cCollisionBox = entity.get<CCollisionBox*>();
+			if (cCollisionBox->isEmpty())
+				*cCollisionBox = entity.get<CConvexPolygon>().getBoundingBox();
+			assert(cCollisionBox->hasPositiveArea());
 		}
 	}};
 }
@@ -31,8 +35,13 @@ void SPhysics::registerProperties()
 	m_properties->set(Property::Gravity, 0.f);
 }
 
-static Vector2f firstContactPointMoveRatios(const CCollisionBox& a, const Vector2f& aMove,
-											const CCollisionBox& b, const Vector2f& bMove)
+static FloatRect getWorldBox(const EntityPointer& entity)
+{
+	return entity.get<CCollisionBox>() + entity.get<CPosition>().val();
+}
+
+static Vector2f firstContactPointMoveRatios(const FloatRect& a, const Vector2f& aMove,
+											const FloatRect& b, const Vector2f& bMove)
 {
 	// The move of A relative to B.
 	const Vector2f relativeMove = aMove - bMove;
@@ -135,8 +144,8 @@ static void applyRigidbodyCollisionForces(const Vector2i& collidedOn, CRigidbody
 	}
 }
 
-static void adjustMoveAfterCollision(const Vector2i& collidedOn, const CCollisionBox& a, Vector2f* aMove,
-									                             const CCollisionBox& b, Vector2f* bMove)
+static void adjustMoveAfterCollision(const Vector2i& collidedOn, const FloatRect& a, Vector2f* aMove,
+									                             const FloatRect& b, Vector2f* bMove)
 {
 	if (collidedOn.x == 1)
 	{
@@ -194,7 +203,6 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 
 	for (EntityPointer other : collidables)
 	{
-		const CCollisionBox& otherCCol = other.get<CCollisionBox>();
 		CollidableProvisional otherProv;
 		
 		if (movingCollidables.contains(other))
@@ -204,7 +212,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 			otherProv = movingCollidables.at(other);
 		}
 		else
-			otherProv.base = otherCCol;
+			otherProv.base = getWorldBox(other);
 
 		if (!prov.destination().intersects(otherProv.destination()))
 			continue;
@@ -242,7 +250,7 @@ void SPhysics::update()
 			continue;
 
 		if (entity.has<CCollisionBox>())
-			movingCollidables.emplace(entity, CollidableProvisional(move, entity.get<CCollisionBox>()));
+			movingCollidables.emplace(entity, CollidableProvisional(move, getWorldBox(entity)));
 		else
 			entity.get<CPosition*>()->mut() += move;
 	}
@@ -271,13 +279,10 @@ void SPhysics::update()
 				assert(c.otherProv.move.isZero());
 		}
 
-		const CCollisionBox destination = prov.destination();
-		CCollisionBox* cCol = entity.get<CCollisionBox*>();
-		if (destination.bottomLeft != cCol->bottomLeft)
-		{
-			*cCol = destination;
-			*entity.get<CPosition*>() = cCol->bottomLeft;
-		}
+		const Vector2f newPosition = prov.destination().bottomLeft - entity.get<CCollisionBox>().bottomLeft;
+		auto* const cPosition = entity.get<CPosition*>();
+		if (newPosition != cPosition->val())
+			*cPosition = newPosition;
 		// TODO: else assert
 	}
 }

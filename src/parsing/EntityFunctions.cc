@@ -104,7 +104,7 @@ static void registerEntityComponentFunctions(sol::usertype<EntityHandle>* et)
 
 static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 {
-	et->set("getBoundingBox", Entity::getBoundingBox);
+	et->set("getHierarchyBoundingBox", Entity::getHierarchyBoundingBox);
 	et->set("getId", [](const EntityHandle& entity) { return Entity::getId(entity); });
 
 	et->set("position", sol::property(
