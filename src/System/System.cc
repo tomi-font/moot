@@ -1,7 +1,7 @@
 #include <moot/System/System.hh>
 
 System::System() :
-	m_lastUpdateTicks(),
+	m_lastUpdateChangeTick(),
 	m_entityManager(nullptr),
 	m_window(nullptr)
 {
@@ -25,18 +25,20 @@ void System::setWindow(Window* window)
 
 void System::setSchedule(SystemSchedule schedule)
 {
-	assert(m_schedule.phase == SystemSchedule().phase
-	    && m_schedule.order.before == SystemSchedule().order.before);
+	assert(m_schedule == SystemSchedule());
 	m_schedule = schedule;
 }
 
-GlobalClock::Ticks System::performUpdate()
+GlobalClock::Microseconds System::performUpdate()
 {
-	const GlobalClock::Ticks thisUpdateTicks = GlobalClock::ticksSinceStart();
+	const GlobalClock::Microseconds thisUpdateStart = GlobalClock::microsecondsSinceStart();
+	
+	const GlobalChangeTick::Tick thisUpdateChangeTick = GlobalChangeTick::current();
+	GlobalChangeTick::advance();
 
 	update();
 
-	m_lastUpdateTicks = thisUpdateTicks;
+	m_lastUpdateChangeTick = thisUpdateChangeTick;
 
-	return GlobalClock::ticksSinceStart() - thisUpdateTicks;
+	return GlobalClock::microsecondsSinceStart() - thisUpdateStart;
 }

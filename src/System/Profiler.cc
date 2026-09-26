@@ -22,7 +22,7 @@ enum Aggregate
 
 static constexpr const char* ProfilingIntervalEnvName = "MOOT_PROFILING_INTERVAL";
 
-static GlobalClock::Ticks getRequestedPrintInterval()
+static GlobalClock::Microseconds getRequestedPrintInterval()
 {
 	const char* const value = std::getenv(ProfilingIntervalEnvName);
 	if (!value)
@@ -36,17 +36,16 @@ static GlobalClock::Ticks getRequestedPrintInterval()
 		std::println(stderr, "{}: expected an interval in seconds, got \"{}\"", ProfilingIntervalEnvName, text);
 		return 0;
 	}
-	static_assert(GlobalClock::TicksAreMicroseconds);
-	return static_cast<GlobalClock::Ticks>(seconds * 1e6);
+	return static_cast<GlobalClock::Microseconds>(seconds * 1e6);
 }
 
 SystemProfiler::SystemProfiler() :
 	m_aggregateRows(AggregateCount),
-	m_printIntervalTicks(getRequestedPrintInterval()),
-	m_frameBeginTicks(0),
-	m_frameSystemsTicks(0),
-	m_lastFrameEndTicks(0),
-	m_intervalStartTicks(0),
+	m_printInterval(getRequestedPrintInterval()),
+	m_frameBegin(0),
+	m_frameSystemsDuration(0),
+	m_lastFrameEnd(0),
+	m_intervalStart(0),
 	m_profiling(false),
 	m_printRequested(false)
 {
@@ -55,7 +54,7 @@ SystemProfiler::SystemProfiler() :
 	m_aggregateRows[Frame] = {"frame"};
 	m_aggregateRows[FrameAndVsync] = {"frame + vsync"};
 
-	if (m_printIntervalTicks)
+	if (m_printInterval)
 		startProfiling();
 }
 
@@ -86,9 +85,9 @@ void SystemProfiler::insertSystemRow(std::size_t index, std::string name)
 void SystemProfiler::startProfiling()
 {
 	m_profiling = true;
-	m_intervalStartTicks = GlobalClock::ticksSinceStart();
-	m_frameBeginTicks = 0;
-	m_lastFrameEndTicks = 0;
+	m_intervalStart = GlobalClock::microsecondsSinceStart();
+	m_frameBegin = 0;
+	m_lastFrameEnd = 0;
 }
 
 void SystemProfiler::beginFrame()
@@ -96,16 +95,16 @@ void SystemProfiler::beginFrame()
 	if (!m_profiling)
 		return;
 
-	m_frameBeginTicks = GlobalClock::ticksSinceStart();
+	m_frameBegin = GlobalClock::microsecondsSinceStart();
 }
 
-void SystemProfiler::recordSystemUpdate(std::size_t systemIndex, GlobalClock::Ticks duration)
+void SystemProfiler::recordSystemUpdate(std::size_t systemIndex, GlobalClock::Microseconds duration)
 {
-	if (!m_frameBeginTicks)
+	if (!m_frameBegin)
 		return;
 
 	m_systemRows[systemIndex].samples.push_back(duration);
-	m_frameSystemsTicks += duration;
+	m_frameSystemsDuration += duration;
 }
 
 void SystemProfiler::endFrame()
@@ -113,45 +112,45 @@ void SystemProfiler::endFrame()
 	if (!m_profiling)
 		return;
 
-	const GlobalClock::Ticks now = GlobalClock::ticksSinceStart();
-	const GlobalClock::Ticks frameTicks = now - m_frameBeginTicks;
+	const GlobalClock::Microseconds now = GlobalClock::microsecondsSinceStart();
+	const GlobalClock::Microseconds frameDuration = now - m_frameBegin;
 
-	if (!m_frameBeginTicks)
+	if (!m_frameBegin)
 	{
 		// Profiling requested mid-frame; start it on the next one.
-		m_intervalStartTicks = now;
-		m_lastFrameEndTicks = now;
+		m_intervalStart = now;
+		m_lastFrameEnd = now;
 		return;
 	}
 
-	m_aggregateRows[AllSystems].samples.push_back(m_frameSystemsTicks);
-	m_aggregateRows[Frame].samples.push_back(frameTicks);
-	m_aggregateRows[OutsideSystems].samples.push_back(frameTicks - m_frameSystemsTicks);
-	if (m_lastFrameEndTicks)
-		m_aggregateRows[FrameAndVsync].samples.push_back(now - m_lastFrameEndTicks);
+	m_aggregateRows[AllSystems].samples.push_back(m_frameSystemsDuration);
+	m_aggregateRows[Frame].samples.push_back(frameDuration);
+	m_aggregateRows[OutsideSystems].samples.push_back(frameDuration - m_frameSystemsDuration);
+	if (m_lastFrameEnd)
+		m_aggregateRows[FrameAndVsync].samples.push_back(now - m_lastFrameEnd);
 
-	m_frameSystemsTicks = 0;
-	m_lastFrameEndTicks = now;
+	m_frameSystemsDuration = 0;
+	m_lastFrameEnd = now;
 
-	const GlobalClock::Ticks intervalTicks = now - m_intervalStartTicks;
-	if (m_printRequested || (m_printIntervalTicks && intervalTicks >= m_printIntervalTicks))
+	const GlobalClock::Microseconds intervalDuration = now - m_intervalStart;
+	if (m_printRequested || (m_printInterval && intervalDuration >= m_printInterval))
 	{
-		print(intervalTicks);
+		print(intervalDuration);
 		m_printRequested = false;
-		m_intervalStartTicks = now;
+		m_intervalStart = now;
 	}
 }
 
 static void printRow(SystemProfiler::Row* row, std::size_t nameWidth)
 {
-	std::vector<GlobalClock::Ticks>& samples = row->samples;
+	std::vector<GlobalClock::Microseconds>& samples = row->samples;
 	if (samples.empty())
 		return; // A row that skipped a frame has none in a one-frame interval.
 
-	GlobalClock::Ticks min = std::numeric_limits<GlobalClock::Ticks>::max();
-	GlobalClock::Ticks max = 0;
-	GlobalClock::Ticks mean = 0;
-	for (const GlobalClock::Ticks sample : samples)
+	GlobalClock::Microseconds min = std::numeric_limits<GlobalClock::Microseconds>::max();
+	GlobalClock::Microseconds max = 0;
+	GlobalClock::Microseconds mean = 0;
+	for (const GlobalClock::Microseconds sample : samples)
 	{
 		min = std::min(min, sample);
 		max = std::max(max, sample);
@@ -159,8 +158,7 @@ static void printRow(SystemProfiler::Row* row, std::size_t nameWidth)
 	}
 	mean /= samples.size();
 
-	static_assert(GlobalClock::TicksAreMicroseconds);
-	const auto ms = [](GlobalClock::Ticks ticks) { return double(ticks) / 1e3; };
+	const auto ms = [](GlobalClock::Microseconds duration) { return double(duration) / 1e3; };
 
 	std::println("  {:<{}} {:>9.3f} {:>9.3f} {:>9.3f}",
 	             row->name, nameWidth, ms(min), ms(mean), ms(max));
@@ -168,7 +166,7 @@ static void printRow(SystemProfiler::Row* row, std::size_t nameWidth)
 	samples.clear();
 }
 
-void SystemProfiler::print(GlobalClock::Ticks intervalTicks)
+void SystemProfiler::print(GlobalClock::Microseconds intervalDuration)
 {
 	std::size_t nameWidth = 0;
 	for (const Row& row : m_systemRows)
@@ -176,7 +174,7 @@ void SystemProfiler::print(GlobalClock::Ticks intervalTicks)
 	for (const Row& row : m_aggregateRows)
 		nameWidth = std::max(nameWidth, row.name.size());
 
-	std::println("\nprofiling over {:.3f}s ({} frames), in ms", double(intervalTicks) / 1e6, m_aggregateRows[AllSystems].samples.size());
+	std::println("\nprofiling over {:.3f}s ({} frames), in ms", double(intervalDuration) / 1e6, m_aggregateRows[AllSystems].samples.size());
 	std::println("  {:<{}} {:>9} {:>9} {:>9}", "", nameWidth, "min", "mean", "max");
 
 	for (Row& row : m_systemRows)

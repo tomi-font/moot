@@ -15,13 +15,13 @@ public:
 	void insertSystemRow(std::size_t index, std::string name);
 
 	void beginFrame();
-	void recordSystemUpdate(std::size_t systemIndex, GlobalClock::Ticks duration);
+	void recordSystemUpdate(std::size_t systemIndex, GlobalClock::Microseconds duration);
 	void endFrame();
 
 	struct Row
 	{
 		std::string name;
-		std::vector<GlobalClock::Ticks> samples;
+		std::vector<GlobalClock::Microseconds> samples;
 	};
 
 private:
@@ -30,16 +30,16 @@ private:
 	void onEvent(const Event&) override;
 
 	void startProfiling();
-	void print(GlobalClock::Ticks intervalTicks);
+	void print(GlobalClock::Microseconds intervalDuration);
 
 	std::vector<Row> m_systemRows;
 	std::vector<Row> m_aggregateRows;
 
-	const GlobalClock::Ticks m_printIntervalTicks;
-	GlobalClock::Ticks m_frameBeginTicks;
-	GlobalClock::Ticks m_frameSystemsTicks;
-	GlobalClock::Ticks m_lastFrameEndTicks;
-	GlobalClock::Ticks m_intervalStartTicks;
+	const GlobalClock::Microseconds m_printInterval;
+	GlobalClock::Microseconds m_frameBegin;
+	GlobalClock::Microseconds m_frameSystemsDuration;
+	GlobalClock::Microseconds m_lastFrameEnd;
+	GlobalClock::Microseconds m_intervalStart;
 
 	bool m_profiling;
 	bool m_printRequested;

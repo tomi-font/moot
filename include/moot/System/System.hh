@@ -2,6 +2,7 @@
 
 #include <moot/Entity/Querier.hh>
 #include <moot/Event/User.hh>
+#include <moot/Global/ChangeTick.hh>
 #include <moot/Global/Clock.hh>
 #include <moot/Property/User.hh>
 #include <moot/System/Schedule.hh>
@@ -29,7 +30,7 @@ public:
 	void setSchedule(SystemSchedule);
 
 	// Returns how long the update took.
-	GlobalClock::Ticks performUpdate();
+	GlobalClock::Microseconds performUpdate();
 
 protected:
 
@@ -37,7 +38,7 @@ protected:
 
 	template<typename T> bool hasChangedSinceLastUpdate(const TrackedValue<T>& tv)
 	{
-		return tv.hasChangedSince(m_lastUpdateTicks);
+		return tv.hasChangedSince(m_lastUpdateChangeTick);
 	}
 
 	EntityManager* entityManager() const { return m_entityManager; }
@@ -47,7 +48,7 @@ private:
 
 	virtual void update() = 0;
 
-	GlobalClock::Ticks m_lastUpdateTicks;
+	GlobalChangeTick::Tick m_lastUpdateChangeTick;
 
 	EntityManager* m_entityManager;
 	Window* m_window;

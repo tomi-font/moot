@@ -16,9 +16,13 @@ struct SystemSchedule
 	{
 		const std::type_info* before;
 		const std::type_info* after;
+
+		bool operator==(const Order&) const = default;
 	};
 
 	constexpr SystemSchedule(Phase systemPhase = Phase::Update, Order systemOrder = {}) : phase(systemPhase), order(systemOrder) {}
+
+	bool operator==(const SystemSchedule&) const = default;
 
 	template<typename T> static constexpr Order before()
 	{

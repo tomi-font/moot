@@ -10,11 +10,9 @@ class GlobalClock
 
 public:
 
-	using Ticks = std::int64_t;
+	using Microseconds = std::int64_t;
 
-	static constexpr bool TicksAreMicroseconds = true;
-
-	static Ticks ticksSinceStart()
+	static Microseconds microsecondsSinceStart()
 	{
 		return s_m_clock.getElapsedTime().asMicroseconds();
 	}
