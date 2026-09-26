@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/Global/Clock.hh>
+#include <moot/Global/ChangeTick.hh>
 #include <utility>
 
 template<typename T> class TrackedValue  
@@ -14,15 +14,22 @@ public:
 
 	T& mut()
 	{
-		m_lastChangeTicks = GlobalClock::ticksSinceStart();
+		m_lastChangeTick = GlobalChangeTick::current();
 		return m_value;
 	}
-	auto& operator=(T value) { mut() = std::move(value); return *this; }
+	auto& operator=(T value)
+	{
+		mut() = std::move(value);
+		return *this;
+	}
 
-	bool hasChangedSince(GlobalClock::Ticks ticks) const { return m_lastChangeTicks > ticks; }
+	bool hasChangedSince(GlobalChangeTick::Tick tick) const
+	{
+		return m_lastChangeTick > tick;
+	}
 
 private:
 
 	T m_value;
-	GlobalClock::Ticks m_lastChangeTicks = {};
+	GlobalChangeTick::Tick m_lastChangeTick = {};
 };
