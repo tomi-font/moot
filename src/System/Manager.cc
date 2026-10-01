@@ -49,6 +49,12 @@ insert:
 	m_systems.insert(m_systems.begin() + i, std::move(addedSystem));
 }
 
+void SystemManager::startSystems()
+{
+	for (auto& system : m_systems)
+		system->start();
+}
+
 void SystemManager::updateSystems()
 {
 	for (std::size_t i = 0; i != m_systems.size(); ++i)

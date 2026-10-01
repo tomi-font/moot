@@ -29,6 +29,10 @@ void System::setSchedule(SystemSchedule schedule)
 	m_schedule = schedule;
 }
 
+void System::start()
+{
+}
+
 GlobalClock::Microseconds System::performUpdate()
 {
 	const GlobalClock::Microseconds thisUpdateStart = GlobalClock::microsecondsSinceStart();

@@ -1,7 +1,6 @@
 #include <moot/parsing/CallbackParameters.hh>
 #include <moot/struct/Rect.hh>
 #include <moot/struct/Vector2.hh>
-#include <SFML/Window/Event.hpp>
 
 template<typename T> static void registerVector2(sol::state* lua, const std::string& nameSuffix)
 {
@@ -31,32 +30,4 @@ void CallbackParameters::registerAll(sol::state* lua)
 	registerVector2<int>(lua, "i");
 
 	registerRect<float>(lua, "f");
-
-	lua->new_usertype<sf::Event>("sf.Event",
-		"key", sol::property(
-			[](const sf::Event& event)
-			{
-				return event.getIf<sf::Event::KeyPressed>()->code;
-			}),
-		"mousePosition", sol::property(
-			[](const sf::Event& event)
-			{
-				return event.visit(
-					[](const auto& subEvent) -> Vector2i
-					{
-						using T = std::decay_t<decltype(subEvent)>;
-						if constexpr (std::is_same_v<T, sf::Event::MouseMoved>
-						           || std::is_same_v<T, sf::Event::MouseButtonPressed>
-						           || std::is_same_v<T, sf::Event::MouseButtonReleased>
-						           || std::is_same_v<T, sf::Event::MouseWheelScrolled>)
-							return subEvent.position;
-						assert(false);
-					});
-			}),
-		"mouseWheelScroll", sol::property(
-			[](const sf::Event& event)
-			{
-				return event.getIf<sf::Event::MouseWheelScrolled>()->delta;
-			})
-		);
 }
