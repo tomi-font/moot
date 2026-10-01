@@ -7,7 +7,6 @@
 #include <moot/parsing/types.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <moot/Window.hh>
-#include <SFML/Window/Event.hpp>
 
 static constexpr std::string_view PrototypeIdKey = "id";
 
@@ -81,37 +80,34 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 
 	lua->set_function("getEntity", &EntityManager::getEntity, entityManager);
 
-	lua->set_function("isKeyPressed",
-		[](sf::Keyboard::Key key)
-		{
-			return static_cast<int>(sf::Keyboard::isKeyPressed(key));
-		});
-	lua->set_function("getMousePosition",
-		[window]()
-		{
-			return Vector2i(sf::Mouse::getPosition(*window));
-		});
-
 	lua->set_function("mapHudToWorld", &Window::mapHudToWorld, window);
 	lua->set_function("mapPixelToHud", &Window::mapPixelToHud, window);
 	lua->set_function("mapPixelToWorld", &Window::mapPixelToWorld, window);
 
 	lua->create_named_table("properties")[sol::metatable_key] = lua->create_table_with(
 		sol::meta_method::index, sol::property(
-			[game](sol::table, const std::string& name)
+			[game](const sol::table&, const std::string& name, sol::this_state solState) -> sol::object
 			{
-				return game->properties()->get(name);
+				if (const auto value = game->properties()->find(name))
+					return sol::make_object(solState.lua_state(), *value);
+				else
+					return sol::make_object(solState.lua_state(), sol::lua_nil);
 			}),
 		sol::meta_method::new_index, sol::property(
-			[game](sol::table, const std::string& name, const sol::object& value)
+			[game](const sol::table&, const std::string& name, const sol::object& valueObj)
 			{
 				Properties* const properties = game->properties();
-				variantIndexToCompileTime<Property::Value>(properties->get(name).index(),
-					[&](auto I)
-					{
-						properties->set(name, asParsed<std::variant_alternative_t<I, Property::Value>>(value));
-					}
-				);
+				if (const auto current = properties->find(name))
+				{
+					variantIndexToCompileTime<Property::Value>(current->index(),
+						[&](auto I)
+						{
+							properties->set(name, asParsed<std::variant_alternative_t<I, Property::Value>>(valueObj));
+						}
+					);
+				}
+				else
+					properties->set(name, valueObj.as<Property::Value>());
 			})
 	);
 

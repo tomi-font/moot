@@ -20,6 +20,7 @@ public:
 
 protected:
 
+	void startSystems();
 	void updateSystems();
 
 	std::vector<std::unique_ptr<System>> m_systems;

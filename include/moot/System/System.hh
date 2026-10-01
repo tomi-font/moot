@@ -29,6 +29,8 @@ public:
 	void setWindow(Window*);
 	void setSchedule(SystemSchedule);
 
+	virtual void start();
+
 	// Returns how long the update took.
 	GlobalClock::Microseconds performUpdate();
 

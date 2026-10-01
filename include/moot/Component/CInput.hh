@@ -1,29 +1,19 @@
 #pragma once
 
-#include <functional>
+#include <moot/Input/Binding.hh>
 #include <vector>
-#include <SFML/Window/Event.hpp>
-
-struct EntityHandle;
 
 class CInput
 {
 public:
 
-	struct Watch
-	{
-		// The events of interest (for each, the type and specific data that must match).
-		std::vector<sf::Event> events;
+	CInput(std::vector<Binding>&& bindings) : m_bindings(std::move(bindings)) {}
 
-		using Callback = std::function<void (EntityHandle&, const sf::Event&)>;
-		Callback callback;
-	};
+	auto& bindings() { return m_bindings; }
 
-	CInput(std::vector<Watch>&& watches) : m_watches(std::move(watches)) {}
-
-	const Watch::Callback* getCallback(const sf::Event&) const;
+	bool bindsKey(sf::Keyboard::Key) const;
 
 private:
 
-	std::vector<Watch> m_watches;
+	std::vector<Binding> m_bindings;
 };

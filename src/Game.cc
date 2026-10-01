@@ -90,6 +90,8 @@ void Game::postProcessEntities(EntityManager::UpdateInfo updateInfo)
 
 void Game::play()
 {
+	startSystems();
+
 	m_clock.restart();
 
 	while (m_running)

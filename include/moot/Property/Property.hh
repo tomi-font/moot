@@ -1,5 +1,6 @@
 #pragma once
 
+#include <moot/Input/Control.hh>
 #include <moot/struct/Color.hh>
 #include <moot/struct/Vector2.hh>
 #include <functional>
@@ -12,7 +13,9 @@ struct Property
 		Color,
 		float,
 		Vector2u,
-		Vector2f
+		Vector2f,
+		Vector2i,
+		Control
 	>;
 
 	using Getter = std::function<Property::Value()>;
@@ -21,5 +24,8 @@ struct Property
 	static constexpr std::string ClearColor = "clearColor";
 	static constexpr std::string ElapsedTime = "elapsedTime";
 	static constexpr std::string Gravity = "gravity";
+	static constexpr std::string PointerPosition = "pointerPosition";
+	static constexpr std::string PointerStick = "pointerStick";
+	static constexpr std::string StickSpeed = "stickSpeed";
 	static constexpr std::string WindowSize = "windowSize";
 };

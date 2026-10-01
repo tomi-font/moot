@@ -1,24 +1,20 @@
 #include <moot/Component/CCamera.hh>
 #include <moot/struct/Vector2.hh>
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 
 CCamera::CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation, float rotation) :
 	m_size(size),
-	m_rotation(rotation),
-	m_limits(limits)
+	m_rotation(rotation)
 {
 	setElevation(elevation);
-	calculateNewSize();
+	setLimits(limits);
 }
 
 void CCamera::calculateNewSize()
 {
 	Vector2f viewSize = m_size;
-
-	if (viewSize.min() <= 0)
-		return;
+	assert(viewSize.isMoreThanZero());
 
 	if (!m_limits.isEmpty())
 	{
@@ -36,7 +32,6 @@ void CCamera::calculateNewSize()
 			m_size = viewSize;
 		}
 	}
-	assert(viewSize.min() > 0);
 }
 
 void CCamera::setSize(const sf::Vector2f& size)
@@ -54,7 +49,7 @@ void CCamera::zoom(float factor)
 
 void CCamera::setLimits(const FloatRect& limits)
 {
-	assert(limits.hasPositiveArea());
+	assert(limits.isEmpty() || limits.hasPositiveArea());
 	m_limits = limits;
 	calculateNewSize();
 }

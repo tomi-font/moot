@@ -14,10 +14,12 @@ void Properties::set(const std::string& name, Property::Value&& value)
 	m_values[name] = std::move(value);
 }
 
-Property::Value Properties::get(const std::string& name) const
+std::optional<Property::Value> Properties::find(const std::string& name) const
 {
 	if (auto getterIt = m_getters.find(name); getterIt != m_getters.end())
 		return getterIt->second();
+	else if (auto valueIt = m_values.find(name); valueIt != m_values.end())
+		return valueIt->second;
 	else
-		return m_values.at(name);
+		return std::nullopt;
 }
