@@ -32,9 +32,9 @@ static Control asControl(const sol::object& obj)
 	const auto& [map, mapSize] = asLuaMapSize(obj);
 	const auto& xObj = map["x"];
 	const auto& yObj = map["y"];
-	
+
 	if (!xObj.valid() && !yObj.valid())
-		return {asButtonPair(obj)}; // Axis, Scroll	
+		return {asButtonPair(obj)}; // Axis, Scroll
 
 	assert(mapSize == 2 && xObj.valid() && yObj.valid());
 	return {Control::ButtonQuad{asButtonPair(xObj), asButtonPair(yObj)}}; // Axes
@@ -137,12 +137,6 @@ template<> void registerAttributeValues<Color>(sol::state* lua)
 	colors["Gray"] = Color(128, 128, 128);
 	colors["SkyBlue"] = Color(135, 206, 235);
 	colors["White"] = Color(255, 255, 255);
-}
-
-void ComponentAttributes::registerAll(sol::state* lua)
-{
-	registerAttributeValues<CInput>(lua);
-	registerAttributeValues<Color>(lua);
 }
 
 template<typename C> static void parser(const sol::object&, ComponentCollection*);
@@ -298,20 +292,20 @@ template<typename C> static void registerComponent(std::string name)
 	EntityFunctions::registerComponentGetter<C>(componentGetter<C>);
 }
 
-static struct Init
+void ComponentAttributes::registerAll(sol::state* lua)
 {
-	Init()
-	{
-		registerComponent<CPosition>("Position");
-		registerComponent<CLocalPosition>("LocalPosition");
-		registerComponent<CConvexPolygon>("ConvexPolygon");
-		registerComponent<CMove>("Move");
-		registerComponent<CInput>("Input");
-		registerComponent<CCollisionBox>("CollisionBox");
-		registerComponent<CRigidbody>("Rigidbody");
-		registerComponent<CCamera>("Camera");
-		registerComponent<CHudRender>("HudRender");
-		registerComponent<CPointable>("Pointable");
-		registerComponent<CLight>("Light");
-	}
-} _;
+	registerComponent<CPosition>("Position");
+	registerComponent<CLocalPosition>("LocalPosition");
+	registerComponent<CConvexPolygon>("ConvexPolygon");
+	registerComponent<CMove>("Move");
+	registerComponent<CInput>("Input");
+	registerComponent<CCollisionBox>("CollisionBox");
+	registerComponent<CRigidbody>("Rigidbody");
+	registerComponent<CCamera>("Camera");
+	registerComponent<CHudRender>("HudRender");
+	registerComponent<CPointable>("Pointable");
+	registerComponent<CLight>("Light");
+
+	registerAttributeValues<CInput>(lua);
+	registerAttributeValues<Color>(lua);
+}
