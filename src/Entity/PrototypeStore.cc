@@ -21,6 +21,6 @@ const Prototype* PrototypeStore::findPrototype(const std::string& name) const
 
 void PrototypeStore::deletePrototype(PrototypeId id)
 {
-	const bool erased = m_numberedPrototypes.erase(id);
-	assert(erased);
+	if (!m_numberedPrototypes.erase(id))
+		assert(false);
 }

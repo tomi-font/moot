@@ -16,7 +16,8 @@ Game::Game(std::source_location location) :
 	m_frameNumber(0),
 	m_running(true)
 {
-	assert(*location.function_name() && "Game must not be a global");
+	if (!*location.function_name())
+		assert(false && "Game must not be a global");
 
 	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
 
@@ -57,9 +58,8 @@ void Game::listenToEvents()
 	listenTo(EngineEvent::GameClose);
 }
 
-void Game::onEvent(const Event& event)
+void Game::onEvent(const Event&)
 {
-	assert(event.id == EngineEvent::GameClose);
 	m_running = false;
 }
 
@@ -118,7 +118,7 @@ void Game::play()
 			}
 
 			updateScriptContext();
-			
+
 			{
 				EntityManager::UpdateInfo updateInfo = updateEntities();
 

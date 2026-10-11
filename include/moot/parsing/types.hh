@@ -34,19 +34,20 @@ template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
 inline sol::table asLuaArray(const sol::object& var)
 {
 	const auto& luaArray = asLuaMap(var);
+#ifndef NDEBUG
 	for (const auto& [luaIndex, value] : luaArray)
 	{
 		const auto index = as<unsigned>(luaIndex);
 		assert(index > 0 && index <= luaArray.size());
 		assert(value.valid());
 	}
+#endif
 	return luaArray;
 }
 template<unsigned N> static inline sol::table asLuaArray(const sol::object& var)
 {
 	const auto& luaArray = asLuaArray(var);
-	const auto size = luaArray.size();
-	assert(size == N);
+	assert(luaArray.size() == N);
 	return luaArray;
 }
 template<typename T, unsigned N> std::array<T, N> asArray(const sol::object& var)

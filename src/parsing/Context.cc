@@ -3,6 +3,7 @@
 #include <moot/parsing/ComponentAttributes.hh>
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/GlobalFunctions.hh>
+#include <cstdlib>
 
 ParsingContext::ParsingContext() : m_lua(new sol::state)
 {
@@ -22,7 +23,7 @@ ParsingContext::~ParsingContext()
 		}
 	}
 	std::cerr << ar.short_src << ':' << ar.currentline << ": " << msg << std::endl;
-	assert(false);
+	std::abort();
 }
 
 void ParsingContext::initializeScriptContext(Game* game)

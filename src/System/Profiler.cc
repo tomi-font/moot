@@ -63,9 +63,8 @@ void SystemProfiler::listenToEvents()
 	listenTo(EngineEvent::ProfilingRequest);
 }
 
-void SystemProfiler::onEvent(const Event& event)
+void SystemProfiler::onEvent(const Event&)
 {
-	assert(event.id == EngineEvent::ProfilingRequest);
 	if (m_profiling)
 	{
 		m_printRequested = true;

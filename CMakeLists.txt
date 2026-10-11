@@ -68,8 +68,8 @@ file(GLOB_RECURSE source_files src/*.cc)
 target_sources(moot PRIVATE ${source_files})
 
 # The leak sanitizer looks its suppressions hook up by name, and an archive member nothing references is
-# not linked: ask the linker for it.
-target_link_options(moot PUBLIC "LINKER:--undefined=__lsan_default_suppressions")
+# not linked: ask the linker for it in debug builds.
+target_link_options(moot PUBLIC "$<$<CONFIG:Debug>:LINKER:--undefined=__lsan_default_suppressions>")
 
 target_link_libraries(moot
 	PUBLIC

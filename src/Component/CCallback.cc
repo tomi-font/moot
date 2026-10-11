@@ -3,15 +3,15 @@
 
 void CCallback::add(Type type, Callback&& callback)
 {
-	const bool added = m_callbacks.emplace(type, std::move(callback)).second;
-	assert(added);
+	if (!m_callbacks.emplace(type, std::move(callback)).second)
+		assert(false);
 }
 
 const CCallback::Callback* CCallback::get(Type type) const
 {
 	if (const auto it = m_callbacks.find(type); it != m_callbacks.end())
 		return &it->second;
-	
+
 	return nullptr;
 }
 
