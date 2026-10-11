@@ -1,5 +1,3 @@
-#include <sanitizer/lsan_interface.h>
-
 // Mesa's GPU drivers (libgallium) leave a few blocks unreachable at exit, allocated on the way to a render
 // texture, and nothing in the engine can free them.
 
@@ -12,6 +10,8 @@
 #endif
 
 #ifdef MOOT_LEAK_SANITIZER
+
+#include <sanitizer/lsan_interface.h>
 
 extern "C" const char* __lsan_default_suppressions()
 {

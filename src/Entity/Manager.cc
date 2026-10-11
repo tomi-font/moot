@@ -12,6 +12,7 @@
 #include <moot/Component/CRigidbody.hh>
 #include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
+#include <utility>
 
 EntityManager::EntityManager() :
 	m_nextEId(1), // 0 (default-constructed value) is the invalid entity ID.
@@ -84,7 +85,7 @@ EntityPointer EntityManager::getEntityPointer(EntityId eId)
 			if (Entity::getId(entity) == eId)
 				return entity;
 		}
-		assert(false);
+		std::unreachable();
 	}
 }
 
@@ -196,8 +197,8 @@ EntityManager::UpdateInfo EntityManager::updateEntities()
 			}
 		}
 
-		const bool erased = m_entityIdMap.erase(eId);
-		assert(erased);
+		if (!m_entityIdMap.erase(eId))
+			assert(false);
 	}
 	m_entitiesToRemove.clear();
 
@@ -240,7 +241,7 @@ EntityManager::UpdateInfo EntityManager::updateEntities()
 		const EntityId eId = Entity::getId(addedEntity);
 
 		m_entityIdMap[eId] = addedEntity;
-		
+
 		if (const auto changedEntityIt = changedEntities.find(&entityToSpawn); changedEntityIt != changedEntities.end())
 			updateInfo.changedEntities.emplace(addedEntity, changedEntityIt->second);
 		else

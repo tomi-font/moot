@@ -5,11 +5,13 @@ EntityQuery::EntityQuery(Parameters&& params) :
 	m_params(std::move(params))
 {
 	assert(!m_params.required.empty());
+#ifndef NDEBUG
 	for (const ComponentComposition& requiredComp : m_params.required)
 	{
 		assert(!requiredComp.empty());
 		assert(requiredComp.hasNoneOf(m_params.forbidden));
 	}
+#endif
 }
 
 bool EntityQuery::matches(ComponentComposition comp) const

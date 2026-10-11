@@ -144,8 +144,8 @@ static void applyRigidbodyCollisionForces(const Vector2i& collidedOn, CRigidbody
 	}
 }
 
-static void adjustMoveAfterCollision(const Vector2i& collidedOn, const FloatRect& a, Vector2f* aMove,
-									                             const FloatRect& b, Vector2f* bMove)
+static void adjustMoveAfterCollision(const Vector2i& collidedOn, [[maybe_unused]] const FloatRect& a, Vector2f* aMove,
+									                             [[maybe_unused]] const FloatRect& b, Vector2f* bMove)
 {
 	if (collidedOn.x == 1)
 	{

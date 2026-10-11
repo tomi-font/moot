@@ -8,8 +8,7 @@ CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Col
 	m_height(height),
 	m_fillColor(fillColor)
 {
-	const std::size_t vertexCount = m_vertices.size();
-	assert(vertexCount >= 3);
+	assert(m_vertices.size() >= 3);
 	assert(m_height >= 0);
 
 	// Store the vertices counter-clockwise (the Y axis grows upwards), so that walking along an edge
@@ -18,6 +17,7 @@ CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Col
 		std::ranges::reverse(m_vertices.begin(), m_vertices.end());
 
 #ifndef NDEBUG
+	const std::size_t vertexCount = m_vertices.size();
 	for (std::size_t i = 0; i != vertexCount; ++i)
 	{
 		const float cp = crossProduct(m_vertices[(i + vertexCount - 1) % vertexCount], m_vertices[i], m_vertices[(i + 1) % vertexCount]);

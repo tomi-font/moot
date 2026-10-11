@@ -4,6 +4,7 @@
 #include <limits>
 #include <utility>
 
+#ifndef NDEBUG
 static bool fits(const Control& control, Binding::Type type)
 {
 	using Type = Binding::Type;
@@ -21,6 +22,7 @@ static bool fits(const Control& control, Binding::Type type)
 
 	std::unreachable();
 }
+#endif
 
 static Binding::Value initialValue(Binding::Type type)
 {
@@ -44,9 +46,10 @@ Binding::Binding(Type type, std::vector<Control>&& controls) :
 	m_lastValue(initialValue(type))
 {
 	assert(m_controls.empty() == (type == Type::Pointer));
-
+#ifndef NDEBUG
 	for (const Control& control : m_controls)
 		assert(fits(control, type));
+#endif
 }
 
 bool Binding::hasKey(sf::Keyboard::Key key) const
