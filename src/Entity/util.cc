@@ -18,17 +18,14 @@ std::vector<EntityHandle> Entity::getChildren(const EntityHandle& entity)
 	return children;
 }
 
-static void updateBoundCoords(const EntityHandle& entity, BoundCoords* coords)
+static void updateBoundCoords(const EntityHandle& entity, BoundCoords* boundCoords)
 {
 	if (auto* cConvexPolygon = entity.find<CConvexPolygon*>())
 	{
-		BoundCoords polygonBoundCoords = cConvexPolygon->getBoundingCoordinates();
+		BoundCoords polygonBoundCoords = cConvexPolygon->boundCoords();
 		polygonBoundCoords.move(entity.get<CPosition>());
 
-		if (coords->isEmpty())
-			*coords = polygonBoundCoords;
-		else
-			coords->incorporate(polygonBoundCoords);
+		boundCoords->incorporate(polygonBoundCoords);
 	}
 }
 
@@ -45,7 +42,7 @@ FloatRect Entity::getHierarchyBoundingBox(const EntityHandle& entity)
 	BoundCoords boundingCoords;
 
 	recursivelyUpdateBoundCoords(entity, &boundingCoords);
-	return boundingCoords.toRect();
+	return boundingCoords;
 }
 
 #ifndef NDEBUG

@@ -7,8 +7,14 @@ struct Color : public sf::Color
 	constexpr Color() : sf::Color(0, 0, 0, 0) {}
 	constexpr Color(const sf::Color& color) : sf::Color(color) {}
 	using sf::Color::Color;
-	
+
 	constexpr operator bool() const { return *this != Color(); }
 
 	constexpr Color operator*(float f) const { return {std::uint8_t(r * f), std::uint8_t(g * f), std::uint8_t(b * f), a}; }
+	constexpr Color operator*(const sf::Color& other) const
+	{
+		Color color = static_cast<sf::Color>(*this) * other;
+		color.a = a;
+		return color;
+	}
 };

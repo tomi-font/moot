@@ -1,12 +1,17 @@
 #pragma once
 
 #include <moot/struct/Color.hh>
+#include <cassert>
+#include <cmath>
 
 class CLight
 {
 public:
 
-	CLight(Color emission, float radius) : m_emission(emission), m_radius(radius) {}
+	CLight(Color emission, float radius) : m_emission(emission), m_radius(radius)
+	{
+		assert(radius > 0 && std::isfinite(radius));
+	}
 
 	auto& emission() const { return m_emission; }
 	auto& radius() const { return m_radius; }
