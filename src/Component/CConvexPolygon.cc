@@ -2,7 +2,6 @@
 #include <moot/util/math/geometry.hh>
 #include <algorithm>
 #include <cassert>
-#include <span>
 
 CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor) :
 	m_vertices(std::move(vertices)),
@@ -25,6 +24,8 @@ CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Col
 		assert(cp > 0); // Strictly convex: every corner turns the same way, none is flat.
 	}
 #endif
+
+	m_boundCoords = {m_vertices};
 }
 
 Vector2f CConvexPolygon::getEdgeNormal(std::size_t i) const
@@ -43,16 +44,6 @@ Vector2f CConvexPolygon::getCentroid() const
 		centroid += vertex / vertexCount;
 
 	return centroid;
-}
-
-BoundCoords CConvexPolygon::getBoundingCoordinates() const 
-{
-	BoundCoords boundCoords = {m_vertices.front()};
-
-	for (const auto& vertex : std::span(m_vertices.begin() + 1, m_vertices.end()))
-		boundCoords.incorporate(vertex);
-
-	return boundCoords;
 }
 
 bool CConvexPolygon::contains(const sf::Vector2f& point) const

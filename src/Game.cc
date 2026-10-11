@@ -4,6 +4,7 @@
 #include <moot/System/SCallback.hh>
 #include <moot/System/SHierarchy.hh>
 #include <moot/System/SInput.hh>
+#include <moot/System/SLight.hh>
 #include <moot/System/SPhysics.hh>
 #include <moot/System/SRender.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
@@ -23,7 +24,8 @@ Game::Game(std::source_location location) :
 	addSystem<SPhysics>(SystemSchedule::Phase::Update);
 	addSystem<SCallback>(SystemSchedule::Phase::Update, SystemSchedule::before<SPhysics>());
 	addSystem<SHierarchy>(SystemSchedule::Phase::Update, SystemSchedule::after<SPhysics>());
-	addSystem<SRender>(SystemSchedule::Phase::Render);
+	addSystem<SLight>(SystemSchedule::Phase::Render);
+	addSystem<SRender>(SystemSchedule::Phase::Render, SystemSchedule::after<SLight>());
 
 	initializeEvents(&m_eventManager);
 	m_profiler.initializeEvents(&m_eventManager);

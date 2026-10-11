@@ -21,8 +21,6 @@ public:
 	System(const System&) = delete;
 	System& operator=(const System&) = delete;
 
-	~System() override;
-
 	auto& schedule() const { return m_schedule; }
 
 	void setEntityManager(EntityManager*);

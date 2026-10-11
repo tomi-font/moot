@@ -1,5 +1,11 @@
 #include <moot/Window.hh>
 
+sf::FloatRect Window::getViewRectangle() const
+{
+	const sf::View& view = getView();
+	return {view.getCenter() - view.getSize() / 2.f, view.getSize()};
+}
+
 Vector2f Window::mapPixelToWorld(const Vector2i& pos) const
 {
 	return m_worldToViewTransform.getInverse().transformPoint(sf::RenderWindow::mapPixelToCoords({pos.x, pos.y}));

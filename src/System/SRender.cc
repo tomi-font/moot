@@ -1,17 +1,19 @@
 #include <moot/System/SRender.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CLight.hh>
+#include <moot/Component/CLightVisibility.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CPosition.hh>
 #include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
+#include <moot/struct/BoundCoords.hh>
+#include <moot/struct/FloatColor.hh>
 #include <moot/util/math/geometry.hh>
 #include <moot/util/math/Segment.hh>
 #include <moot/Window.hh>
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <numbers>
 #include <ranges>
 
 // Indices for this system's queries.
@@ -25,7 +27,7 @@ enum Q
 };
 
 // Makes the Y axis grow upwards, with the origin at the bottom-left corner instead of the top-left one.
-static sf::Transform groundToViewTransform(const sf::Vector2f& viewSize)
+static sf::Transform getGroundToViewTransform(const sf::Vector2f& viewSize)
 {
 	sf::Transform transform;
 	transform.translate({0, viewSize.y});
@@ -55,7 +57,7 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldToViewTransform = groundToViewTransform(size) * cCamera.getGroundTransform();
+	const sf::Transform worldToViewTransform = getGroundToViewTransform(size) * cCamera.getGroundTransform();
 
 	center = worldToViewTransform.transformPoint(center);
 
@@ -75,7 +77,7 @@ SRender::SRender()
 	}};
 
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
-	
+
 	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>} }};
 
 	m_queries[Q::Lights] = {{ .required = {CId<CLight>} }};
@@ -104,8 +106,14 @@ void SRender::drawPolygons()
 {
 	m_passVertices.clear();
 
+	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
+
 	for (auto [entity, cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<EntityPointer, CConvexPolygon, CPosition>())
 	{
+		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cPosition.val();
+		if (!viewWorldRectangle.intersects(polygonBoundingBox))
+			continue;
+
 		const auto& vertices = cConvexPolygon.vertices();
 		const sf::Vertex baseVertex = {cPosition.val() + vertices[0], cConvexPolygon.fillColor()};
 
@@ -133,154 +141,28 @@ void SRender::updateLightMap()
 	m_lightMap.setView(window()->getView());
 }
 
+static Color emissionAt(const CLight& cLight, float distance)
+{
+	return cLight.emission() * (1 - distance / cLight.radius());
+}
+
 void SRender::drawLights()
 {
-	constexpr unsigned FillerRaysPerCircle = 64;
-	constexpr float MaxFillerAngle = 2 * std::numbers::pi_v<float> / FillerRaysPerCircle;
-
 	m_passVertices.clear();
 
-	std::vector<Segment> occluderSegments;
-	occluderSegments.reserve(4 * m_queries[Q::ConvexPolygons].getEntityCount() * 2);
-
-	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
-	{
-		const auto& vertices = cConvexPolygon.vertices();
-		for (unsigned i = 0; i != vertices.size(); ++i)
-		{
-			occluderSegments.emplace_back(cPosition.val() + vertices[i],
-			                              cPosition.val() + vertices[(i + 1) % vertices.size()]);
-		}
-	}
-
-	std::vector<float> rayAngles;
 	std::vector<sf::Vertex> rayVertices;
 
-	for (auto [cPosition, cLight] : m_queries[Q::Lights].getAll<CPosition, CLight>())
+	for (auto [cPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility>())
 	{
-		const float lightRadiusSquared = cLight.radius() * cLight.radius();
-
-		rayAngles.clear();
-
-		auto addRaysToward = [&cPosition, &rayAngles](const sf::Vector2f& point)
-		{
-			constexpr float RayClearanceUlps = 64;
-			constexpr float MaxAngularClearance = 0.01f;
-
-			const sf::Vector2f lightToPoint = point - cPosition.val();
-			const float distance = std::hypot(lightToPoint.x, lightToPoint.y);
-			const float angle = std::atan2(lightToPoint.y, lightToPoint.x);
-
-			// Positions are only accurate to a few ULPs of the largest number involved,
-			// so nudge the side rays by that much to make sure they clear the corner.
-			const float largestOperand = maxAbs(cPosition.val().x, cPosition.val().y, point.x, point.y, distance);
-			const float positionError = RayClearanceUlps * largestOperand * std::numeric_limits<float>::epsilon();
-			const float angularClearance = positionError / distance;
-
-			// Avoid degenerate cases when the light is way too close to the occluder. Handles distance == 0 too.
-			if (!(angularClearance < MaxAngularClearance))
-				return;
-
-			rayAngles.append_range(std::array{angle - angularClearance, angle, angle + angularClearance});
-		};
-		
-		for (const Segment& segment : occluderSegments)
-		{
-			// Find where the segment crosses the light's circle: points lightToSegmentStart + fraction * segment.vector
-			// whose distance to the light equals the radius. Squaring both sides gives a quadratic in the fraction.
-			const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val(); 
-			const float startDistanceSquared = lightToSegmentStart.dot(lightToSegmentStart);
-			const float segmentLengthSquared = segment.vector.dot(segment.vector);
-			const float startAlongSegmentTwice = 2 * lightToSegmentStart.dot(segment.vector);
-
-			if (startDistanceSquared < lightRadiusSquared)
-				addRaysToward(segment.a); // Every vertex appears once as some segment's A.
-
-			const float discriminant = startAlongSegmentTwice * startAlongSegmentTwice
-			                         - 4 * segmentLengthSquared * (startDistanceSquared - lightRadiusSquared);
-			if (discriminant <= 0)
-				continue; // Misses or grazes the circle.
-
-			const float root = std::sqrt(discriminant);
-			for (const float segmentFraction : {(-startAlongSegmentTwice - root) / (2 * segmentLengthSquared),
-			                                    (-startAlongSegmentTwice + root) / (2 * segmentLengthSquared)})
-			{
-				if (segmentFraction > 0 && segmentFraction < 1) // Only crossings strictly inside the segment.
-					addRaysToward(segment.a + segmentFraction * segment.vector);
-			}
-		}
-		std::ranges::sort(rayAngles);
-
-		const auto uniqueRet = std::ranges::unique(rayAngles);
-		rayAngles.erase(uniqueRet.begin(), uniqueRet.end());
-		
-		if (rayAngles.empty())
-		{
-			// No occluder within radius: throw a dummy ray to trigger the filling below.
-			rayAngles = {0.f};
-		}
-
-		// Insert the filler rays, in place and sorted. For that, start from the end.
-		for (const unsigned i : std::views::iota(0u, rayAngles.size()) | std::views::reverse)
-		{
-			const unsigned next = (i + 1) % rayAngles.size();
-			const float angleDiff = (next != 0) ? rayAngles[next] - rayAngles[i]
-			                                    : 2 * std::numbers::pi_v<float> - (rayAngles[i] - rayAngles[next]);
-			if (angleDiff <= MaxFillerAngle)
-				continue; // Also skips the negative gap a corner straddling +- pi might produce.
-
-			const auto fillerRays = static_cast<unsigned>(angleDiff / MaxFillerAngle);
-			const float angleIncrement = angleDiff / (fillerRays + 1);
-			const float angle = rayAngles[i];
-
-			rayAngles.insert_range(rayAngles.begin() + ssize_t(i) + 1,
-			                       std::views::iota(0u, fillerRays)
-								   | std::views::transform([=](unsigned n) { return angle + n * angleIncrement; }));
-		}
-
-		rayVertices.resize(rayAngles.size());
-
-		for (const unsigned i : std::views::iota(0u, rayAngles.size()))
-		{
-			const float rayAngle = rayAngles[i];
-			const sf::Vector2f rayDirection = {std::cos(rayAngle), std::sin(rayAngle)};
-
-			float closestHitDistance = cLight.radius();
-
-			for (const Segment& segment : occluderSegments)
-			{
-				// Can be 0 when the ray is parallel to the segment; using negated comparisons to handle that.
-				const float determinant = crossProduct(rayDirection, segment.vector);
-				
-				const sf::Vector2f lightToSegmentStart = segment.a - cPosition.val();
-				
-				const float hitDistance = crossProduct(lightToSegmentStart, segment.vector) / determinant;
-				if (!(hitDistance >= 0 && hitDistance < closestHitDistance))
-					continue;
-				
-				const float segmentFraction = crossProduct(lightToSegmentStart, rayDirection) / determinant;
-				if (!(segmentFraction >= 0 && segmentFraction <= 1))
-					continue;
-
-				closestHitDistance = hitDistance;
-			}
-
-			const float brightness = 1 - closestHitDistance / cLight.radius();
-
-			rayVertices[i].color.r = std::uint8_t(cLight.emission().r * brightness);
-			rayVertices[i].color.g = std::uint8_t(cLight.emission().g * brightness);
-			rayVertices[i].color.b = std::uint8_t(cLight.emission().b * brightness);
-
-			rayVertices[i].position = cPosition.val() + rayDirection * closestHitDistance;
-		}
+		rayVertices.clear();
+		for (const LightRay& ray : cLightVisibility.rays())
+			rayVertices.emplace_back(cPosition.val() + ray.direction * ray.distance, emissionAt(cLight, ray.distance));
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
 		{
-			const unsigned next = (i + 1) % rayVertices.size();
-
 			m_passVertices.emplace_back(cPosition.val(), cLight.emission());
 			m_passVertices.emplace_back(rayVertices[i]);
-			m_passVertices.emplace_back(rayVertices[next]);
+			m_passVertices.emplace_back(rayVertices[(i + 1) % rayVertices.size()]);
 		}
 	}
 
@@ -295,17 +177,15 @@ void SRender::drawLightMap()
 {
 	m_lightMap.display();
 
-	const sf::View& view = window()->getView();
-	const sf::Vector2f viewSize = view.getSize();
-	const sf::Vector2f viewPos = view.getCenter() - viewSize / 2.f;
+	const sf::FloatRect view = window()->getViewRectangle();
 	const sf::Vector2f windowSize = sf::Vector2f(window()->getSize());
 
 	const std::array<sf::Vertex, 4> corners =
 	{
-		sf::Vertex{.position = {viewPos},                           .texCoords = {0.f, 0.f}},
-		sf::Vertex{.position = {viewPos.x + viewSize.x, viewPos.y}, .texCoords = {windowSize.x, 0.f}},
-		sf::Vertex{.position = {viewPos + viewSize},                .texCoords = {windowSize}},
-		sf::Vertex{.position = {viewPos.x, viewPos.y + viewSize.y}, .texCoords = {0.f, windowSize.y}},
+		sf::Vertex{.position = {view.position},                                  .texCoords = {0.f, 0.f}},
+		sf::Vertex{.position = {view.position.x + view.size.x, view.position.y}, .texCoords = {windowSize.x, 0.f}},
+		sf::Vertex{.position = {view.position + view.size},                      .texCoords = {windowSize}},
+		sf::Vertex{.position = {view.position.x, view.position.y + view.size.y}, .texCoords = {0.f, windowSize.y}},
 	};
 
 	sf::RenderStates states;
@@ -313,6 +193,100 @@ void SRender::drawLightMap()
 	states.texture = &m_lightMap.getTexture();
 
 	window()->draw(corners.data(), corners.size(), sf::PrimitiveType::TriangleFan, states);
+}
+
+struct FootSample
+{
+	float fraction;
+	FloatColor light;
+};
+
+static void sampleFootLight(const sf::Vector2f& lightPosition, const CLight& cLight, const CLightVisibility& cLightVisibility,
+                            const sf::Vector2f& footStart, const sf::Vector2f& footEnd, const sf::Vector2f& outwardNormal,
+                            const CConvexPolygon* polygon, std::vector<FootSample>* samples)
+{
+	if (outwardNormal.dot(lightPosition - footStart) <= 0)
+		return;
+
+	const sf::Vector2f foot = footEnd - footStart;
+	const float nearestFraction = std::clamp((lightPosition - footStart).dot(foot) / foot.dot(foot), 0.f, 1.f);
+	if ((footStart + nearestFraction * foot - lightPosition).lengthSquared() >= cLight.radius() * cLight.radius())
+		return;
+
+	// The polygon being counter-clockwise, the foot goes clockwise from its start to its end as seen from the light.
+	const float startAngle = std::atan2(footStart.y - lightPosition.y, footStart.x - lightPosition.x);
+	const float endAngle = std::atan2(footEnd.y - lightPosition.y, footEnd.x - lightPosition.x);
+
+	for (const LightRay& ray : cLightVisibility.getRaysClockwise(startAngle, endAngle))
+	{
+		if (!ray.hitPolygon)
+			continue;
+
+		const float determinant = crossProduct(foot, ray.direction);
+		if (determinant == 0)
+			continue;
+
+		float fraction = std::clamp(crossProduct(lightPosition - footStart, ray.direction) / determinant, 0.f, 1.f);
+		if (!samples->empty())
+			fraction = std::max(fraction, samples->back().fraction);
+
+		if (ray.hitPolygon == polygon)
+		{
+			const float cosine = std::max(0.f, -ray.direction.dot(outwardNormal)); // Lambert's cosine law
+			samples->emplace_back(fraction, FloatColor(emissionAt(cLight, ray.distance)) * cosine);
+		}
+		else
+			samples->emplace_back(fraction);
+	}
+}
+
+struct FootCut
+{
+	float fraction;
+	FloatColor lightBefore;
+	FloatColor lightAfter;
+};
+
+static std::size_t cutFoot(std::vector<FootCut>* cuts, float fraction)
+{
+	const auto nextIt = std::ranges::lower_bound(*cuts, fraction, {}, &FootCut::fraction);
+	const FootCut& next = *nextIt;
+	const std::size_t index = nextIt - cuts->begin();
+
+	if (next.fraction == fraction)
+		return index;
+
+	const FootCut& previous = *(nextIt - 1);
+	const float amount = (fraction - previous.fraction) / (next.fraction - previous.fraction);
+	const FloatColor light = previous.lightAfter + (next.lightBefore - previous.lightAfter) * amount;
+	cuts->emplace(nextIt, fraction, light, light);
+	return index;
+}
+
+static void addFootLight(const std::vector<FootSample>& samples, std::vector<FootCut>* cuts)
+{
+	std::size_t fromCutIndex = cutFoot(cuts, samples.front().fraction);
+
+	for (auto [from, to] : samples | std::views::pairwise)
+	{
+		const std::size_t toCutIndex = cutFoot(cuts, to.fraction);
+
+		if (from.light && to.light)
+		{
+			for (const std::size_t i : std::views::iota(fromCutIndex, toCutIndex + 1))
+			{
+				FootCut* cut = &(*cuts)[i];
+				const float amount = (cut->fraction - from.fraction) / (to.fraction - from.fraction);
+				const FloatColor light = from.light + (to.light - from.light) * amount;
+				if (i != fromCutIndex)
+					cut->lightBefore += light;
+				if (i != toCutIndex)
+					cut->lightAfter += light;
+			}
+		}
+
+		fromCutIndex = toCutIndex;
+	}
 }
 
 void SRender::drawExtrusions()
@@ -348,19 +322,12 @@ void SRender::drawExtrusions()
 	// ones must be drawn first. Good enough for footprints that do not overlap.
 	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::screenY);
 
-	const sf::View& view = window()->getView();
-	const sf::Vector2f viewSize = view.getSize();
-	const sf::Vector2f viewTopLeft = view.getCenter() - viewSize / 2.f;
-	const sf::Vector2f lightMapSize(m_lightMap.getSize());
-	// From world coordinates to light-map texels, in one go: into the view, then into the map.
-	sf::Transform worldToLightMapTransform;
-	worldToLightMapTransform.scale(lightMapSize.componentWiseDiv(viewSize));
-	worldToLightMapTransform.translate(-viewTopLeft);
-	worldToLightMapTransform.combine(window()->worldToViewTransform());
-	// A face is lit by the ground at its foot, so it samples the light map just outside its footprint: the
-	// interior would lie about the light, and the edge itself is noisy. In world units, this many pixels out.
-	constexpr float LightSamplePixels = 3;
-	const float lightSampleOffset = LightSamplePixels * viewSize.x / lightMapSize.x;
+	const auto ambientLight = m_properties->get<Color>(Property::AmbientLight);
+	const FloatColor ambientLightFloat = ambientLight;
+
+	const auto groundToViewTransform = getGroundToViewTransform(window()->getView().getSize());
+	const FloatRect viewGroundRectangle = groundToViewTransform.getInverse().transformRect(window()->getViewRectangle());
+
 	// How much a unit of height rises on screen.
 	const float rise = std::cos(cCamera.elevation());
 	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
@@ -372,12 +339,16 @@ void SRender::drawExtrusions()
 	std::vector<sf::Vector2f> worldPoints;
 	std::vector<sf::Vector2f> edgeNormals;
 
+	std::vector<FootSample> footSamples;
+	std::vector<FootCut> footCuts;
+
 	for (const Extrusion& extrusion : extrusions)
 	{
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
 		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
-		const Color color = extrusion.polygon->fillColor();
+		const Color fillColor = extrusion.polygon->fillColor();
+		const Color topColor = fillColor * ambientLight;
 
 		topVertices.resize(vertexCount);
 		points.resize(vertexCount);
@@ -391,40 +362,47 @@ void SRender::drawExtrusions()
 		}
 		assert(crossProduct(points[0], points[1], points[2]) > 0); // Still counter-clockwise: the ground transform never mirrors.
 
+		BoundCoords bounds(points);
+		bounds.max.y += up.y;
+		if (!viewGroundRectangle.intersects(bounds))
+			continue;
+
 		for (std::size_t i = 0; i != vertexCount; ++i)
 		{
-			const std::size_t j = (i + 1) % vertexCount;
-			const sf::Vector2f a = points[i];
-			const sf::Vector2f b = points[j];
-			const sf::Vector2f edge = b - a;
+			const std::size_t next = (i + 1) % vertexCount;
+			const Segment edge = {points[i], points[next]};
 
-			// The top face samples the light just outside each corner, along the vertex normal (the mean of its edges' normals).
-			const sf::Vector2f cornerOffset = (edgeNormals[i] + edgeNormals[(i + vertexCount - 1) % vertexCount]).normalized() * lightSampleOffset;
-			topVertices[i] = {a + up, color, worldToLightMapTransform.transformPoint(worldPoints[i] + cornerOffset)};
+			topVertices[i] = {edge.a + up, topColor};
 			if (i >= 2)
 				m_passVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
 
 			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so an
 			// extruded face points toward the camera only if its edge runs left to right.
-			if (edge.x <= 0)
+			if (edge.vector.x <= 0)
 				continue;
 
-			// Shaded by how much the face turns towards the camera, as if it were a light: a face is as dark as it is thin.
-			const sf::Color sideColor = color * (edge.x / edge.length());
-			const sf::Vector2f offset = edgeNormals[i] * lightSampleOffset;
-			const sf::Vertex baseA = {a, sideColor, worldToLightMapTransform.transformPoint(worldPoints[i] + offset)};
-			const sf::Vertex baseB = {b, sideColor, worldToLightMapTransform.transformPoint(worldPoints[j] + offset)};
-			const sf::Vertex topA = {topVertices[i].position, sideColor, baseA.texCoords};
-			const sf::Vertex topB = {b + up, sideColor, baseB.texCoords};
-			m_passVertices.append_range(std::array{baseA, baseB, topB, baseA, topB, topA});
+			footCuts = {{0.f, {}, ambientLightFloat}, {1.f, ambientLightFloat, {}}};
+
+			for (auto [cPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility>())
+			{
+				footSamples.clear();
+				sampleFootLight(cPosition, cLight, cLightVisibility, worldPoints[i], worldPoints[next], edgeNormals[i], extrusion.polygon, &footSamples);
+				if (!footSamples.empty())
+					addFootLight(footSamples, &footCuts);
+			}
+
+			for (auto [from, to] : footCuts | std::views::pairwise)
+			{
+				const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, fillColor * Color(from.lightAfter)};
+				const sf::Vertex baseTo = {edge.a + to.fraction * edge.vector, fillColor * Color(to.lightBefore)};
+				const sf::Vertex topFrom = {baseFrom.position + up, baseFrom.color};
+				const sf::Vertex topTo = {baseTo.position + up, baseTo.color};
+				m_passVertices.append_range(std::array{baseFrom, baseTo, topTo, baseFrom, topTo, topFrom});
+			}
 		}
 	}
 
-	sf::RenderStates states;
-	states.transform = groundToViewTransform(viewSize);
-	states.texture = &m_lightMap.getTexture();
-
-	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, states);
+	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, groundToViewTransform);
 }
 
 void SRender::drawHud()

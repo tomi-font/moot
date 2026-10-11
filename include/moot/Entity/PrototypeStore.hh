@@ -8,6 +8,7 @@ class PrototypeStore
 public:
 
 	PrototypeStore() = default;
+
 	PrototypeStore(const PrototypeStore&) = delete;
 	PrototypeStore& operator=(const PrototypeStore&) = delete;
 

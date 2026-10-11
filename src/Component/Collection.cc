@@ -20,7 +20,7 @@ ComponentCollection::ComponentCollection(const ComponentCollection& other) :
 		(this->*op->copy)(other.m_id, 0, other.m_size);
 }
 
-ComponentCollection::ComponentCollection(ComponentCollection&& from) :
+ComponentCollection::ComponentCollection(ComponentCollection&& from) noexcept :
 	ComponentComposable(from),
 	m_id(from.m_id),
 	m_size(from.m_size),

@@ -22,10 +22,13 @@ struct Property
 
 	static constexpr std::string AmbientLight = "ambientLight";
 	static constexpr std::string ClearColor = "clearColor";
+
 	static constexpr std::string ElapsedTime = "elapsedTime";
 	static constexpr std::string Gravity = "gravity";
+
 	static constexpr std::string PointerPosition = "pointerPosition";
 	static constexpr std::string PointerStick = "pointerStick";
 	static constexpr std::string StickSpeed = "stickSpeed";
+
 	static constexpr std::string WindowSize = "windowSize";
 };

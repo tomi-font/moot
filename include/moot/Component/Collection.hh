@@ -10,7 +10,7 @@ public:
 
 	ComponentCollection();
 	ComponentCollection(const ComponentCollection&);
-	ComponentCollection(ComponentCollection&&);
+	ComponentCollection(ComponentCollection&&) noexcept;
 	~ComponentCollection();
 
 	void append(ComponentCollection&&);

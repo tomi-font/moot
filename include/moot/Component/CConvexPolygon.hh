@@ -14,6 +14,7 @@ public:
 	auto& vertices() const { return m_vertices; }
 	auto& height() const { return m_height; }
 	auto& fillColor() const { return m_fillColor; }
+	auto& boundCoords() const { return m_boundCoords; }
 
 	void setFillColor(Color color) { m_fillColor = color; }
 
@@ -22,8 +23,7 @@ public:
 	// The outward unit normal of the edge from vertex i to the next.
 	Vector2f getEdgeNormal(std::size_t i) const;
 
-	BoundCoords getBoundingCoordinates() const;
-	FloatRect getBoundingBox() const { return getBoundingCoordinates().toRect(); }
+	FloatRect getBoundingRect() const { return m_boundCoords; }
 	bool contains(const sf::Vector2f& point) const;
 
 private:
@@ -31,4 +31,5 @@ private:
 	std::vector<Vector2f> m_vertices;
 	float m_height;
 	Color m_fillColor;
+	BoundCoords m_boundCoords;
 };

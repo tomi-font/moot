@@ -7,10 +7,6 @@ System::System() :
 {
 }
 
-System::~System()
-{
-}
-
 void System::setEntityManager(EntityManager* entityManager)
 {
 	assert(!m_entityManager && entityManager);

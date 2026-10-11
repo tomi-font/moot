@@ -1,7 +1,11 @@
 #pragma once
 
 #include <moot/util/math/base.hh>
+#include <numbers>
 #include <SFML/System/Vector2.hpp>
+
+static constexpr float Pi = std::numbers::pi_v<float>;
+static constexpr float TwoPi = 2 * Pi;
 
 static constexpr float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b)
 {

@@ -36,7 +36,7 @@ namespace sf
 {
 	template<typename T, typename U> auto operator*(const sf::Vector2<T>& left, const sf::Vector2<U>& right)
 	{
-		return sf::Vector2(left.x * right.x, left.x * right.y);
+		return sf::Vector2(left.x * right.x, left.y * right.y);
 	}
 	template<typename T> sf::Vector2<T> operator/(const sf::Vector2<T>& left, const sf::Vector2<T>& right)
 	{

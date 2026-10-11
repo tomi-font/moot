@@ -24,7 +24,7 @@ SPhysics::SPhysics()
 		{
 			auto* cCollisionBox = entity.get<CCollisionBox*>();
 			if (cCollisionBox->isEmpty())
-				*cCollisionBox = entity.get<CConvexPolygon>().getBoundingBox();
+				*cCollisionBox = entity.get<CConvexPolygon>().getBoundingRect();
 			assert(cCollisionBox->hasPositiveArea());
 		}
 	}};
@@ -47,7 +47,7 @@ static Vector2f firstContactPointMoveRatios(const FloatRect& a, const Vector2f& 
 	const Vector2f relativeMove = aMove - bMove;
 	assert(aMove.isNotZero() && relativeMove.isNotZero());
 
-	assert((a + aMove).intersects(b + bMove));
+	assert((a + aMove).intersectsBeyondEpsilon(b + bMove));
 
 	constexpr float NoMoveRatio = -std::numeric_limits<float>::infinity();
 	Vector2f ratios;
@@ -68,7 +68,7 @@ static Vector2f firstContactPointMoveRatios(const FloatRect& a, const Vector2f& 
 
 	assert(ratios.x <= 1 && ratios.y <= 1);
 	// Each axis' ratio may be negative if the entities were already overlapping on that axis.
-	assert(a.intersects(b)
+	assert(a.intersectsBeyondEpsilon(b)
 	    || ratios.x >= -epsilon(b.left - a.right(), a.left - b.right())
 	    || ratios.y >= -epsilon(b.bottom - a.top(), a.bottom - b.top()));
 
@@ -121,9 +121,9 @@ static Vector2i moveToFirstContactPoint(const Vector2f& ratios, float ratio, Flo
 			a->bottom = b->top();
 	}
 
-	assert(!a->intersects(*b));
+	assert(!a->intersectsBeyondEpsilon(*b));
 	// TODO: add factor
-	assert((*a + *aMove).intersects(*b + *bMove));
+	assert((*a + *aMove).intersectsBeyondEpsilon(*b + *bMove));
 
 	return collidedOn;
 }
@@ -172,8 +172,8 @@ static void adjustMoveAfterCollision(const Vector2i& collidedOn, const FloatRect
 		aMove->y = std::max(0.f, aMove->y);
 		bMove->y = std::min(0.f, bMove->y);
 	}
-	
-	assert(!(a + *aMove).intersects(b + *bMove));
+
+	assert(!(a + *aMove).intersectsBeyondEpsilon(b + *bMove));
 }
 
 struct CollidableProvisional
@@ -204,7 +204,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 	for (EntityPointer other : collidables)
 	{
 		CollidableProvisional otherProv;
-		
+
 		if (movingCollidables.contains(other))
 		{
 			if (entity == other)
@@ -214,7 +214,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 		else
 			otherProv.base = getWorldBox(other);
 
-		if (!prov.destination().intersects(otherProv.destination()))
+		if (!prov.destination().intersectsBeyondEpsilon(otherProv.destination()))
 			continue;
 
 		const Vector2f ratios = firstContactPointMoveRatios(prov.base, prov.move, otherProv.base, otherProv.move);

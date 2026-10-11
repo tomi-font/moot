@@ -7,6 +7,8 @@ class Window : public sf::RenderWindow
 {
 public:
 
+	sf::FloatRect getViewRectangle() const;
+
 	auto& worldToViewTransform() const { return m_worldToViewTransform; }
 	void setWorldToViewTransform(const sf::Transform& transform) { m_worldToViewTransform = transform; }
 
