@@ -101,7 +101,7 @@ void SLight::update()
 	std::vector<float> rayAngles;
 	std::vector<LightRay> rays;
 
-	for (auto [entity, cLightPosition, cLight] : m_queries[Q::Lights].getAll<EntityPointer, CPosition, CLight>())
+	for (auto [cLightPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility*>())
 	{
 		const sf::Vector2f& lightPosition = cLightPosition;
 		const float lightRadiusSquared = cLight.radius() * cLight.radius();
@@ -233,6 +233,6 @@ void SLight::update()
 			const RayHit hit = castRay(exposedEdges, lightPosition, rayDirection, cLight.radius());
 			rays.emplace_back(rayDirection, rayAngle, hit.distance, hit.polygon);
 		}
-		entity.get<CLightVisibility*>()->setRays(rays);
+		cLightVisibility->setRays(rays);
 	}
 }

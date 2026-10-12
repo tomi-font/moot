@@ -103,10 +103,10 @@ void SInput::update()
 
 		if (m_state.isActive() && Binding::deliversOn(*event))
 		{
-			for (EntityPointer entity : m_queries[Q::Input])
+			for (auto [entity, cInput] : m_queries[Q::Input].getAll<EntityPointer, CInput*>())
 			{
 				EntityHandle eHandle = entityManager()->makeHandle(entity);
-				for (Binding& binding : entity.get<CInput*>()->bindings())
+				for (Binding& binding : cInput->bindings())
 					binding.deliverEventUpdate(*event, m_state, eHandle);
 			}
 		}
@@ -120,10 +120,10 @@ void SInput::update()
 
 	movePointer();
 
-	for (EntityPointer entity : m_queries[Q::Input])
+	for (auto [entity, cInput] : m_queries[Q::Input].getAll<EntityPointer, CInput*>())
 	{
 		EntityHandle eHandle = entityManager()->makeHandle(entity);
-		for (Binding& binding : entity.get<CInput*>()->bindings())
+		for (Binding& binding : cInput->bindings())
 			binding.deliverFrameUpdate(m_state, eHandle);
 	}
 

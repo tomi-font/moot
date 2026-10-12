@@ -2,6 +2,8 @@
 
 #include <moot/Component/Collection.hh>
 #include <moot/Entity/Pointer.hh>
+#include <tuple>
+#include <type_traits>
 
 class ComponentCollectionIteratorBase
 {
@@ -28,20 +30,44 @@ public:
 	EntityPointer operator*() const { return {*m_collectionIt, m_idx}; }
 };
 
+template<typename C> using AccessedComponent = std::conditional_t<std::is_pointer_v<C>, C, const C&>;
+
 // Iterates over components of the given types.
 template<typename ...Cs> class ComponentCollectionIterator : public ComponentCollectionIteratorBase
 {
-	std::tuple<const std::vector<Cs>* ...> m_components;
+	template<typename C> using IteratedComponent = std::remove_pointer_t<C>;
+
+	std::tuple<std::vector<IteratedComponent<Cs>>* ...> m_components;
+
+	template<typename C> std::vector<IteratedComponent<C>>* findAll() const
+	{
+		ComponentCollection* const collection = *m_collectionIt;
+
+		if constexpr (std::is_pointer_v<C>)
+			if (!(collection)->has<IteratedComponent<C>>())
+				return nullptr;
+
+		return &collection->getAll<IteratedComponent<C>>();
+	}
+
+	template<typename C> AccessedComponent<C> access() const
+	{
+		auto* const components = std::get<std::vector<IteratedComponent<C>>*>(m_components);
+		if constexpr (std::is_pointer_v<C>)
+			return components ? &(*components)[m_idx] : nullptr;
+		else
+			return (*components)[m_idx];
+	}
 
 public:
 	using ComponentCollectionIteratorBase::ComponentCollectionIteratorBase;
 
-	std::tuple<const Cs&...> operator*()
+	std::tuple<AccessedComponent<Cs>...> operator*()
 	{
 		if (m_idx == 0)
-			m_components = {&(*m_collectionIt)->template getAll<Cs>() ...};
+			m_components = {findAll<Cs>()...};
 
-		return {(*std::get<const std::vector<Cs>*>(m_components))[m_idx] ...};
+		return {access<Cs>()...};
 	}
 };
 
@@ -51,7 +77,7 @@ template<typename ...Cs> class ComponentCollectionIterator<EntityPointer, Cs...>
 public:
 	using ComponentCollectionIterator<Cs...>::ComponentCollectionIterator;
 
-	std::tuple<EntityPointer, const Cs&...> operator*()
+	std::tuple<EntityPointer, AccessedComponent<Cs>...> operator*()
 	{
 		return std::tuple_cat(std::tuple<EntityPointer>({*this->m_collectionIt, this->m_idx}),
 		                      ComponentCollectionIterator<Cs...>::operator*());

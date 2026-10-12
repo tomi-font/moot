@@ -35,11 +35,6 @@ void SPhysics::registerProperties()
 	m_properties->set(Property::Gravity, 0.f);
 }
 
-static FloatRect getWorldBox(const EntityPointer& entity)
-{
-	return entity.get<CCollisionBox>() + entity.get<CPosition>().val();
-}
-
 static Vector2f firstContactPointMoveRatios(const FloatRect& a, const Vector2f& aMove,
 											const FloatRect& b, const Vector2f& bMove)
 {
@@ -201,7 +196,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 	Collision firstCollision;
 	firstCollision.moveRatio = 2; // More than 1.
 
-	for (EntityPointer other : collidables)
+	for (auto [other, cOtherPosition, cOtherCollisionBox] : collidables.getAll<EntityPointer, CPosition, CCollisionBox>())
 	{
 		CollidableProvisional otherProv;
 
@@ -212,7 +207,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 			otherProv = movingCollidables.at(other);
 		}
 		else
-			otherProv.base = getWorldBox(other);
+			otherProv.base = cOtherCollisionBox + cOtherPosition.val();
 
 		if (!prov.destination().intersectsBeyondEpsilon(otherProv.destination()))
 			continue;
@@ -231,16 +226,15 @@ void SPhysics::update()
 	const auto gravity = m_properties->get<float>(Property::Gravity);
 	std::unordered_map<EntityPointer, CollidableProvisional> movingCollidables;
 
-	for (EntityPointer entity : m_queries[Q::Dynamic])
+	for (auto [entity, cMove, cRigidbody, cCollisionBox, cPosition] : m_queries[Q::Dynamic].getAll<EntityPointer, CMove*, CRigidbody*, CCollisionBox*, CPosition*>())
 	{
 		Vector2f velocity;
 
-		if (entity.has<CMove>())
-			velocity += entity.get<CMove>().velocity();
+		if (cMove)
+			velocity += cMove->velocity();
 
-		if (entity.has<CRigidbody>())
+		if (cRigidbody)
 		{
-			CRigidbody* cRigidbody = entity.get<CRigidbody*>();
 			cRigidbody->applyYForce(-gravity * elapsedTime);
 			velocity += cRigidbody->velocity();
 		}
@@ -249,10 +243,10 @@ void SPhysics::update()
 		if (move.isZero())
 			continue;
 
-		if (entity.has<CCollisionBox>())
-			movingCollidables.emplace(entity, CollidableProvisional(move, getWorldBox(entity)));
+		if (cCollisionBox)
+			movingCollidables.emplace(entity, CollidableProvisional(move, *cCollisionBox + cPosition->val()));
 		else
-			entity.get<CPosition*>()->mut() += move;
+			cPosition->mut() += move;
 	}
 
 	for (auto movingCollidableIt = movingCollidables.begin();
