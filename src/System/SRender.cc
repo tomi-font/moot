@@ -219,9 +219,6 @@ static void sampleFootLight(const sf::Vector2f& lightPosition, const CLight& cLi
 
 	for (const LightRay& ray : cLightVisibility.getRaysClockwise(startAngle, endAngle))
 	{
-		if (!ray.hitPolygon)
-			continue;
-
 		const float determinant = crossProduct(foot, ray.direction);
 		if (determinant == 0)
 			continue;
@@ -271,7 +268,7 @@ static void addFootLight(const std::vector<FootSample>& samples, std::vector<Foo
 	{
 		const std::size_t toCutIndex = cutFoot(cuts, to.fraction);
 
-		if (from.light && to.light)
+		if (from.light || to.light)
 		{
 			for (const std::size_t i : std::views::iota(fromCutIndex, toCutIndex + 1))
 			{
