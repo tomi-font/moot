@@ -16,14 +16,10 @@ struct BoundCoords
 
 	operator FloatRect() const { return min.x <= max.x ? FloatRect(min, max - min) : FloatRect(); }
 
-	void incorporate(const sf::Vector2f& point);
-	void incorporate(const BoundCoords& other);
-
-	void move(const sf::Vector2f& move)
-	{
-		min += move;
-		max += move;
-	}
+	BoundCoords& incorporate(const sf::Vector2f& point);
+	BoundCoords& incorporate(const BoundCoords& other);
+	BoundCoords& move(const sf::Vector2f& move);
+	BoundCoords& extrude(const sf::Vector2f& extrusion);
 
 	sf::Vector2f min = {INFINITY, INFINITY};
 	sf::Vector2f max = {-INFINITY, -INFINITY};

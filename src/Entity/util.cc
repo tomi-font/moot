@@ -22,10 +22,7 @@ static void updateBoundCoords(const EntityHandle& entity, BoundCoords* boundCoor
 {
 	if (auto* cConvexPolygon = entity.find<CConvexPolygon*>())
 	{
-		BoundCoords polygonBoundCoords = cConvexPolygon->boundCoords();
-		polygonBoundCoords.move(entity.get<CPosition>());
-
-		boundCoords->incorporate(polygonBoundCoords);
+		boundCoords->incorporate(cConvexPolygon->boundCoords(entity.get<CPosition>()));
 	}
 }
 

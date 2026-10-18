@@ -1,31 +1,35 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/util/math/geometry.hh>
-#include <algorithm>
 #include <cassert>
 
-CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor) :
+CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor, std::optional<Outline> outline) :
 	m_vertices(std::move(vertices)),
 	m_height(height),
-	m_fillColor(fillColor)
+	m_fillColor(fillColor),
+	m_outline(outline),
+	m_boundCoords(m_vertices)
 {
+#ifndef NDEBUG
 	assert(m_vertices.size() >= 3);
 	assert(m_height >= 0);
+	if (m_outline)
+		assert(m_outline->thickness >= 0);
 
-	// Store the vertices counter-clockwise (the Y axis grows upwards), so that walking along an edge
-	// always has the inside on the left: consumers can then take the outward side without checking.
-	if (crossProductSign(m_vertices[0], m_vertices[1], m_vertices[2]) < 0)
-		std::ranges::reverse(m_vertices.begin(), m_vertices.end());
-
-#ifndef NDEBUG
 	const std::size_t vertexCount = m_vertices.size();
 	for (std::size_t i = 0; i != vertexCount; ++i)
 	{
-		const float cp = crossProduct(m_vertices[(i + vertexCount - 1) % vertexCount], m_vertices[i], m_vertices[(i + 1) % vertexCount]);
-		assert(cp > 0); // Strictly convex: every corner turns the same way, none is flat.
+		const std::size_t next = (i + 1) % vertexCount;
+
+		const float cp = crossProduct(m_vertices[(i + vertexCount - 1) % vertexCount], m_vertices[i], m_vertices[next]);
+		assert(cp > 0); // Strictly convex: every corner turns to the left (counter-clockwise), none is flat.
+
+		if (m_outline && m_outline->thickness > 0)
+		{
+			const float t = 2 * m_outline->thickness;
+			assert(t * t <= (m_vertices[next] - m_vertices[i]).lengthSquared());
+		}
 	}
 #endif
-
-	m_boundCoords = {m_vertices};
 }
 
 Vector2f CConvexPolygon::getEdgeNormal(std::size_t i) const

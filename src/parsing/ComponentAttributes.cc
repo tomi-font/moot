@@ -151,20 +151,37 @@ template<> void parser<CLocalPosition>(const sol::object& data, ComponentCollect
 	collection->add<CLocalPosition>(asVector2f(data));
 }
 
+static CConvexPolygon::Outline asOutline(const sol::object& obj)
+{
+	const auto& [map, mapSize] = asLuaMapSize(obj);
+	const auto& thicknessObj = map["thickness"];
+	const auto& colorObj = map["color"];
+	assert(mapSize == 0u + thicknessObj.valid() + colorObj.valid());
+
+	return {.thickness = asOptionalParsed<float>(thicknessObj, 0),
+	        .color = asOptionalParsed<Color>(colorObj)};
+}
+
 template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& heightObj = map["height"];
 	const auto& fillColorObj = map["fillColor"];
-	assert(mapSize == 1u + heightObj.valid() + fillColorObj.valid());
+	const auto& outlineObj = map["outline"];
+	assert(mapSize == 1u + heightObj.valid() + fillColorObj.valid() + outlineObj.valid());
 
 	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
 		vertices.push_back(asVector2f(value));
 
+	std::optional<CConvexPolygon::Outline> outline;
+	if (outlineObj.valid())
+		outline = asOutline(outlineObj);
+
 	collection->add<CConvexPolygon>(std::move(vertices),
 	                                asOptionalParsed<float>(heightObj, 0),
-	                                asOptionalParsed<Color>(fillColorObj));
+	                                asOptionalParsed<Color>(fillColorObj),
+	                                outline);
 }
 
 template<> void parser<CMove>(const sol::object& data, ComponentCollection* collection)

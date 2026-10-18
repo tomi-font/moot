@@ -20,15 +20,17 @@ struct Property
 
 	using Getter = std::function<Property::Value()>;
 
-	static constexpr std::string AmbientLight = "ambientLight";
-	static constexpr std::string ClearColor = "clearColor";
+	static const std::string AmbientLight;
+	static const std::string ClearColor;
+	static const std::string DefaultOutlineColor;
+	static const std::string DefaultOutlineThickness;
 
-	static constexpr std::string ElapsedTime = "elapsedTime";
-	static constexpr std::string Gravity = "gravity";
+	static const std::string ElapsedTime;
+	static const std::string Gravity;
 
-	static constexpr std::string PointerPosition = "pointerPosition";
-	static constexpr std::string PointerStick = "pointerStick";
-	static constexpr std::string StickSpeed = "stickSpeed";
+	static const std::string PointerPosition;
+	static const std::string PointerStick;
+	static const std::string StickSpeed;
 
-	static constexpr std::string WindowSize = "windowSize";
+	static const std::string WindowSize;
 };

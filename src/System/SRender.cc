@@ -87,6 +87,8 @@ void SRender::registerProperties()
 {
 	m_properties->set(Property::ClearColor, Color::Black);
 	m_properties->set(Property::AmbientLight, Color::White);
+	m_properties->set(Property::DefaultOutlineColor, Color::Black);
+	m_properties->set(Property::DefaultOutlineThickness, 0.02f);
 }
 
 void SRender::updateCameras()
@@ -102,27 +104,92 @@ void SRender::updateCameras()
 	}
 }
 
+static CConvexPolygon::Outline getDefaultOutline(const Properties& properties)
+{
+	const CConvexPolygon::Outline defaultOutline = {properties.get<float>(Property::DefaultOutlineThickness),
+	                                                properties.get<Color>(Property::DefaultOutlineColor)};
+	assert(defaultOutline.thickness >= 0);
+	return defaultOutline;
+}
+
+static auto getOutline(const CConvexPolygon& cConvexPolygon, const CConvexPolygon::Outline& defaultOutline)
+{
+	std::optional<CConvexPolygon::Outline> outline = cConvexPolygon.outline();
+	if (outline)
+	{
+		if (outline->thickness == 0)
+			outline->thickness = defaultOutline.thickness;
+		if (!outline->color)
+			outline->color = defaultOutline.color;
+	}
+	return outline;
+}
+
+static void insetCorners(const std::vector<sf::Vector2f>& points, float thickness, std::vector<sf::Vector2f>* insetPoints)
+{
+	const std::size_t count = points.size();
+	insetPoints->resize(count);
+
+	sf::Vector2f previousDirection = (points[0] - points[count - 1]).normalized();
+	for (std::size_t i = 0; i != count; ++i)
+	{
+		const sf::Vector2f direction = (points[(i + 1) % count] - points[i]).normalized();
+		// Divides by the sine of the turn, which strict convexity keeps positive.
+		const float slide = (previousDirection.dot(direction) - 1) / previousDirection.cross(direction);
+		// perpendicular() turns towards the inside for counter-clockwise points.
+		(*insetPoints)[i] = points[i] + thickness * (previousDirection.perpendicular() + slide * previousDirection);
+		previousDirection = direction;
+	}
+}
+
+static void appendQuad(const sf::Vertex& a, const sf::Vertex& b, const sf::Vertex& c, const sf::Vertex& d, std::vector<sf::Vertex>* vertices)
+{
+	vertices->append_range(std::array{a, b, c, a, c, d});
+}
+
+static void appendPolygonOutline(const std::vector<sf::Vector2f>& points, float thickness, Color color,
+                                 std::vector<sf::Vector2f>* innerPoints, std::vector<sf::Vertex>* vertices)
+{
+	insetCorners(points, thickness, innerPoints);
+	for (std::size_t i = 0; i != points.size(); ++i)
+	{
+		const std::size_t next = (i + 1) % points.size();
+		appendQuad({points[i], color}, {points[next], color}, {(*innerPoints)[next], color}, {(*innerPoints)[i], color}, vertices);
+	}
+}
+
 void SRender::drawPolygons()
 {
 	m_passVertices.clear();
 
+	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
 	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
 
-	for (auto [entity, cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<EntityPointer, CConvexPolygon, CPosition>())
+	std::vector<sf::Vector2f> points;
+	std::vector<sf::Vector2f> outlineInnerPoints;
+	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
+
+	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
+		if (cCamera.seesExtrusions() && cConvexPolygon.height() > 0)
+			continue;
+
 		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cPosition.val();
 		if (!viewWorldRectangle.intersects(polygonBoundingBox))
 			continue;
 
-		const auto& vertices = cConvexPolygon.vertices();
-		const sf::Vertex baseVertex = {cPosition.val() + vertices[0], cConvexPolygon.fillColor()};
+		const std::size_t vertexCount = cConvexPolygon.vertices().size();
+		const Color fillColor = cConvexPolygon.fillColor();
 
-		for (std::size_t i = 1; i + 1 < vertices.size(); ++i)
-		{
-			m_passVertices.append_range(std::array<sf::Vertex, 3>{baseVertex,
-			                                                      {cPosition.val() + vertices[i], cConvexPolygon.fillColor()},
-			                                                      {cPosition.val() + vertices[i + 1], cConvexPolygon.fillColor()}});
-		}
+		points.resize(vertexCount);
+		for (std::size_t i = 0; i != vertexCount; ++i)
+			points[i] = cPosition.val() + cConvexPolygon.vertices()[i];
+
+		for (std::size_t i = 1; i + 1 < vertexCount; ++i)
+			m_passVertices.append_range(std::array<sf::Vertex, 3>{{{points[0], fillColor}, {points[i], fillColor}, {points[i + 1], fillColor}}});
+
+		if (const auto outline = getOutline(cConvexPolygon, defaultOutline))
+			appendPolygonOutline(points, outline->thickness, outline->color, &outlineInnerPoints, &m_passVertices);
 	}
 
 	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
@@ -235,6 +302,18 @@ static void sampleFootLight(const sf::Vector2f& lightPosition, const CLight& cLi
 		else
 			samples->emplace_back(fraction);
 	}
+
+	if (!samples->empty())
+	{
+		// The rays cast to clear the foot's corners land a few ULPs inside it.
+		// A sample this close to an end is one of them and stands for the end.
+		constexpr float FootEndTolerance = 0.01f;
+
+		if (samples->front().fraction <= FootEndTolerance)
+			samples->front().fraction = 0;
+		if (samples->back().fraction >= 1 - FootEndTolerance)
+			samples->back().fraction = 1;
+	}
 }
 
 struct FootCut
@@ -250,13 +329,13 @@ static std::size_t cutFoot(std::vector<FootCut>* cuts, float fraction)
 	const FootCut& next = *nextIt;
 	const std::size_t index = nextIt - cuts->begin();
 
-	if (next.fraction == fraction)
-		return index;
-
-	const FootCut& previous = *(nextIt - 1);
-	const float amount = (fraction - previous.fraction) / (next.fraction - previous.fraction);
-	const FloatColor light = previous.lightAfter + (next.lightBefore - previous.lightAfter) * amount;
-	cuts->emplace(nextIt, fraction, light, light);
+	if (next.fraction != fraction)
+	{
+		const FootCut& previous = *(nextIt - 1);
+		const float amount = (fraction - previous.fraction) / (next.fraction - previous.fraction);
+		const FloatColor light = previous.lightAfter + (next.lightBefore - previous.lightAfter) * amount;
+		cuts->emplace(nextIt, fraction, light, light);
+	}
 	return index;
 }
 
@@ -286,11 +365,37 @@ static void addFootLight(const std::vector<FootSample>& samples, std::vector<Foo
 	}
 }
 
+static void appendFaceOutline(const Segment& edge, const sf::Vector2f& up, const sf::Vector2f& upPerHeight,
+                              const CConvexPolygon::Outline& outline, std::vector<FootCut>* footCuts, std::vector<sf::Vertex>* vertices)
+{
+	const sf::Vector2f footInset = outline.thickness * upPerHeight;
+	const float sideFraction = outline.thickness / edge.vector.length();
+	assert(sideFraction <= 0.51f);
+	cutFoot(footCuts, sideFraction);
+	cutFoot(footCuts, 1 - sideFraction);
+
+	for (auto [from, to] : *footCuts | std::views::pairwise)
+	{
+		const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, outline.color * Color(from.lightAfter)};
+		const sf::Vertex baseTo = {edge.a + to.fraction * edge.vector, outline.color * Color(to.lightBefore)};
+		const sf::Vertex topFrom = {baseFrom.position + up, baseFrom.color};
+		const sf::Vertex topTo = {baseTo.position + up, baseTo.color};
+
+		if (to.fraction <= sideFraction || from.fraction >= 1 - sideFraction)
+			appendQuad(baseFrom, baseTo, topTo, topFrom, vertices);
+		else
+		{
+			appendQuad(baseFrom, baseTo, {baseTo.position + footInset, baseTo.color}, {baseFrom.position + footInset, baseFrom.color}, vertices);
+			appendQuad({topFrom.position - footInset, topFrom.color}, {topTo.position - footInset, topTo.color}, topTo, topFrom, vertices);
+		}
+	}
+}
+
 void SRender::drawExtrusions()
 {
 	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
-	if (cCamera.elevation() == CCamera::MaxElevation)
-		return; // Looking straight at the plane, the extrusions are hidden behind their footprint.
+	if (!cCamera.seesExtrusions())
+		return;
 
 	struct Extrusion
 	{
@@ -321,20 +426,20 @@ void SRender::drawExtrusions()
 
 	const auto ambientLight = m_properties->get<Color>(Property::AmbientLight);
 	const FloatColor ambientLightFloat = ambientLight;
+	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
 
-	const auto groundToViewTransform = getGroundToViewTransform(window()->getView().getSize());
-	const FloatRect viewGroundRectangle = groundToViewTransform.getInverse().transformRect(window()->getViewRectangle());
+	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
 
-	// How much a unit of height rises on screen.
 	const float rise = std::cos(cCamera.elevation());
-	assert(rise >= 0); // Extrusions rise up the screen, so the viewer is at the bottom.
+	assert(rise >= 0);
+	const sf::Vector2f upPerHeight = groundTransform.getInverse().transformPoint({0, rise});
 
 	m_passVertices.clear();
 
-	std::vector<sf::Vertex> topVertices;
 	std::vector<sf::Vector2f> points;
-	std::vector<sf::Vector2f> worldPoints;
+	std::vector<sf::Vector2f> topPoints;
 	std::vector<sf::Vector2f> edgeNormals;
+	std::vector<sf::Vector2f> outlineInnerPoints;
 
 	std::vector<FootSample> footSamples;
 	std::vector<FootCut> footCuts;
@@ -343,25 +448,23 @@ void SRender::drawExtrusions()
 	{
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
-		const sf::Vector2f up = {0, extrusion.polygon->height() * rise};
+		const sf::Vector2f up = extrusion.polygon->height() * upPerHeight;
 		const Color fillColor = extrusion.polygon->fillColor();
 		const Color topColor = fillColor * ambientLight;
+		const auto outline = getOutline(*extrusion.polygon, defaultOutline);
 
-		topVertices.resize(vertexCount);
 		points.resize(vertexCount);
-		worldPoints.resize(vertexCount);
+		topPoints.resize(vertexCount);
 		edgeNormals.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
 		{
-			worldPoints[i] = extrusion.position + vertices[i];
-			points[i] = groundTransform.transformPoint(worldPoints[i]);
+			points[i] = extrusion.position + vertices[i];
+			topPoints[i] = points[i] + up;
 			edgeNormals[i] = extrusion.polygon->getEdgeNormal(i);
 		}
-		assert(crossProduct(points[0], points[1], points[2]) > 0); // Still counter-clockwise: the ground transform never mirrors.
 
-		BoundCoords bounds(points);
-		bounds.max.y += up.y;
-		if (!viewGroundRectangle.intersects(bounds))
+		const BoundCoords bounds = extrusion.polygon->boundCoords(extrusion.position).extrude(up);
+		if (!viewWorldRectangle.intersects(bounds))
 			continue;
 
 		for (std::size_t i = 0; i != vertexCount; ++i)
@@ -369,13 +472,13 @@ void SRender::drawExtrusions()
 			const std::size_t next = (i + 1) % vertexCount;
 			const Segment edge = {points[i], points[next]};
 
-			topVertices[i] = {edge.a + up, topColor};
 			if (i >= 2)
-				m_passVertices.append_range(std::array{topVertices[0], topVertices[i - 1], topVertices[i]});
+				m_passVertices.append_range(std::array<sf::Vertex, 3>({{topPoints[0], topColor}, {topPoints[i - 1], topColor}, {topPoints[i], topColor}}));
 
-			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so an
-			// extruded face points toward the camera only if its edge runs left to right.
-			if (edge.vector.x <= 0)
+			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so an extruded
+			// face points toward the camera only if its edge runs left to right on screen. The transform has
+			// no translation, so a vector goes through it as a point.
+			if (groundTransform.transformPoint(edge.vector).x <= 0)
 				continue;
 
 			footCuts = {{0.f, {}, ambientLightFloat}, {1.f, ambientLightFloat, {}}};
@@ -383,7 +486,7 @@ void SRender::drawExtrusions()
 			for (auto [cPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility>())
 			{
 				footSamples.clear();
-				sampleFootLight(cPosition, cLight, cLightVisibility, worldPoints[i], worldPoints[next], edgeNormals[i], extrusion.polygon, &footSamples);
+				sampleFootLight(cPosition, cLight, cLightVisibility, points[i], points[next], edgeNormals[i], extrusion.polygon, &footSamples);
 				if (!footSamples.empty())
 					addFootLight(footSamples, &footCuts);
 			}
@@ -396,10 +499,16 @@ void SRender::drawExtrusions()
 				const sf::Vertex topTo = {baseTo.position + up, baseTo.color};
 				m_passVertices.append_range(std::array{baseFrom, baseTo, topTo, baseFrom, topTo, topFrom});
 			}
+
+			if (outline)
+				appendFaceOutline(edge, up, upPerHeight, *outline, &footCuts, &m_passVertices);
 		}
+
+		if (outline)
+			appendPolygonOutline(topPoints, outline->thickness, outline->color * ambientLight, &outlineInnerPoints, &m_passVertices);
 	}
 
-	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, groundToViewTransform);
+	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
 }
 
 void SRender::drawHud()
