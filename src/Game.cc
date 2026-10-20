@@ -1,7 +1,9 @@
 #include <moot/Game.hh>
+#include <moot/Component/CDrive.hh>
 #include <moot/Component/Id.hh>
 #include <moot/Event/Engine.hh>
 #include <moot/System/SCallback.hh>
+#include <moot/System/SDrive.hh>
 #include <moot/System/SHierarchy.hh>
 #include <moot/System/SInput.hh>
 #include <moot/System/SLight.hh>
@@ -22,6 +24,7 @@ Game::Game(std::source_location location) :
 	assert(ComponentIdRegistry::idCount() <= 8 * sizeof(ComponentComposition::Bits));
 
 	addSystem<SInput>(SystemSchedule::Phase::Input);
+	addSystem<SDrive>(SystemSchedule::Phase::Input, SystemSchedule::after<SInput>());
 	addSystem<SPhysics>(SystemSchedule::Phase::Update);
 	addSystem<SCallback>(SystemSchedule::Phase::Update, SystemSchedule::before<SPhysics>());
 	addSystem<SHierarchy>(SystemSchedule::Phase::Update, SystemSchedule::after<SPhysics>());
@@ -31,6 +34,7 @@ Game::Game(std::source_location location) :
 	initializeEvents(&m_eventManager);
 	m_profiler.initializeEvents(&m_eventManager);
 
+	CDrive::registerAttributes();
 	initializeScriptContext(this);
 
 	sf::VideoMode halfScreen = sf::VideoMode::getDesktopMode();

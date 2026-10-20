@@ -1,6 +1,7 @@
 #include <moot/parsing/ComponentAttributes.hh>
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
+#include <moot/Component/CDrive.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CInput.hh>
 #include <moot/Component/CLight.hh>
@@ -14,7 +15,6 @@
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
 #include <variant>
-#include <SFML/System/Angle.hpp>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
 
@@ -231,6 +231,12 @@ template<> void parser<CRigidbody>(const sol::object& data, ComponentCollection*
 	collection->add<CRigidbody>();
 }
 
+template<> void parser<CDrive>(const sol::object& data, ComponentCollection* collection)
+{
+	asLuaMap<0>(data);
+	collection->add<CDrive>();
+}
+
 template<> void parser<CCamera>(const sol::object& data, ComponentCollection* collection)
 {
 	const auto& [map, mapSize] = asLuaMapSize(data);
@@ -246,11 +252,10 @@ template<> void parser<CCamera>(const sol::object& data, ComponentCollection* co
 	if (limitsObj.valid())
 		limits = asFloatRect(limitsObj);
 
-	// Angles are given in degrees.
 	if (elevationObj.valid())
-		elevation = sf::degrees(as<float>(elevationObj)).asRadians();
+		elevation = as<float>(elevationObj);
 	if (rotationObj.valid())
-		rotation = sf::degrees(as<float>(rotationObj)).asRadians();
+		rotation = as<float>(rotationObj);
 
 	collection->add<CCamera>(asVector2f(map["size"]), limits, elevation, rotation);
 }
@@ -292,9 +297,7 @@ decltype(ComponentAttributes::s_m_parsers) ComponentAttributes::s_m_parsers;
 
 void ComponentAttributes::registerParser(ComponentId cId, Parser parser)
 {
-	const auto& name = ComponentNames::get(cId);
-	assert(!s_m_parsers.contains(name));
-	s_m_parsers[name] = parser;
+	s_m_parsers[ComponentNames::get(cId)] = parser;
 }
 
 template<typename C> static sol::object componentGetter(const EntityHandle& entity, lua_State* luaState)
@@ -322,6 +325,7 @@ void ComponentAttributes::registerAll(sol::state* lua)
 	registerComponent<CHudRender>("HudRender");
 	registerComponent<CPointable>("Pointable");
 	registerComponent<CLight>("Light");
+	registerComponent<CDrive>("Drive");
 
 	registerAttributeValues<CInput>(lua);
 	registerAttributeValues<Color>(lua);

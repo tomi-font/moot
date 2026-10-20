@@ -20,6 +20,5 @@ void ComponentNames::add(ComponentId cId, std::string&& name)
 
 	s_m_names.resize(ComponentIdRegistry::idCount());
 
-	assert(s_m_names[cId].empty());
 	s_m_names[cId] = std::move(name);
 }
