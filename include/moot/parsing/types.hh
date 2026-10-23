@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/parsing/sol.hh>
+#include <sol/sol.hpp>
 #include <moot/struct/Color.hh>
 #include <moot/struct/Rect.hh>
 #include <SFML/Graphics/Color.hpp>
@@ -29,7 +29,7 @@ template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
 	const auto& [luaMap, size] = asLuaMapSize(var);
 	assert(size == N);
 	return luaMap;
-} 
+}
 
 inline sol::table asLuaArray(const sol::object& var)
 {

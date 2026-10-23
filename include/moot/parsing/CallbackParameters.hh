@@ -1,6 +1,6 @@
 #pragma once
 
-#include <moot/parsing/sol.hh>
+#include <sol/sol.hpp>
 
 class CallbackParameters
 {

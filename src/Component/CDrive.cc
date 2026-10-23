@@ -1,21 +1,21 @@
 #include <moot/Component/CDrive.hh>
 #include <moot/Component/CCamera.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/Pointer.hh>
+#include <moot/TrackedValue.hh>
 #include <algorithm>
 #include <utility>
 
 std::vector<CDrive::Attribute> CDrive::s_m_attributes;
 
-// The class of a setter member function.
-template<typename> struct SetterTraits;
-template<typename C, typename A> struct SetterTraits<void (C::*)(A)>
-{
-	using Class = C;
-};
+// The class a setter member function or a tracked data member belongs to.
+template<typename> struct MemberTraits;
+template<typename C, typename A> struct MemberTraits<void (C::*)(A)> { using Class = C; };
+template<typename C, typename T> struct MemberTraits<TrackedValue<T> C::*> { using Class = C; };
 
 template<auto Getter, auto Setter> static CDrive::Attribute makeAttribute(std::string_view name, float min = -INFINITY, float max = INFINITY)
 {
-	using C = typename SetterTraits<decltype(Setter)>::Class;
+	using C = typename MemberTraits<decltype(Setter)>::Class;
 
 	return {
 		.cId = CId<C>,
@@ -27,12 +27,26 @@ template<auto Getter, auto Setter> static CDrive::Attribute makeAttribute(std::s
 	};
 }
 
+template<auto Member> static CDrive::Attribute makeAttribute(std::string_view name, float min = -INFINITY, float max = INFINITY)
+{
+	using C = typename MemberTraits<decltype(Member)>::Class;
+
+	return {
+		.cId = CId<C>,
+		.name = std::string(name),
+		.get = [](const EntityPointer& entity) -> float { return entity.get<C>().*Member; },
+		.set = [](const EntityPointer& entity, float value) { entity.get<C*>()->*Member = value; },
+		.min = min,
+		.max = max
+	};
+}
+
 void CDrive::registerAttributes()
 {
 	s_m_attributes =
 	{
 		makeAttribute<&CCamera::elevation, &CCamera::setElevation>("elevation", CCamera::MinElevation, CCamera::MaxElevation),
-		makeAttribute<&CCamera::rotation, &CCamera::setRotation>("rotation"),
+		makeAttribute<&CTransform::rotation>("rotation"),
 	};
 }
 

@@ -1,16 +1,16 @@
 #include <moot/Entity/Manager.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Component/CChildren.hh>
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CEntity.hh>
-#include <moot/Component/CLocalPosition.hh>
+#include <moot/Component/CLocalTransform.hh>
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CParent.hh>
 #include <moot/Component/CPointable.hh>
-#include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CCamera.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/util.hh>
 #include <utility>
 
@@ -22,13 +22,13 @@ EntityManager::EntityManager() :
 
 static void checkComponentComposition(ComponentComposable entity)
 {
-	if (!entity.has<CPosition>())
-		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight, CLocalPosition>()));
+	if (!entity.has<CTransform>())
+		assert((entity.hasNoneOf<CCollisionBox, CConvexPolygon, CCamera, CMove, CRigidbody, CPointable, CLight, CLocalTransform>()));
 
 	if (entity.has<CPointable>())
 		assert(entity.has<CConvexPolygon>());
 
-	if (entity.has<CLocalPosition>())
+	if (entity.has<CLocalTransform>())
 		assert(!entity.has<CCollisionBox>());
 }
 
@@ -37,7 +37,7 @@ EntityHandle EntityManager::processEntityToSpawn(ComponentCollection* entity, st
 	entity->add<CEntity>(m_nextEId++);
 
 	if (pos)
-		entity->add<CPosition>(*pos);
+		entity->add<CTransform>(*pos);
 
 	return {{entity, 0}, entity->comp(), this};
 }

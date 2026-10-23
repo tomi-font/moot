@@ -1,10 +1,9 @@
 #include <moot/System/SPhysics.hh>
-#include <moot/Component/CCamera.hh>
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CMove.hh>
-#include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/Pointer/operators.hh>
 #include <moot/util/math/base.hh>
 
@@ -197,7 +196,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 	Collision firstCollision;
 	firstCollision.moveRatio = 2; // More than 1.
 
-	for (auto [other, cOtherPosition, cOtherCollisionBox] : collidables.getAll<EntityPointer, CPosition, CCollisionBox>())
+	for (auto [other, cOtherTransform, cOtherCollisionBox] : collidables.getAll<EntityPointer, CTransform, CCollisionBox>())
 	{
 		CollidableProvisional otherProv;
 
@@ -208,7 +207,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 			otherProv = movingCollidables.at(other);
 		}
 		else
-			otherProv.base = cOtherCollisionBox + cOtherPosition.val();
+			otherProv.base = cOtherCollisionBox + cOtherTransform.position.val();
 
 		if (!prov.destination().intersectsBeyondEpsilon(otherProv.destination()))
 			continue;
@@ -227,17 +226,12 @@ void SPhysics::update()
 	const auto gravity = m_properties->get<float>(Property::Gravity);
 	std::unordered_map<EntityPointer, CollidableProvisional> movingCollidables;
 
-	for (auto [entity, cMove, cRigidbody, cCollisionBox, cPosition] : m_queries[Q::Dynamic].getAll<EntityPointer, CMove*, CRigidbody*, CCollisionBox*, CPosition*>())
+	for (auto [entity, cMove, cRigidbody, cCollisionBox, cTransform] : m_queries[Q::Dynamic].getAll<EntityPointer, CMove*, CRigidbody*, CCollisionBox*, CTransform*>())
 	{
 		Vector2f velocity;
 
 		if (cMove)
-		{
-			if (cMove->space() == CMove::Space::Camera)
-				velocity += cMove->velocity().rotatedBy(sf::radians(-entity.get<CCamera>().rotation()));
-			else
-				velocity += cMove->velocity();
-		}
+			velocity += cMove->velocity().rotatedBy(sf::radians(cTransform->rotation));
 
 		if (cRigidbody)
 		{
@@ -250,9 +244,9 @@ void SPhysics::update()
 			continue;
 
 		if (cCollisionBox)
-			movingCollidables.emplace(entity, CollidableProvisional(move, *cCollisionBox + cPosition->val()));
+			movingCollidables.emplace(entity, CollidableProvisional(move, *cCollisionBox + cTransform->position));
 		else
-			cPosition->mut() += move;
+			cTransform->position.mut() += move;
 	}
 
 	for (auto movingCollidableIt = movingCollidables.begin();
@@ -279,10 +273,6 @@ void SPhysics::update()
 				assert(c.otherProv.move.isZero());
 		}
 
-		const Vector2f newPosition = prov.destination().bottomLeft - entity.get<CCollisionBox>().bottomLeft;
-		auto* const cPosition = entity.get<CPosition*>();
-		if (newPosition != cPosition->val())
-			*cPosition = newPosition;
-		// TODO: else assert
+		entity.get<CTransform*>()->position = prov.destination().bottomLeft - entity.get<CCollisionBox>().bottomLeft;
 	}
 }

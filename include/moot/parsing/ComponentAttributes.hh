@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Component/Collection.hh>
-#include <moot/parsing/sol.hh>
+#include <sol/sol.hpp>
 #include <unordered_map>
 
 class ComponentAttributes

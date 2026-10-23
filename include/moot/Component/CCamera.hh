@@ -12,23 +12,21 @@ public:
 	static constexpr float MinElevation = std::numbers::pi_v<float> / 180; // 1 degree
 	static constexpr float MaxElevation = std::numbers::pi_v<float> / 2;
 
-	CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation = MaxElevation, float rotation = 0);
+	CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation = MaxElevation);
 
 	void setSize(const sf::Vector2f&);
 	void zoom(float factor);
 	void setLimits(const FloatRect&);
 	void setElevation(float radians);
-	void setRotation(float radians) { m_rotation = radians; }
 
 	auto& size() const { return m_size; }
 	auto& limits() const { return m_limits; }
 	auto& elevation() const { return m_elevation; }
-	auto& rotation() const { return m_rotation; }
 
 	bool seesExtrusions() const { return m_elevation != MaxElevation; }
 
-	// Maps the world plane into the camera's frame, as seen from its elevation and rotation, y up.
-	sf::Transform getTransform() const;
+	// Maps the world plane into the camera's frame, as seen from its elevation and the entity's rotation, y up.
+	sf::Transform getTransform(float rotation) const;
 
 private:
 
@@ -36,7 +34,6 @@ private:
 
 	TrackedValue<Vector2f> m_size;
 	TrackedValue<float> m_elevation;
-	TrackedValue<float> m_rotation;
 
 	// The borders, in world coordinates, of the area this view is limited to show.
 	FloatRect m_limits;

@@ -3,9 +3,8 @@
 #include <cassert>
 #include <cmath>
 
-CCamera::CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation, float rotation) :
-	m_size(size),
-	m_rotation(rotation)
+CCamera::CCamera(const sf::Vector2f& size, const FloatRect& limits, float elevation) :
+	m_size(size)
 {
 	setElevation(elevation);
 	setLimits(limits);
@@ -60,11 +59,12 @@ void CCamera::setElevation(float radians)
 	m_elevation = radians;
 }
 
-sf::Transform CCamera::getTransform() const
+sf::Transform CCamera::getTransform(float rotation) const
 {
 	// SFML post-multiplies: the rotation below is applied to points first.
+	// The camera follows the entity's rotation, so the world is seen turned the other way.
 	sf::Transform transform;
 	transform.scale({1, std::sin(m_elevation)});
-	transform.rotate(sf::radians(m_rotation));
+	transform.rotate(sf::radians(-rotation));
 	return transform;
 }

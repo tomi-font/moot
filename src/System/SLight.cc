@@ -2,7 +2,7 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CLightVisibility.hh>
-#include <moot/Component/CPosition.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/struct/Rect.hh>
 #include <moot/util/math/geometry.hh>
@@ -101,9 +101,9 @@ void SLight::update()
 	std::vector<float> rayAngles;
 	std::vector<LightRay> rays;
 
-	for (auto [cLightPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility*>())
+	for (auto [cLightTransform, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CTransform, CLight, CLightVisibility*>())
 	{
-		const sf::Vector2f& lightPosition = cLightPosition;
+		const sf::Vector2f& lightPosition = cLightTransform.position;
 		const float lightRadiusSquared = cLight.radius() * cLight.radius();
 
 		exposedEdges.clear();
@@ -138,9 +138,9 @@ void SLight::update()
 			rayAngles.append_range(std::array{wrapAngle(angle - angularClearance), wrapAngle(angle + angularClearance)});
 		};
 
-		for (auto [cConvexPolygon, cPosition] : m_queries[Q::Occluders].getAll<CConvexPolygon, CPosition>())
+		for (auto [cConvexPolygon, cPolygonTransform] : m_queries[Q::Occluders].getAll<CConvexPolygon, CTransform>())
 		{
-			const sf::Vector2f& polygonPosition = cPosition;
+			const sf::Vector2f& polygonPosition = cPolygonTransform.position;
 
 			// A polygon whose bounding box is out of reach has nothing to hit.
 			const FloatRect boundingBox = cConvexPolygon.getBoundingRect() + polygonPosition;

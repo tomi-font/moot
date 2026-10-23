@@ -2,7 +2,7 @@
 #include <moot/Component/CChildren.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CParent.hh>
-#include <moot/Component/CPosition.hh>
+#include <moot/Component/CTransform.hh>
 
 std::vector<EntityHandle> Entity::getChildren(const EntityHandle& entity)
 {
@@ -22,7 +22,7 @@ static void updateBoundCoords(const EntityHandle& entity, BoundCoords* boundCoor
 {
 	if (auto* cConvexPolygon = entity.find<CConvexPolygon*>())
 	{
-		boundCoords->incorporate(cConvexPolygon->boundCoords(entity.get<CPosition>()));
+		boundCoords->incorporate(cConvexPolygon->boundCoords(entity.get<CTransform>().position));
 	}
 }
 

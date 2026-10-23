@@ -1,12 +1,11 @@
 #include <moot/parsing/EntityFunctions.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CDrive.hh>
 #include <moot/Component/CHudRender.hh>
-#include <moot/Component/CLocalPosition.hh>
 #include <moot/Component/CMove.hh>
-#include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CCamera.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/Entity/util.hh>
 #include <moot/parsing/ComponentAttributes.hh>
@@ -51,7 +50,7 @@ static void registerComponentTypes(sol::state* lua)
 	hudRender["pos"] = sol::property(&CHudRender::position);
 
 	auto move = registerComponent<CMove>(ct);
-	move["setMotion"] = [](CMove* cMove, const sol::object& direction, CMove::Space space) { cMove->setMotion(asVector2f(direction), space); };
+	move["setMotion"] = [](CMove* cMove, const sol::object& direction) { cMove->setMotion(asVector2f(direction)); };
 
 	auto rigidbody = registerComponent<CRigidbody>(ct);
 	rigidbody["applyYForce"] = &CRigidbody::applyYForce;
@@ -61,17 +60,6 @@ static void registerComponentTypes(sol::state* lua)
 	camera["setSize"] = [](CCamera* cCamera, sol::object size) { cCamera->setSize(asVector2f(size)); };
 	camera["setLimits"] = [](CCamera* cCamera, sol::object size) { cCamera->setLimits(asFloatRect(size)); };
 	camera["elevation"] = sol::property([](const CCamera& cCamera) -> float { return cCamera.elevation(); }, &CCamera::setElevation);
-	camera["rotation"] = sol::property([](const CCamera& cCamera) -> float { return cCamera.rotation(); }, &CCamera::setRotation);
-
-	auto position = registerComponent<CPosition>(ct);
-	position["x"] = sol::property([](const CPosition& pos) { return pos.val().x; },
-	                              [](CPosition* pos, float x) { pos->mut().x = x; });
-	position["y"] = sol::property([](const CPosition& pos) { return pos.val().y; },
-	                              [](CPosition* pos, float y) { pos->mut().y = y; });
-
-	auto localPosition = registerComponent<CLocalPosition>(ct);
-	localPosition["x"] = &CLocalPosition::x;
-	localPosition["y"] = &CLocalPosition::y;
 
 	auto convexPolygon = registerComponent<CConvexPolygon>(ct);
 	convexPolygon["fillColor"] = sol::property(&CConvexPolygon::setFillColor);
@@ -81,6 +69,12 @@ static void registerComponentTypes(sol::state* lua)
 	{
 		cDrive->drive(CDrive::getAttribute(cId, name), speed);
 	};
+
+	auto transform = registerComponent<CTransform>(ct);
+	transform["position"] = sol::property([](const CTransform& cTransform) -> const Vector2f& { return cTransform.position; },
+	                                      [](CTransform* cTransform, const sol::object& position) { cTransform->position = asVector2f(position); });
+	transform["rotation"] = sol::property([](const CTransform& cTransform) -> float { return cTransform.rotation; },
+	                                      [](CTransform* cTransform, float rotation) { cTransform->rotation = rotation; });
 }
 
 static void registerEntityComponentFunctions(sol::usertype<EntityHandle>* et)
@@ -109,14 +103,6 @@ static void registerEntityUtilityFunctions(sol::usertype<EntityHandle>* et)
 {
 	et->set("getHierarchyBoundingBox", Entity::getHierarchyBoundingBox);
 	et->set("getId", [](const EntityHandle& entity) { return Entity::getId(entity); });
-
-	et->set("position", sol::property(
-		[](const EntityHandle& entity) { return entity.get<CPosition*>(); },
-		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CPosition*>() = pos; }));
-
-	et->set("localPosition", sol::property(
-		[](const EntityHandle& entity) { return entity.get<CLocalPosition*>(); },
-		[](const EntityHandle& entity, const Vector2f& pos) { *entity.get<CLocalPosition*>() = pos; }));
 
 	et->set("setParent", Entity::setParent);
 }

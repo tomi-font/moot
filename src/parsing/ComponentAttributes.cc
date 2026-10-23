@@ -1,19 +1,20 @@
 #include <moot/parsing/ComponentAttributes.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CDrive.hh>
 #include <moot/Component/CHudRender.hh>
 #include <moot/Component/CInput.hh>
 #include <moot/Component/CLight.hh>
-#include <moot/Component/CLocalPosition.hh>
+#include <moot/Component/CLocalTransform.hh>
 #include <moot/Component/CMove.hh>
 #include <moot/Component/CPointable.hh>
-#include <moot/Component/CPosition.hh>
 #include <moot/Component/CRigidbody.hh>
-#include <moot/Component/CCamera.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
+#include <optional>
 #include <variant>
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
@@ -126,14 +127,6 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	pad["DPadY"] = Control(Control::PadDPadAxis{.vertical = true});
 }
 
-template<> void registerAttributeValues<CMove>(sol::state* lua)
-{
-	auto spaces = lua->create_table("Space");
-
-	spaces["World"] = CMove::Space::World;
-	spaces["Camera"] = CMove::Space::Camera;
-}
-
 template<> void registerAttributeValues<Color>(sol::state* lua)
 {
 	auto colors = lua->create_table("Color");
@@ -149,14 +142,31 @@ template<> void registerAttributeValues<Color>(sol::state* lua)
 
 template<typename C> static void parser(const sol::object&, ComponentCollection*);
 
-template<> void parser<CPosition>(const sol::object& data, ComponentCollection* collection)
+template<> void parser<CTransform>(const sol::object& data, ComponentCollection* collection)
 {
-	collection->add<CPosition>(asVector2f(data));
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& rotationObj = map["rotation"];
+	assert(mapSize == 1u + rotationObj.valid());
+
+	collection->add<CTransform>(asVector2f(map["position"]), asOptionalParsed<float>(rotationObj, 0));
 }
 
-template<> void parser<CLocalPosition>(const sol::object& data, ComponentCollection* collection)
+template<> void parser<CLocalTransform>(const sol::object& data, ComponentCollection* collection)
 {
-	collection->add<CLocalPosition>(asVector2f(data));
+	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& positionObj = map["position"];
+	const auto& rotationObj = map["rotation"];
+	assert(mapSize > 0 && mapSize == 0u + positionObj.valid() + rotationObj.valid());
+
+	std::optional<Vector2f> position;
+	std::optional<float> rotation;
+
+	if (positionObj.valid())
+		position = asVector2f(positionObj);
+	if (rotationObj.valid())
+		rotation = as<float>(rotationObj);
+
+	collection->add<CLocalTransform>(position, rotation);
 }
 
 static CConvexPolygon::Outline asOutline(const sol::object& obj)
@@ -250,22 +260,18 @@ template<> void parser<CCamera>(const sol::object& data, ComponentCollection* co
 	const auto& [map, mapSize] = asLuaMapSize(data);
 	const auto& limitsObj = map["limits"];
 	const auto& elevationObj = map["elevation"];
-	const auto& rotationObj = map["rotation"];
-	assert(mapSize == 1u + limitsObj.valid() + elevationObj.valid() + rotationObj.valid());
+	assert(mapSize == 1u + limitsObj.valid() + elevationObj.valid());
 
 	FloatRect limits;
 	float elevation = CCamera::MaxElevation;
-	float rotation = 0;
 
 	if (limitsObj.valid())
 		limits = asFloatRect(limitsObj);
 
 	if (elevationObj.valid())
 		elevation = as<float>(elevationObj);
-	if (rotationObj.valid())
-		rotation = as<float>(rotationObj);
 
-	collection->add<CCamera>(asVector2f(map["size"]), limits, elevation, rotation);
+	collection->add<CCamera>(asVector2f(map["size"]), limits, elevation);
 }
 
 template<> void parser<CHudRender>(const sol::object& data, ComponentCollection* collection)
@@ -322,8 +328,6 @@ template<typename C> static void registerComponent(std::string name)
 
 void ComponentAttributes::registerAll(sol::state* lua)
 {
-	registerComponent<CPosition>("Position");
-	registerComponent<CLocalPosition>("LocalPosition");
 	registerComponent<CConvexPolygon>("ConvexPolygon");
 	registerComponent<CMove>("Move");
 	registerComponent<CInput>("Input");
@@ -334,8 +338,9 @@ void ComponentAttributes::registerAll(sol::state* lua)
 	registerComponent<CPointable>("Pointable");
 	registerComponent<CLight>("Light");
 	registerComponent<CDrive>("Drive");
+	registerComponent<CTransform>("Transform");
+	registerComponent<CLocalTransform>("LocalTransform");
 
 	registerAttributeValues<CInput>(lua);
-	registerAttributeValues<CMove>(lua);
 	registerAttributeValues<Color>(lua);
 }

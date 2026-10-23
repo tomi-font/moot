@@ -2,7 +2,7 @@
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CInput.hh>
 #include <moot/Component/CPointable.hh>
-#include <moot/Component/CPosition.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/Entity/util.hh>
 #include <moot/Event/Engine.hh>
@@ -96,7 +96,7 @@ void SInput::update()
 		if (m_logPadEvents)
 		{
 			logPadEvent(*event);
-			
+
 			if (const auto* connected = event->getIf<sf::Event::JoystickConnected>())
 				logConnectedPad(connected->joystickId, m_state);
 		}
@@ -157,12 +157,12 @@ void SInput::updatePointables()
 	const EntityId prevPointedEntityId = m_pointedEntityId;
 	m_pointedEntityId = {};
 
-	for (auto [entity, cPointable, cPosition, cConvexPolygon] : m_queries[Q::Pointables].getAll<EntityPointer, CPointable, CPosition, CConvexPolygon>())
+	for (auto [entity, cPointable, cTransform, cConvexPolygon] : m_queries[Q::Pointables].getAll<EntityPointer, CPointable, CTransform, CConvexPolygon>())
 	{
 		const EntityId eId = Entity::getId(entity);
 		const bool wasPointed = (eId == prevPointedEntityId);
 		const bool isPointed = !m_pointedEntityId && m_state.pointerIsInWindow()
-		                    && cConvexPolygon.contains(pointerWorldPos - cPosition.val());
+		                    && cConvexPolygon.contains(pointerWorldPos - cTransform.position.val());
 		EntityHandle eHandle = entityManager()->makeHandle(entity);
 
 		if (!wasPointed && isPointed)

@@ -7,8 +7,8 @@ template<typename T> static void registerVector2(sol::state* lua, const std::str
 	using V = Vector2<T>;
 
 	lua->new_usertype<V>("mt.Vector2." + nameSuffix,
-		"x", &V::x,
-		"y", &V::y,
+		"x", sol::readonly(&V::x),
+		"y", sol::readonly(&V::y),
 		sol::meta_method::addition, static_cast<V(*)(const V&, const V&)>(&operator+),
 		sol::meta_method::subtraction, static_cast<V(*)(const V&, const V&)>(&operator-)
 	);
@@ -19,7 +19,7 @@ template<typename T> static void registerRect(sol::state* lua, const std::string
 	using R = Rect<T>;
 
 	lua->new_usertype<R>("mt.Rect." + nameSuffix,
-		"size", &R::size
+		"size", sol::readonly(&R::size)
 	);
 }
 

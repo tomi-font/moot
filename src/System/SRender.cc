@@ -3,7 +3,7 @@
 #include <moot/Component/CLight.hh>
 #include <moot/Component/CLightVisibility.hh>
 #include <moot/Component/CHudRender.hh>
-#include <moot/Component/CPosition.hh>
+#include <moot/Component/CTransform.hh>
 #include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
 #include <moot/struct/BoundCoords.hh>
@@ -38,8 +38,9 @@ static sf::Transform getCameraToViewTransform(const sf::Vector2f& viewSize)
 
 static void updateCamera(const EntityPointer& entity, Window* window)
 {
-	sf::Vector2f center = entity.get<CPosition>();
+	const auto& cTransform = entity.get<CTransform>();
 	const auto& cCamera = entity.get<CCamera>();
+	sf::Vector2f center = cTransform.position;
 	const sf::Vector2f& size = cCamera.size();
 
 	if (entity.has<CConvexPolygon>())
@@ -58,7 +59,7 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldToViewTransform = getCameraToViewTransform(size) * cCamera.getTransform();
+	const sf::Transform worldToViewTransform = getCameraToViewTransform(size) * cCamera.getTransform(cTransform.rotation);
 
 	center = worldToViewTransform.transformPoint(center);
 
@@ -94,12 +95,12 @@ void SRender::registerProperties()
 
 void SRender::updateCameras()
 {
-	auto [entity, cPosition, cCamera] = m_queries[Q::Camera].getSingle<EntityPointer, CPosition, CCamera>();
+	auto [entity, cTransform, cCamera] = m_queries[Q::Camera].getSingle<EntityPointer, CTransform, CCamera>();
 
-	if (hasChangedSinceLastUpdate(cPosition)
+	if (hasChangedSinceLastUpdate(cTransform.position)
+	 || hasChangedSinceLastUpdate(cTransform.rotation)
 	 || hasChangedSinceLastUpdate(cCamera.size())
-	 || hasChangedSinceLastUpdate(cCamera.elevation())
-	 || hasChangedSinceLastUpdate(cCamera.rotation()))
+	 || hasChangedSinceLastUpdate(cCamera.elevation()))
 	{
 		updateCamera(entity, window());
 	}
@@ -170,12 +171,12 @@ void SRender::drawPolygons()
 	std::vector<sf::Vector2f> outlineInnerPoints;
 	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
 
-	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
+	for (auto [cConvexPolygon, cTransform] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CTransform>())
 	{
 		if (cCamera.seesExtrusions() && cConvexPolygon.height() > 0)
 			continue;
 
-		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cPosition.val();
+		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cTransform.position.val();
 		if (!viewWorldRectangle.intersects(polygonBoundingBox))
 			continue;
 
@@ -184,7 +185,7 @@ void SRender::drawPolygons()
 
 		points.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
-			points[i] = cPosition.val() + cConvexPolygon.vertices()[i];
+			points[i] = cTransform.position.val() + cConvexPolygon.vertices()[i];
 
 		for (std::size_t i = 1; i + 1 < vertexCount; ++i)
 			m_passVertices.append_range(std::array<sf::Vertex, 3>{{{points[0], fillColor}, {points[i], fillColor}, {points[i + 1], fillColor}}});
@@ -220,15 +221,15 @@ void SRender::drawLights()
 
 	std::vector<sf::Vertex> rayVertices;
 
-	for (auto [cPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility>())
+	for (auto [cTransform, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CTransform, CLight, CLightVisibility>())
 	{
 		rayVertices.clear();
 		for (const LightRay& ray : cLightVisibility.rays())
-			rayVertices.emplace_back(cPosition.val() + ray.direction * ray.distance, emissionAt(cLight, ray.distance));
+			rayVertices.emplace_back(cTransform.position.val() + ray.direction * ray.distance, emissionAt(cLight, ray.distance));
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
 		{
-			m_passVertices.emplace_back(cPosition.val(), cLight.emission());
+			m_passVertices.emplace_back(cTransform.position.val(), cLight.emission());
 			m_passVertices.emplace_back(rayVertices[i]);
 			m_passVertices.emplace_back(rayVertices[(i + 1) % rayVertices.size()]);
 		}
@@ -479,11 +480,11 @@ static std::vector<Extrusion> sortBackToFront(std::vector<Extrusion> extrusions,
 
 void SRender::drawExtrusions()
 {
-	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
+	auto [cCameraTransform, cCamera] = m_queries[Q::Camera].getSingle<CTransform, CCamera>();
 	if (!cCamera.seesExtrusions())
 		return;
 
-	const sf::Transform cameraTransform = cCamera.getTransform();
+	const sf::Transform cameraTransform = cCamera.getTransform(cCameraTransform.rotation);
 	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
 
 	const float rise = std::cos(cCamera.elevation());
@@ -496,18 +497,20 @@ void SRender::drawExtrusions()
 	std::vector<sf::Vector2f> cameraFootprints;
 	cameraFootprints.reserve(4 * extrusions.capacity() * 2);
 
-	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
+	for (auto [cConvexPolygon, cPolygonTransform] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CTransform>())
 	{
 		if (cConvexPolygon.height() <= 0)
 			continue;
 
-		if (!viewWorldRectangle.intersects(cConvexPolygon.boundCoords(cPosition.val()).extrude(cConvexPolygon.height() * upPerHeight)))
+		const sf::Vector2f& polygonPosition = cPolygonTransform.position;
+
+		if (!viewWorldRectangle.intersects(cConvexPolygon.boundCoords(polygonPosition).extrude(cConvexPolygon.height() * upPerHeight)))
 			continue;
 
-		Extrusion extrusion = {&cConvexPolygon, cPosition.val(), cameraFootprints.size()};
+		Extrusion extrusion = {&cConvexPolygon, polygonPosition, cameraFootprints.size()};
 		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
 		{
-			const sf::Vector2f cameraPoint = cameraTransform.transformPoint(cPosition.val() + vertex);
+			const sf::Vector2f cameraPoint = cameraTransform.transformPoint(polygonPosition + vertex);
 			cameraFootprints.push_back(cameraPoint);
 			extrusion.bounds.incorporate(cameraPoint);
 		}
@@ -566,10 +569,10 @@ void SRender::drawExtrusions()
 
 			footCuts = {{0.f, {}, ambientLightFloat}, {1.f, ambientLightFloat, {}}};
 
-			for (auto [cPosition, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CPosition, CLight, CLightVisibility>())
+			for (auto [cTransform, cLight, cLightVisibility] : m_queries[Q::Lights].getAll<CTransform, CLight, CLightVisibility>())
 			{
 				footSamples.clear();
-				sampleFootLight(cPosition, cLight, cLightVisibility, points[i], points[next], edgeNormals[i], extrusion.polygon, &footSamples);
+				sampleFootLight(cTransform.position, cLight, cLightVisibility, points[i], points[next], edgeNormals[i], extrusion.polygon, &footSamples);
 				if (!footSamples.empty())
 					addFootLight(footSamples, &footCuts);
 			}

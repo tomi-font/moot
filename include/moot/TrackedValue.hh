@@ -3,7 +3,7 @@
 #include <moot/Global/ChangeTick.hh>
 #include <utility>
 
-template<typename T> class TrackedValue  
+template<typename T> class TrackedValue
 {
 public:
 
@@ -19,7 +19,8 @@ public:
 	}
 	auto& operator=(T value)
 	{
-		mut() = std::move(value);
+		if (value != m_value)
+			mut() = std::move(value);
 		return *this;
 	}
 

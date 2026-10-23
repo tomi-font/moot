@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/Entity/Prototype.hh>
-#include <moot/parsing/sol.hh>
+#include <sol/sol.hpp>
 
 class PrototypeAttributes
 {
