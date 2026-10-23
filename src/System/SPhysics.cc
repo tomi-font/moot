@@ -1,4 +1,5 @@
 #include <moot/System/SPhysics.hh>
+#include <moot/Component/CCamera.hh>
 #include <moot/Component/CCollisionBox.hh>
 #include <moot/Component/CConvexPolygon.hh>
 #include <moot/Component/CMove.hh>
@@ -231,7 +232,12 @@ void SPhysics::update()
 		Vector2f velocity;
 
 		if (cMove)
-			velocity += cMove->velocity();
+		{
+			if (cMove->space() == CMove::Space::Camera)
+				velocity += cMove->velocity().rotatedBy(sf::radians(-entity.get<CCamera>().rotation()));
+			else
+				velocity += cMove->velocity();
+		}
 
 		if (cRigidbody)
 		{

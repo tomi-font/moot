@@ -51,7 +51,7 @@ static void registerComponentTypes(sol::state* lua)
 	hudRender["pos"] = sol::property(&CHudRender::position);
 
 	auto move = registerComponent<CMove>(ct);
-	move["setMotion"] = [](CMove* cMove, const sol::object& direction) { cMove->setMotion(asVector2f(direction)); };
+	move["setMotion"] = [](CMove* cMove, const sol::object& direction, CMove::Space space) { cMove->setMotion(asVector2f(direction), space); };
 
 	auto rigidbody = registerComponent<CRigidbody>(ct);
 	rigidbody["applyYForce"] = &CRigidbody::applyYForce;

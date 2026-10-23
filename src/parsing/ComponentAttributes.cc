@@ -126,6 +126,14 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	pad["DPadY"] = Control(Control::PadDPadAxis{.vertical = true});
 }
 
+template<> void registerAttributeValues<CMove>(sol::state* lua)
+{
+	auto spaces = lua->create_table("Space");
+
+	spaces["World"] = CMove::Space::World;
+	spaces["Camera"] = CMove::Space::Camera;
+}
+
 template<> void registerAttributeValues<Color>(sol::state* lua)
 {
 	auto colors = lua->create_table("Color");
@@ -328,5 +336,6 @@ void ComponentAttributes::registerAll(sol::state* lua)
 	registerComponent<CDrive>("Drive");
 
 	registerAttributeValues<CInput>(lua);
+	registerAttributeValues<CMove>(lua);
 	registerAttributeValues<Color>(lua);
 }
