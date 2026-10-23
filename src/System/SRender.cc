@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <ranges>
+#include <span>
 
 // Indices for this system's queries.
 enum Q
@@ -27,7 +28,7 @@ enum Q
 };
 
 // Makes the Y axis grow upwards, with the origin at the bottom-left corner instead of the top-left one.
-static sf::Transform getGroundToViewTransform(const sf::Vector2f& viewSize)
+static sf::Transform getCameraToViewTransform(const sf::Vector2f& viewSize)
 {
 	sf::Transform transform;
 	transform.translate({0, viewSize.y});
@@ -44,7 +45,7 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 	if (entity.has<CConvexPolygon>())
 		center += entity.get<CConvexPolygon>().getCentroid();
 
-	// The limits are in world coordinates, so they only make sense when the ground is not transformed.
+	// The limits are in world coordinates, so they only make sense when the world is not transformed.
 	if (const FloatRect& limits = cCamera.limits(); !limits.isEmpty())
 	{
 		center.x = std::min(
@@ -57,7 +58,7 @@ static void updateCamera(const EntityPointer& entity, Window* window)
 		);
 	}
 
-	const sf::Transform worldToViewTransform = getGroundToViewTransform(size) * cCamera.getGroundTransform();
+	const sf::Transform worldToViewTransform = getCameraToViewTransform(size) * cCamera.getTransform();
 
 	center = worldToViewTransform.transformPoint(center);
 
@@ -391,48 +392,134 @@ static void appendFaceOutline(const Segment& edge, const sf::Vector2f& up, const
 	}
 }
 
+struct Extrusion
+{
+	const CConvexPolygon* polygon;
+	sf::Vector2f worldPosition;
+	std::size_t footprintStart;
+	BoundCoords bounds;
+	float footprintTop;
+
+	std::span<const sf::Vector2f> getFootprint(std::span<const sf::Vector2f> cameraFootprints) const
+	{
+		return cameraFootprints.subspan(footprintStart, polygon->vertices().size());
+	}
+};
+
+static float getLowestY(std::span<const sf::Vector2f> points, float x)
+{
+	float lowestY = std::numeric_limits<float>::infinity();
+	for (std::size_t i = 0; i != points.size(); ++i)
+	{
+		const Segment edge = {points[i], points[(i + 1) % points.size()]};
+		const float fraction = (x - edge.a.x) / edge.vector.x;
+		if (fraction >= 0 && fraction <= 1)
+			lowestY = std::min(lowestY, edge.a.y + fraction * edge.vector.y);
+	}
+	assert(std::isfinite(lowestY));
+	return lowestY;
+}
+
+static std::vector<Extrusion> sortBackToFront(std::vector<Extrusion> extrusions, const std::vector<sf::Vector2f>& cameraFootprints)
+{
+	struct Occlusion
+	{
+		std::size_t occluded;
+		std::size_t occluder;
+	};
+	std::vector<Occlusion> occlusions;
+
+	// Sorted by their left edge, an extrusion only has to be compared to the ones that start before it ends.
+	std::ranges::sort(extrusions, [](const Extrusion& a, const Extrusion& b) { return a.bounds.min.x < b.bounds.min.x; });
+
+	for (std::size_t i = 0; i != extrusions.size(); ++i)
+	{
+		const Extrusion& a = extrusions[i];
+		for (std::size_t j = i + 1; j != extrusions.size() && extrusions[j].bounds.min.x < a.bounds.max.x; ++j)
+		{
+			const Extrusion& b = extrusions[j];
+			if (a.bounds.max.y <= b.bounds.min.y || b.bounds.max.y <= a.bounds.min.y)
+				continue;
+
+			float lowestYA = a.bounds.min.y;
+			float lowestYB = b.bounds.min.y;
+			if (!(lowestYA >= b.footprintTop || lowestYB >= a.footprintTop))
+			{
+				const float sharedX = (std::max(a.bounds.min.x, b.bounds.min.x) + std::min(a.bounds.max.x, b.bounds.max.x)) / 2;
+				lowestYA = getLowestY(a.getFootprint(cameraFootprints), sharedX);
+				lowestYB = getLowestY(b.getFootprint(cameraFootprints), sharedX);
+			}
+			if (lowestYA > lowestYB)
+				occlusions.emplace_back(i, j);
+			else if (lowestYB > lowestYA)
+				occlusions.emplace_back(j, i);
+		}
+	}
+	// Sort by occluder, so that the extrusions one occludes are one range to look up.
+	std::ranges::sort(occlusions, [](const Occlusion& a, const Occlusion& b) { return a.occluder < b.occluder; });
+
+	std::vector<Extrusion> sortedExtrusions;
+	sortedExtrusions.reserve(extrusions.size());
+
+	std::vector<bool> isPlaced(extrusions.size(), false);
+	const auto placeAfterOccluded = [&](this const auto& self, std::size_t index)
+	{
+		if (isPlaced[index])
+			return;
+		isPlaced[index] = true; // Before its occluded ones to avoid infinite recursion in case of overlapping footprints.
+		for (const Occlusion& occlusion : std::ranges::equal_range(occlusions, index, {}, &Occlusion::occluder))
+			self(occlusion.occluded);
+		sortedExtrusions.push_back(extrusions[index]);
+	};
+	for (std::size_t i = 0; i != extrusions.size(); ++i)
+		placeAfterOccluded(i);
+
+	return sortedExtrusions;
+}
+
 void SRender::drawExtrusions()
 {
 	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
 	if (!cCamera.seesExtrusions())
 		return;
 
-	struct Extrusion
-	{
-		const CConvexPolygon* polygon;
-		sf::Vector2f position;
-		float screenY;
-	};
+	const sf::Transform cameraTransform = cCamera.getTransform();
+	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
+
+	const float rise = std::cos(cCamera.elevation());
+	assert(rise >= 0);
+	const sf::Vector2f upPerHeight = cameraTransform.getInverse().transformPoint({0, rise});
+
 	std::vector<Extrusion> extrusions;
 	extrusions.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
 
-	const sf::Transform groundTransform = cCamera.getGroundTransform();
+	std::vector<sf::Vector2f> cameraFootprints;
+	cameraFootprints.reserve(4 * extrusions.capacity() * 2);
 
 	for (auto [cConvexPolygon, cPosition] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CPosition>())
 	{
 		if (cConvexPolygon.height() <= 0)
 			continue;
 
-		float depth = -std::numeric_limits<float>::infinity();
+		if (!viewWorldRectangle.intersects(cConvexPolygon.boundCoords(cPosition.val()).extrude(cConvexPolygon.height() * upPerHeight)))
+			continue;
+
+		Extrusion extrusion = {&cConvexPolygon, cPosition.val(), cameraFootprints.size()};
 		for (const sf::Vector2f& vertex : cConvexPolygon.vertices())
-			depth = std::max(depth, groundTransform.transformPoint(cPosition.val() + vertex).y);
-
-		extrusions.emplace_back(&cConvexPolygon, cPosition.val(), depth);
+		{
+			const sf::Vector2f cameraPoint = cameraTransform.transformPoint(cPosition.val() + vertex);
+			cameraFootprints.push_back(cameraPoint);
+			extrusion.bounds.incorporate(cameraPoint);
+		}
+		extrusion.footprintTop = extrusion.bounds.max.y;
+		extrusion.bounds.max.y += cConvexPolygon.height() * rise;
+		extrusions.push_back(extrusion);
 	}
-
-	// Painter's algorithm: an extrusion only covers screen space above its footprint, so the farther
-	// ones must be drawn first. Good enough for footprints that do not overlap.
-	std::ranges::sort(extrusions, std::greater<>(), &Extrusion::screenY);
+	extrusions = sortBackToFront(std::move(extrusions), cameraFootprints);
 
 	const auto ambientLight = m_properties->get<Color>(Property::AmbientLight);
 	const FloatColor ambientLightFloat = ambientLight;
 	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
-
-	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
-
-	const float rise = std::cos(cCamera.elevation());
-	assert(rise >= 0);
-	const sf::Vector2f upPerHeight = groundTransform.getInverse().transformPoint({0, rise});
 
 	m_passVertices.clear();
 
@@ -448,6 +535,7 @@ void SRender::drawExtrusions()
 	{
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
+		const std::span cameraFootprint = extrusion.getFootprint(cameraFootprints);
 		const sf::Vector2f up = extrusion.polygon->height() * upPerHeight;
 		const Color fillColor = extrusion.polygon->fillColor();
 		const Color topColor = fillColor * ambientLight;
@@ -458,14 +546,10 @@ void SRender::drawExtrusions()
 		edgeNormals.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
 		{
-			points[i] = extrusion.position + vertices[i];
+			points[i] = extrusion.worldPosition + vertices[i];
 			topPoints[i] = points[i] + up;
 			edgeNormals[i] = extrusion.polygon->getEdgeNormal(i);
 		}
-
-		const BoundCoords bounds = extrusion.polygon->boundCoords(extrusion.position).extrude(up);
-		if (!viewWorldRectangle.intersects(bounds))
-			continue;
 
 		for (std::size_t i = 0; i != vertexCount; ++i)
 		{
@@ -475,10 +559,9 @@ void SRender::drawExtrusions()
 			if (i >= 2)
 				m_passVertices.append_range(std::array<sf::Vertex, 3>({{topPoints[0], topColor}, {topPoints[i - 1], topColor}, {topPoints[i], topColor}}));
 
-			// The ground transform keeps the vertices counter-clockwise (it never mirrors), so an extruded
-			// face points toward the camera only if its edge runs left to right on screen. The transform has
-			// no translation, so a vector goes through it as a point.
-			if (groundTransform.transformPoint(edge.vector).x <= 0)
+			// The camera transform keeps the vertices counter-clockwise (it never mirrors), so an extruded
+			// face points toward the camera only if its edge runs left to right on screen.
+			if (cameraFootprint[next].x <= cameraFootprint[i].x)
 				continue;
 
 			footCuts = {{0.f, {}, ambientLightFloat}, {1.f, ambientLightFloat, {}}};

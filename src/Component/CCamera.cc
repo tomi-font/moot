@@ -28,7 +28,7 @@ void CCamera::calculateNewSize()
 				viewSize = {m_limits.width, m_limits.width / aspectRatio};
 			else
 				viewSize = {m_limits.height * aspectRatio, m_limits.height};
-		
+
 			m_size = viewSize;
 		}
 	}
@@ -60,7 +60,7 @@ void CCamera::setElevation(float radians)
 	m_elevation = radians;
 }
 
-sf::Transform CCamera::getGroundTransform() const
+sf::Transform CCamera::getTransform() const
 {
 	// SFML post-multiplies: the rotation below is applied to points first.
 	sf::Transform transform;

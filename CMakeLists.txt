@@ -58,7 +58,7 @@ endif()
 
 list(APPEND warnings
 	-Winvalid-constexpr
-	-Wframe-larger-than=4096
+	-Wframe-larger-than=16384
 	${disabled_warnings}
 )
 

@@ -27,8 +27,8 @@ public:
 
 	bool seesExtrusions() const { return m_elevation != MaxElevation; }
 
-	// Maps the world plane as seen from the camera's elevation and rotation.
-	sf::Transform getGroundTransform() const;
+	// Maps the world plane into the camera's frame, as seen from its elevation and rotation, y up.
+	sf::Transform getTransform() const;
 
 private:
 
