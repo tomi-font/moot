@@ -207,7 +207,7 @@ static Collision getFirstCollision(const EntityPointer& entity, const Collidable
 			otherProv = movingCollidables.at(other);
 		}
 		else
-			otherProv.base = cOtherCollisionBox + cOtherTransform.position.val();
+			otherProv.base = cOtherCollisionBox + cOtherTransform.position;
 
 		if (!prov.destination().intersectsBeyondEpsilon(otherProv.destination()))
 			continue;

@@ -9,7 +9,6 @@ public:
 
 	explicit TrackedValue(T value = {}) : m_value(std::move(value)) {}
 
-	const T& val() const { return m_value; }
 	operator const T&() const { return m_value; }
 
 	T& mut()

@@ -176,7 +176,7 @@ void SRender::drawPolygons()
 		if (cCamera.seesExtrusions() && cConvexPolygon.height() > 0)
 			continue;
 
-		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cTransform.position.val();
+		const FloatRect polygonBoundingBox = cConvexPolygon.getBoundingRect() + cTransform.position;
 		if (!viewWorldRectangle.intersects(polygonBoundingBox))
 			continue;
 
@@ -185,7 +185,7 @@ void SRender::drawPolygons()
 
 		points.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
-			points[i] = cTransform.position.val() + cConvexPolygon.vertices()[i];
+			points[i] = cTransform.position + cConvexPolygon.vertices()[i];
 
 		for (std::size_t i = 1; i + 1 < vertexCount; ++i)
 			m_passVertices.append_range(std::array<sf::Vertex, 3>{{{points[0], fillColor}, {points[i], fillColor}, {points[i + 1], fillColor}}});
@@ -225,11 +225,11 @@ void SRender::drawLights()
 	{
 		rayVertices.clear();
 		for (const LightRay& ray : cLightVisibility.rays())
-			rayVertices.emplace_back(cTransform.position.val() + ray.direction * ray.distance, emissionAt(cLight, ray.distance));
+			rayVertices.emplace_back(cTransform.position + ray.direction * ray.distance, emissionAt(cLight, ray.distance));
 
 		for (unsigned i = 0; i != rayVertices.size(); ++i)
 		{
-			m_passVertices.emplace_back(cTransform.position.val(), cLight.emission());
+			m_passVertices.emplace_back(cTransform.position, cLight.emission());
 			m_passVertices.emplace_back(rayVertices[i]);
 			m_passVertices.emplace_back(rayVertices[(i + 1) % rayVertices.size()]);
 		}

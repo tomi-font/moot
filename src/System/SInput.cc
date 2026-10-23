@@ -162,7 +162,7 @@ void SInput::updatePointables()
 		const EntityId eId = Entity::getId(entity);
 		const bool wasPointed = (eId == prevPointedEntityId);
 		const bool isPointed = !m_pointedEntityId && m_state.pointerIsInWindow()
-		                    && cConvexPolygon.contains(pointerWorldPos - cTransform.position.val());
+		                    && cConvexPolygon.contains(pointerWorldPos - cTransform.position);
 		EntityHandle eHandle = entityManager()->makeHandle(entity);
 
 		if (!wasPointed && isPointed)

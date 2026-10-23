@@ -35,7 +35,7 @@ void SHierarchy::placeChildren(const EntityPointer& parent)
 		auto* const cChildTransform = child.get<CTransform*>();
 
 		if (cLocalTransform.position)
-			cChildTransform->position = cParentTransform.position.val() + cLocalTransform.position->rotatedBy(sf::radians(cParentTransform.rotation));
+			cChildTransform->position = cParentTransform.position + cLocalTransform.position->rotatedBy(sf::radians(cParentTransform.rotation));
 
 		if (cLocalTransform.rotation)
 			cChildTransform->rotation = cParentTransform.rotation + *cLocalTransform.rotation;

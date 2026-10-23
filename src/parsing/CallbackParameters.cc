@@ -1,6 +1,7 @@
 #include <moot/parsing/CallbackParameters.hh>
 #include <moot/struct/Rect.hh>
 #include <moot/struct/Vector2.hh>
+#include <functional>
 
 template<typename T> static void registerVector2(sol::state* lua, const std::string& nameSuffix)
 {
@@ -9,8 +10,8 @@ template<typename T> static void registerVector2(sol::state* lua, const std::str
 	lua->new_usertype<V>("mt.Vector2." + nameSuffix,
 		"x", sol::readonly(&V::x),
 		"y", sol::readonly(&V::y),
-		sol::meta_method::addition, static_cast<V(*)(const V&, const V&)>(&operator+),
-		sol::meta_method::subtraction, static_cast<V(*)(const V&, const V&)>(&operator-)
+		sol::meta_method::addition, std::plus<V>(),
+		sol::meta_method::subtraction, std::minus<V>()
 	);
 }
 
