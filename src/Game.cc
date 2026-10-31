@@ -106,7 +106,9 @@ void Game::play()
 
 		++m_frameNumber;
 
-		m_properties.set(Property::ElapsedTime, m_clock.restart().asSeconds());
+		constexpr float MaxElapsedTime = 1 / 20.f;
+		const float elapsedTime = std::min(m_clock.restart().asSeconds(), MaxElapsedTime);
+		m_properties.set(Property::ElapsedTime, elapsedTime);
 
 		for (bool needsEntityUpdate = true; needsEntityUpdate;)
 		{
