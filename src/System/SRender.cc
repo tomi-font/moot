@@ -167,11 +167,16 @@ void SRender::drawPolygons()
 	auto [cCamera] = m_queries[Q::Camera].getSingle<CCamera>();
 	const FloatRect viewWorldRectangle = window()->worldToViewTransform().getInverse().transformRect(window()->getViewRectangle());
 
-	std::vector<sf::Vector2f> points;
-	std::vector<sf::Vector2f> outlineInnerPoints;
-	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
+	struct FlatPolygon
+	{
+		const CConvexPolygon* polygon;
+		sf::Vector2f position;
+		EntityId entityId;
+	};
+	std::vector<FlatPolygon> flatPolygons;
+	flatPolygons.reserve(m_queries[Q::ConvexPolygons].getEntityCount());
 
-	for (auto [cConvexPolygon, cTransform] : m_queries[Q::ConvexPolygons].getAll<CConvexPolygon, CTransform>())
+	for (auto [entity, cTransform, cConvexPolygon] : m_queries[Q::ConvexPolygons].getAll<EntityPointer, CTransform, CConvexPolygon>())
 	{
 		if (cCamera.seesExtrusions() && cConvexPolygon.height() > 0)
 			continue;
@@ -180,12 +185,23 @@ void SRender::drawPolygons()
 		if (!viewWorldRectangle.intersects(polygonBoundingBox))
 			continue;
 
+		flatPolygons.emplace_back(&cConvexPolygon, cTransform.position, Entity::getId(entity));
+	}
+	std::ranges::sort(flatPolygons, {}, &FlatPolygon::entityId); // Later spawned is drawn on top.
+
+	std::vector<sf::Vector2f> points;
+	std::vector<sf::Vector2f> outlineInnerPoints;
+	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
+
+	for (const auto& [polygon, position, entityId] : flatPolygons)
+	{
+		const CConvexPolygon& cConvexPolygon = *polygon;
 		const std::size_t vertexCount = cConvexPolygon.vertices().size();
 		const Color fillColor = cConvexPolygon.fillColor();
 
 		points.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
-			points[i] = cTransform.position + cConvexPolygon.vertices()[i];
+			points[i] = position + cConvexPolygon.vertices()[i];
 
 		for (std::size_t i = 1; i + 1 < vertexCount; ++i)
 			m_passVertices.append_range(std::array<sf::Vertex, 3>{{{points[0], fillColor}, {points[i], fillColor}, {points[i + 1], fillColor}}});
