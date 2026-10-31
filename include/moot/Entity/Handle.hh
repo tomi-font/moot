@@ -6,13 +6,13 @@
 
 struct EntityHandle : EntityPointer, ComponentComposable
 {
-	template<typename C, typename = std::enable_if_t<!std::is_pointer_v<C>>>
-	inline const C& get() const
+	template<typename C> requires (!std::is_pointer_v<C>)
+	const C& get() const
 	{
 		return *get<C*>();
 	}
 
-	template<typename CP, typename = std::enable_if_t<std::is_pointer_v<CP>>>
+	template<typename CP> requires (std::is_pointer_v<CP>)
 	CP get() const noexcept
 	{
 		using C = std::remove_pointer_t<CP>;
@@ -30,7 +30,7 @@ struct EntityHandle : EntityPointer, ComponentComposable
 	using ComponentComposable::has;
 	using ComponentComposable::comp;
 
-	template<typename CP> inline CP find() const
+	template<typename CP> CP find() const
 	{
 		using C = std::remove_pointer_t<CP>;
 		if (has<C>())
@@ -39,7 +39,7 @@ struct EntityHandle : EntityPointer, ComponentComposable
 		return nullptr;
 	}
 
-	template<typename C> inline C* add(auto&&... args)
+	template<typename C> C* add(auto&&... args)
 	{
 		m_comp += CId<C>;
 		return manager->addComponentTo<C>(*this, std::forward<decltype(args)>(args)...);

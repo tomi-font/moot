@@ -1,82 +1,76 @@
 #include <moot/parsing/GlobalFunctions.hh>
 #include <moot/Entity/Handle.hh>
-#include <moot/Entity/PrototypeStore.hh>
+#include <moot/Entity/Prototype.hh>
 #include <moot/Event/Event.hh>
 #include <moot/Game.hh>
 #include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/parsing/types.hh>
+#include <moot/Resource/Store.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <moot/Window.hh>
 
 static constexpr std::string_view PrototypeIdKey = "id";
 
-static void parsePrototype(sol::table protoTable, Prototype* proto)
+static void parsePrototype(const sol::table& protoTable, EntityPrototype* proto)
 {
 	for (const auto& attr : protoTable)
 		PrototypeAttributes::parse(attr, proto);
 }
 
-static const Prototype* findOrMakePrototype(sol::table protoTable, PrototypeStore* prototypeStore, const sol::table& prototypeMetatable)
+static const EntityPrototype& findOrMakePrototype(sol::table& protoTable, ResourceStore* resources, const sol::table& prototypeMetatable)
 {
 	auto idObj = protoTable[PrototypeIdKey];
 	if (idObj.valid())
-		return &prototypeStore->getPrototype(as<PrototypeStore::PrototypeId>(idObj));
+		return resources->get<EntityPrototype>(as<ResourceStore::Id>(idObj));
 
-	const auto [proto, id] = prototypeStore->newPrototype();
+	const auto [id, proto] = resources->add<EntityPrototype>();
 
 	parsePrototype(protoTable, proto);
 
 	idObj = id;
 	protoTable[sol::metatable_key] = prototypeMetatable;
 
-	return proto;
+	return *proto;
 }
 
 void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 {
-	PrototypeStore* const prototypeStore = game;
+	ResourceStore* const resources = game;
 	EntityManager* const entityManager = game;
 	Window* const window = game->window();
 
-	lua->set_function("registerPrototype",
-		[prototypeStore](std::string name, sol::table protoTable)
-		{
-			parsePrototype(protoTable, prototypeStore->newPrototype(std::move(name)));
-		}
-	);
-
 	const sol::table prototypeMetatable = lua->create_table_with(sol::meta_method::garbage_collect,
-		[prototypeStore](const sol::table& protoTable)
+		[resources](const sol::table& protoTable)
 		{
-			prototypeStore->deletePrototype(as<PrototypeStore::PrototypeId>(protoTable[PrototypeIdKey]));
+			resources->remove<EntityPrototype>(as<ResourceStore::Id>(protoTable[PrototypeIdKey]));
 		});
 	const auto getPrototype =
-		[=](sol::table protoTable)
+		[=](sol::table& protoTable)
 		{
-			return findOrMakePrototype(protoTable, prototypeStore, prototypeMetatable);
+			return findOrMakePrototype(protoTable, resources, prototypeMetatable);
 		};
 	lua->set_function("spawn", sol::overload(
 		[=](sol::table protoTable)
 		{
-			return entityManager->spawn(*getPrototype(protoTable));
+			return entityManager->spawn(getPrototype(protoTable));
 		},
 		[=](sol::table protoTable, const sol::object& posObj)
 		{
 			const auto pos = asVector2f(posObj);
-			return entityManager->spawn(*getPrototype(protoTable), pos);
+			return entityManager->spawn(getPrototype(protoTable), pos);
 		},
 		[=](const std::string& protoName)
 		{
-			return entityManager->spawn(prototypeStore->getPrototype(protoName));
+			return entityManager->spawn(resources->get<EntityPrototype>(protoName));
 		},
 		[=](const std::string& protoName, const sol::object& posObj)
 		{
 			const auto pos = asVector2f(posObj);
-			return entityManager->spawn(prototypeStore->getPrototype(protoName), pos);
+			return entityManager->spawn(resources->get<EntityPrototype>(protoName), pos);
 		}
 	));
 
-	lua->set_function("remove", &Game::remove, game);
+	lua->set_function("remove", &EntityManager::remove, entityManager);
 
 	lua->set_function("getEntity", &EntityManager::getEntity, entityManager);
 

@@ -18,7 +18,7 @@ public:
 
 	EntityManager();
 
-	EntityHandle spawn(const Prototype&, std::optional<sf::Vector2f> = {});
+	EntityHandle spawn(const EntityPrototype&, std::optional<sf::Vector2f> = {});
 	EntityHandle spawnEmpty(std::optional<sf::Vector2f> = {});
 	void remove(const EntityHandle&);
 	bool isEntityToRemove(const EntityPointer& entity) const { return m_entitiesToRemove.contains(entity); }

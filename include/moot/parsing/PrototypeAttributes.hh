@@ -7,5 +7,5 @@ class PrototypeAttributes
 {
 public:
 
-	static void parse(const std::pair<sol::object, sol::object>&, Prototype*);
+	static void parse(const std::pair<sol::object, sol::object>&, EntityPrototype*);
 };

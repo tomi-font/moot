@@ -2,7 +2,7 @@
 
 #include <moot/Component/Collection.hh>
 
-class Prototype : public ComponentCollection
+class EntityPrototype : public ComponentCollection
 {
 public:
 

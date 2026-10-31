@@ -1,11 +1,11 @@
 #pragma once
 
 #include <moot/Entity/Manager.hh>
-#include <moot/Entity/PrototypeStore.hh>
 #include <moot/Event/Manager.hh>
 #include <moot/Event/User.hh>
 #include <moot/parsing/Context.hh>
 #include <moot/Property/Properties.hh>
+#include <moot/Resource/Store.hh>
 #include <moot/System/Manager.hh>
 #include <moot/Window.hh>
 #include <source_location>
@@ -14,7 +14,7 @@ class Game final :
 	public ParsingContext,
 	public EntityManager,
 	public SystemManager,
-	public PrototypeStore,
+	public ResourceStore,
 	EventUser
 {
 public:

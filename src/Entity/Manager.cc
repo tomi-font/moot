@@ -42,7 +42,7 @@ EntityHandle EntityManager::processEntityToSpawn(ComponentCollection* entity, st
 	return {{entity, 0}, entity->comp(), this};
 }
 
-EntityHandle EntityManager::spawn(const Prototype& proto, std::optional<sf::Vector2f> pos)
+EntityHandle EntityManager::spawn(const EntityPrototype& proto, std::optional<sf::Vector2f> pos)
 {
 	assert(proto.size() == 1);
 	assert((proto.hasNoneOf<CChildren, CParent>()));
