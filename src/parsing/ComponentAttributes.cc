@@ -20,6 +20,19 @@
 
 template<typename C> static void registerAttributeValues(sol::state* lua);
 
+static int raiseUnknownName(lua_State* L)
+{
+	lua_pushfstring(L, "undefined value %s.%s", lua_tostring(L, lua_upvalueindex(1)), luaL_tolstring(L, 2, nullptr));
+	return lua_error(L);
+}
+
+static sol::table createStrictTable(sol::state* lua, const std::string& name)
+{
+	auto table = lua->create_table(name);
+	table[sol::metatable_key] = lua->create_table_with(sol::meta_method::index, sol::make_closure(raiseUnknownName, name));
+	return table;
+}
+
 static Control::ButtonPair asButtonPair(const sol::object& obj)
 {
 	const auto& pair = asLuaArray<2>(obj);
@@ -70,7 +83,7 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	lua->set("Pointer", Binding(Binding::Type::Pointer, {}));
 
 	using Key = sf::Keyboard::Key;
-	auto keys = lua->create_table("Key");
+	auto keys = createStrictTable(lua, "Key");
 	const auto addKey = [&keys](std::string_view name, Key code) { keys[name] = Control(Control::Key{code}); };
 
 	static_assert(int(Key::Z) - int(Key::A) == 'Z' - 'A');
@@ -91,7 +104,7 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 	addKey("LShift", Key::LShift);
 	addKey("LControl", Key::LControl);
 
-	auto mouse = lua->create_table("Mouse");
+	auto mouse = createStrictTable(lua, "Mouse");
 	mouse["Left"] = Control(Control::MouseButton{sf::Mouse::Button::Left});
 	mouse["Right"] = Control(Control::MouseButton{sf::Mouse::Button::Right});
 	mouse["Middle"] = Control(Control::MouseButton{sf::Mouse::Button::Middle});
@@ -100,7 +113,7 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 
 	using PadButton = GamepadLayout::Button;
 	using PadStick = GamepadLayout::Stick;
-	auto pad = lua->create_table("Pad");
+	auto pad = createStrictTable(lua, "Pad");
 	const auto padButton = [&pad](std::string_view name, PadButton button) { pad[name] = Control(Control::PadButton{button}); };
 
 	padButton("A", PadButton::A);
@@ -129,7 +142,7 @@ template<> void registerAttributeValues<CInput>(sol::state* lua)
 
 template<> void registerAttributeValues<Color>(sol::state* lua)
 {
-	auto colors = lua->create_table("Color");
+	auto colors = createStrictTable(lua, "Color");
 
 	colors["None"] = Color();
 	colors["Black"] = Color(0, 0, 0);
