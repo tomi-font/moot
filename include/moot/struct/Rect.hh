@@ -46,8 +46,8 @@ struct Rect
 	bool intersectsBeyondEpsilon(const Rect<T>& other) const
 	{
 		const Rect<T> inter = intersectionWith(other);
-		return inter.width > epsilon(maxAbs(left, right()), maxAbs(other.left, other.right()))
-		    && inter.height > epsilon(maxAbs(bottom, top()), maxAbs(other.bottom, other.top()));
+		return inter.width > epsilon(left, right(), other.left, other.right())
+		    && inter.height > epsilon(bottom, top(), other.bottom, other.top());
 	}
 
 	union

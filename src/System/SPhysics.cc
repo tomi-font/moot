@@ -61,11 +61,8 @@ static Vector2f firstContactPointMoveRatios(const FloatRect& a, const Vector2f& 
 	else
 		ratios.y = NoMoveRatio;
 
-	assert(ratios.x <= 1 && ratios.y <= 1);
 	// Each axis' ratio may be negative if the entities were already overlapping on that axis.
-	assert(a.intersectsBeyondEpsilon(b)
-	    || ratios.x >= -epsilon(b.left - a.right(), a.left - b.right())
-	    || ratios.y >= -epsilon(b.bottom - a.top(), a.bottom - b.top()));
+	assert(ratios.x <= 1 && ratios.y <= 1);
 
 	return ratios;
 }

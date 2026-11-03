@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <limits>
 
 // Returns the absolute difference of two numbers.
@@ -11,27 +12,25 @@ template<typename T> T absDiff(T left, T right)
 }
 
 // Returns the maximum of the absolute values of the given numbers.
-auto maxAbs(auto... args)
+template<typename T> T maxAbs(T first, std::same_as<T> auto... rest)
 {
-	return std::max({std::abs(args)...});
+	return std::max({std::abs(first), std::abs(rest)...});
 }
 
-// Returns the epsilon of two numbers.
-template<typename T> T epsilon(T a, T b)
+// Returns the epsilon of the given numbers.
+template<typename T> T epsilon(T first, std::same_as<T> auto... rest)
 {
-	return maxAbs(a, b) * std::numeric_limits<T>::epsilon();
+	return maxAbs(first, rest...) * std::numeric_limits<T>::epsilon();
 }
 
 // Returns whether two floating-point numbers are within the given tolerance.
-template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-bool equal(T left, T right, T tolerance)
+template<std::floating_point T> bool equal(T left, T right, T tolerance)
 {
 	return absDiff(left, right) <= tolerance;
 }
 
 // Returns whether two floating-point numbers are considered equal.
-template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-bool equal(T left, T right)
+template<std::floating_point T> bool equal(T left, T right)
 {
 	return equal(left, right, epsilon(left, right));
 }
