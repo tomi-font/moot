@@ -12,7 +12,7 @@ template<typename T> T as(const sol::object& var)
 	return var.as<T>();
 }
 
-static inline sol::table asLuaMap(const sol::object& var)
+inline sol::table asLuaMap(const sol::object& var)
 {
 	return as<sol::table>(var);
 }
@@ -24,7 +24,7 @@ inline std::pair<sol::table, unsigned> asLuaMapCount(const sol::object& var)
 		++entryCount;
 	return {luaMap, entryCount};
 }
-template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
+template<unsigned N> sol::table asLuaMap(const sol::object& var)
 {
 	const auto& [luaMap, entryCount] = asLuaMapCount(var);
 	assert(entryCount == N);
@@ -32,7 +32,7 @@ template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
 }
 
 // Lua's #: how many entries sit at 1, 2, 3... before the first hole.
-static inline unsigned sequenceLength(const sol::table& table)
+inline unsigned sequenceLength(const sol::table& table)
 {
 	return static_cast<unsigned>(table.size());
 }
@@ -50,7 +50,7 @@ inline sol::table asLuaArray(const sol::object& var)
 #endif
 	return luaArray;
 }
-template<unsigned N> static inline sol::table asLuaArray(const sol::object& var)
+template<unsigned N> sol::table asLuaArray(const sol::object& var)
 {
 	const auto& luaArray = asLuaArray(var);
 	assert(luaArray.size() == N);
@@ -87,14 +87,14 @@ template<typename T> Vector2<T> asVector2(const sol::object& var)
 	else
 		return as<Vector2<T>>(var);
 }
-static inline auto asVector2f(const sol::object& var) {	return asVector2<float>(var); }
+inline auto asVector2f(const sol::object& var) { return asVector2<float>(var); }
 
 template<typename T> Rect<T> asRect(const sol::object& var)
 {
 	const auto& luaArray = asLuaArray<2>(var);
 	return {asVector2<T>(luaArray[1]), asVector2<T>(luaArray[2])};
 }
-static inline auto asFloatRect(const sol::object& var) { return asRect<float>(var); }
+inline auto asFloatRect(const sol::object& var) { return asRect<float>(var); }
 
 inline Color asColor(const sol::object& var)
 {
@@ -107,12 +107,12 @@ inline Color asColor(const sol::object& var)
 		return as<Color>(var);
 }
 
-template<typename T> static inline T asParsed(const sol::object& var) { return as<T>(var); }
+template<typename T> T asParsed(const sol::object& var) { return as<T>(var); }
 template<> inline Vector2f asParsed(const sol::object& var) { return asVector2f(var); }
 template<> inline Color asParsed(const sol::object& var) { return asColor(var); }
 template<> inline FloatRect asParsed(const sol::object& var) { return asFloatRect(var); }
 
-template<typename T> static inline T asOptionalParsed(const sol::object& var, T defaultValue = {})
+template<typename T> T asOptionalParsed(const sol::object& var, T defaultValue = {})
 {
 	return var.valid() ? asParsed<T>(var) : defaultValue;
 }

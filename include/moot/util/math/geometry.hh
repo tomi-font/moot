@@ -7,17 +7,17 @@
 static constexpr float Pi = std::numbers::pi_v<float>;
 static constexpr float TwoPi = 2 * Pi;
 
-static constexpr float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b)
+constexpr float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b)
 {
 	return a.x * b.y - a.y * b.x;
 }
 
-static constexpr float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b, const sf::Vector2f& c)
+constexpr float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b, const sf::Vector2f& c)
 {
 	return (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
 }
 
-static constexpr auto crossProductSign(const sf::Vector2f& a, const sf::Vector2f& b, const sf::Vector2f& c)
+constexpr int crossProductSign(const sf::Vector2f& a, const sf::Vector2f& b, const sf::Vector2f& c)
 {
 	return sign(crossProduct(a, b, c));
 }
