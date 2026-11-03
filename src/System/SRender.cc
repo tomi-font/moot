@@ -6,10 +6,11 @@
 #include <moot/Component/CTransform.hh>
 #include <moot/Component/CCamera.hh>
 #include <moot/Entity/util.hh>
+#include <moot/Texture/Texture.hh>
 #include <moot/struct/BoundCoords.hh>
 #include <moot/struct/FloatColor.hh>
+#include <moot/struct/Segment.hh>
 #include <moot/util/math/geometry.hh>
-#include <moot/util/math/Segment.hh>
 #include <moot/Window.hh>
 #include <algorithm>
 #include <cmath>
@@ -80,7 +81,20 @@ SRender::SRender()
 
 	m_queries[Q::HudRendered] = {{ .required = {CId<CHudRender>} }};
 
-	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>} }};
+	m_queries[Q::ConvexPolygons] = {{ .required = {CId<CConvexPolygon>},
+		.onEntityAdded = [](const EntityPointer& entity)
+		{
+			auto* const cConvexPolygon = entity.get<CConvexPolygon*>();
+			if (!cConvexPolygon->texture())
+				return;
+			const Vector2f& position = entity.get<CTransform>().position;
+			std::vector<Vector2f> texCoords;
+			texCoords.reserve(cConvexPolygon->vertices().size());
+			for (const Vector2f& vertex : cConvexPolygon->vertices())
+				texCoords.emplace_back(cConvexPolygon->texture()->getTexCoords(position + vertex));
+			cConvexPolygon->setTexCoords(std::move(texCoords));
+		}
+	}};
 
 	m_queries[Q::Lights] = {{ .required = {CId<CLight>} }};
 }
@@ -149,15 +163,30 @@ static void appendQuad(const sf::Vertex& a, const sf::Vertex& b, const sf::Verte
 	vertices->append_range(std::array{a, b, c, a, c, d});
 }
 
-static void appendPolygonOutline(const std::vector<sf::Vector2f>& points, float thickness, Color color,
+static void appendPolygonOutline(const std::vector<sf::Vector2f>& points, float thickness, Color color, const auto& texCoordsAt,
                                  std::vector<sf::Vector2f>* innerPoints, std::vector<sf::Vertex>* vertices)
 {
 	insetCorners(points, thickness, innerPoints);
 	for (std::size_t i = 0; i != points.size(); ++i)
 	{
 		const std::size_t next = (i + 1) % points.size();
-		appendQuad({points[i], color}, {points[next], color}, {(*innerPoints)[next], color}, {(*innerPoints)[i], color}, vertices);
+		appendQuad(
+			{points[i],            color, texCoordsAt(points[i])},
+			{points[next],         color, texCoordsAt(points[next])},
+			{(*innerPoints)[next], color, texCoordsAt((*innerPoints)[next])},
+			{(*innerPoints)[i],    color, texCoordsAt((*innerPoints)[i])},
+			vertices
+		);
 	}
+}
+
+void SRender::drawBatch(const Texture* texture)
+{
+	sf::RenderStates states;
+	states.transform = window()->worldToViewTransform();
+	states.texture = texture;
+	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, states);
+	m_passVertices.clear();
 }
 
 void SRender::drawPolygons()
@@ -192,25 +221,45 @@ void SRender::drawPolygons()
 	std::vector<sf::Vector2f> points;
 	std::vector<sf::Vector2f> outlineInnerPoints;
 	const CConvexPolygon::Outline defaultOutline = getDefaultOutline(*m_properties);
+	const Texture* batchTexture = nullptr;
 
 	for (const auto& [polygon, position, entityId] : flatPolygons)
 	{
 		const CConvexPolygon& cConvexPolygon = *polygon;
 		const std::size_t vertexCount = cConvexPolygon.vertices().size();
 		const Color fillColor = cConvexPolygon.fillColor();
+		const Texture* const texture = cConvexPolygon.texture();
+		const auto vertexTexCoords = [&](std::size_t i)
+		{
+			return texture ? cConvexPolygon.texCoords()[i] : Vector2f();
+		};
+		const auto texCoordsAt = [&, firstVertex = position + cConvexPolygon.vertices()[0]](const sf::Vector2f& point)
+		{
+			return texture ? cConvexPolygon.texCoords()[0] + texture->getTexCoords(point - firstVertex) : Vector2f();
+		};
+
+		if (texture != batchTexture)
+		{
+			drawBatch(batchTexture);
+			batchTexture = texture;
+		}
 
 		points.resize(vertexCount);
 		for (std::size_t i = 0; i != vertexCount; ++i)
 			points[i] = position + cConvexPolygon.vertices()[i];
 
 		for (std::size_t i = 1; i + 1 < vertexCount; ++i)
-			m_passVertices.append_range(std::array<sf::Vertex, 3>{{{points[0], fillColor}, {points[i], fillColor}, {points[i + 1], fillColor}}});
+			m_passVertices.append_range(std::array<sf::Vertex, 3>{{
+				{points[0],     fillColor, vertexTexCoords(0)},
+				{points[i],     fillColor, vertexTexCoords(i)},
+				{points[i + 1], fillColor, vertexTexCoords(i + 1)},
+			}});
 
 		if (const auto outline = getOutline(cConvexPolygon, defaultOutline))
-			appendPolygonOutline(points, outline->thickness, outline->color, &outlineInnerPoints, &m_passVertices);
+			appendPolygonOutline(points, outline->thickness, outline->color, texCoordsAt, &outlineInnerPoints, &m_passVertices);
 	}
 
-	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
+	drawBatch(batchTexture);
 }
 
 void SRender::updateLightMap()
@@ -383,8 +432,9 @@ static void addFootLight(const std::vector<FootSample>& samples, std::vector<Foo
 	}
 }
 
-static void appendFaceOutline(const Segment& edge, const sf::Vector2f& up, const sf::Vector2f& upPerHeight,
-                              const CConvexPolygon::Outline& outline, std::vector<FootCut>* footCuts, std::vector<sf::Vertex>* vertices)
+static void appendFaceOutline(const Segment& edge, const sf::Vector2f& up, float height, const sf::Vector2f& upPerHeight,
+                              const CConvexPolygon::Outline& outline, const auto& faceTexCoordsAt,
+                              std::vector<FootCut>* footCuts, std::vector<sf::Vertex>* vertices)
 {
 	const sf::Vector2f footInset = outline.thickness * upPerHeight;
 	const float sideFraction = outline.thickness / edge.vector.length();
@@ -394,17 +444,23 @@ static void appendFaceOutline(const Segment& edge, const sf::Vector2f& up, const
 
 	for (auto [from, to] : *footCuts | std::views::pairwise)
 	{
-		const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, outline.color * Color(from.lightAfter)};
-		const sf::Vertex baseTo = {edge.a + to.fraction * edge.vector, outline.color * Color(to.lightBefore)};
-		const sf::Vertex topFrom = {baseFrom.position + up, baseFrom.color};
-		const sf::Vertex topTo = {baseTo.position + up, baseTo.color};
+		const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, outline.color * Color(from.lightAfter), faceTexCoordsAt(from.fraction, 0)};
+		const sf::Vertex baseTo =   {edge.a + to.fraction * edge.vector  , outline.color * Color(to.lightBefore) , faceTexCoordsAt(to.fraction, 0)};
+		const sf::Vertex topFrom =  {baseFrom.position + up              , baseFrom.color                        , faceTexCoordsAt(from.fraction, height)};
+		const sf::Vertex topTo =    {baseTo.position + up                , baseTo.color                          , faceTexCoordsAt(to.fraction, height)};
 
 		if (to.fraction <= sideFraction || from.fraction >= 1 - sideFraction)
 			appendQuad(baseFrom, baseTo, topTo, topFrom, vertices);
 		else
 		{
-			appendQuad(baseFrom, baseTo, {baseTo.position + footInset, baseTo.color}, {baseFrom.position + footInset, baseFrom.color}, vertices);
-			appendQuad({topFrom.position - footInset, topFrom.color}, {topTo.position - footInset, topTo.color}, topTo, topFrom, vertices);
+			appendQuad(baseFrom, baseTo,
+			           {baseTo.position + footInset,   baseTo.color,   faceTexCoordsAt(to.fraction, outline.thickness)},
+			           {baseFrom.position + footInset, baseFrom.color, faceTexCoordsAt(from.fraction, outline.thickness)},
+			           vertices);
+
+			appendQuad({topFrom.position - footInset, topFrom.color, faceTexCoordsAt(from.fraction, height - outline.thickness)},
+			           {topTo.position - footInset,   topTo.color,   faceTexCoordsAt(to.fraction, height - outline.thickness)},
+			           topTo, topFrom, vertices);
 		}
 	}
 }
@@ -550,15 +606,36 @@ void SRender::drawExtrusions()
 	std::vector<FootSample> footSamples;
 	std::vector<FootCut> footCuts;
 
+	const Texture* batchTexture = nullptr;
+
 	for (const Extrusion& extrusion : extrusions)
 	{
 		const auto& vertices = extrusion.polygon->vertices();
 		const std::size_t vertexCount = vertices.size();
 		const std::span cameraFootprint = extrusion.getFootprint(cameraFootprints);
-		const sf::Vector2f up = extrusion.polygon->height() * upPerHeight;
+		const float height = extrusion.polygon->height();
+		const sf::Vector2f up = height * upPerHeight;
 		const Color fillColor = extrusion.polygon->fillColor();
 		const Color topColor = fillColor * ambientLight;
 		const auto outline = getOutline(*extrusion.polygon, defaultOutline);
+		const Texture* const texture = extrusion.polygon->texture();
+		// The cap's vertices have their texture coordinates; the rest of the cap and the faces, unrolled along the
+		// walk around the polygon and up the height, start from the first vertex's.
+		const auto vertexTexCoords = [&](std::size_t i)
+		{
+			return texture ? extrusion.polygon->texCoords()[i] : Vector2f();
+		};
+		const Vector2f firstTexCoords = vertexTexCoords(0);
+		const auto capTexCoordsAt = [&](const sf::Vector2f& topPoint)
+		{
+			return texture ? firstTexCoords + texture->getTexCoords(topPoint - up - extrusion.worldPosition - vertices[0]) : Vector2f();
+		};
+
+		if (texture != batchTexture)
+		{
+			drawBatch(batchTexture);
+			batchTexture = texture;
+		}
 
 		points.resize(vertexCount);
 		topPoints.resize(vertexCount);
@@ -570,13 +647,25 @@ void SRender::drawExtrusions()
 			edgeNormals[i] = extrusion.polygon->getEdgeNormal(i);
 		}
 
+		float perimeterBefore = 0;
 		for (std::size_t i = 0; i != vertexCount; ++i)
 		{
 			const std::size_t next = (i + 1) % vertexCount;
 			const Segment edge = {points[i], points[next]};
 
+			const float edgeLength = edge.vector.length();
+			const auto faceTexCoordsAt = [=](float fraction, float z)
+			{
+				return texture ? firstTexCoords + texture->getTexCoords({perimeterBefore + fraction * edgeLength, z}) : Vector2f();
+			};
+			perimeterBefore += edgeLength;
+
 			if (i >= 2)
-				m_passVertices.append_range(std::array<sf::Vertex, 3>({{topPoints[0], topColor}, {topPoints[i - 1], topColor}, {topPoints[i], topColor}}));
+				m_passVertices.append_range(std::array<sf::Vertex, 3>({
+				    {topPoints[0],     topColor, vertexTexCoords(0)},
+				    {topPoints[i - 1], topColor, vertexTexCoords(i - 1)},
+				    {topPoints[i],     topColor, vertexTexCoords(i)}
+				}));
 
 			// The camera transform keeps the vertices counter-clockwise (it never mirrors), so an extruded
 			// face points toward the camera only if its edge runs left to right on screen.
@@ -595,22 +684,22 @@ void SRender::drawExtrusions()
 
 			for (auto [from, to] : footCuts | std::views::pairwise)
 			{
-				const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, fillColor * Color(from.lightAfter)};
-				const sf::Vertex baseTo = {edge.a + to.fraction * edge.vector, fillColor * Color(to.lightBefore)};
-				const sf::Vertex topFrom = {baseFrom.position + up, baseFrom.color};
-				const sf::Vertex topTo = {baseTo.position + up, baseTo.color};
+				const sf::Vertex baseFrom = {edge.a + from.fraction * edge.vector, fillColor * Color(from.lightAfter), faceTexCoordsAt(from.fraction, 0)};
+				const sf::Vertex baseTo =   {edge.a + to.fraction * edge.vector,   fillColor * Color(to.lightBefore),  faceTexCoordsAt(to.fraction, 0)};
+				const sf::Vertex topFrom =  {baseFrom.position + up,               baseFrom.color,                     faceTexCoordsAt(from.fraction, height)};
+				const sf::Vertex topTo =    {baseTo.position + up,                 baseTo.color,                       faceTexCoordsAt(to.fraction, height)};
 				m_passVertices.append_range(std::array{baseFrom, baseTo, topTo, baseFrom, topTo, topFrom});
 			}
 
 			if (outline)
-				appendFaceOutline(edge, up, upPerHeight, *outline, &footCuts, &m_passVertices);
+				appendFaceOutline(edge, up, height, upPerHeight, *outline, faceTexCoordsAt, &footCuts, &m_passVertices);
 		}
 
 		if (outline)
-			appendPolygonOutline(topPoints, outline->thickness, outline->color * ambientLight, &outlineInnerPoints, &m_passVertices);
+			appendPolygonOutline(topPoints, outline->thickness, outline->color * ambientLight, capTexCoordsAt, &outlineInnerPoints, &m_passVertices);
 	}
 
-	window()->draw(m_passVertices.data(), m_passVertices.size(), sf::PrimitiveType::Triangles, window()->worldToViewTransform());
+	drawBatch(batchTexture);
 }
 
 void SRender::drawHud()

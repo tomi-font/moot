@@ -16,19 +16,25 @@ static inline sol::table asLuaMap(const sol::object& var)
 {
 	return as<sol::table>(var);
 }
-inline std::pair<sol::table, unsigned> asLuaMapSize(const sol::object& var)
+inline std::pair<sol::table, unsigned> asLuaMapCount(const sol::object& var)
 {
 	const auto& luaMap = asLuaMap(var);
-	unsigned size = 0;
+	unsigned entryCount = 0;
 	for (auto it = luaMap.cbegin(); it != luaMap.cend(); ++it)
-		++size;
-	return {luaMap, size};
+		++entryCount;
+	return {luaMap, entryCount};
 }
 template<unsigned N> static inline sol::table asLuaMap(const sol::object& var)
 {
-	const auto& [luaMap, size] = asLuaMapSize(var);
-	assert(size == N);
+	const auto& [luaMap, entryCount] = asLuaMapCount(var);
+	assert(entryCount == N);
 	return luaMap;
+}
+
+// Lua's #: how many entries sit at 1, 2, 3... before the first hole.
+static inline unsigned sequenceLength(const sol::table& table)
+{
+	return static_cast<unsigned>(table.size());
 }
 
 inline sol::table asLuaArray(const sol::object& var)

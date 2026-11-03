@@ -2,11 +2,12 @@
 #include <moot/util/math/geometry.hh>
 #include <cassert>
 
-CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor, std::optional<Outline> outline) :
+CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Color fillColor, std::optional<Outline> outline, const Texture* texture) :
 	m_vertices(std::move(vertices)),
 	m_height(height),
 	m_fillColor(fillColor),
 	m_outline(outline),
+	m_texture(texture),
 	m_boundCoords(m_vertices)
 {
 #ifndef NDEBUG
@@ -30,6 +31,12 @@ CConvexPolygon::CConvexPolygon(std::vector<Vector2f> vertices, float height, Col
 		}
 	}
 #endif
+}
+
+void CConvexPolygon::setTexCoords(std::vector<Vector2f>&& texCoords)
+{
+	assert(texCoords.size() == m_vertices.size());
+	m_texCoords = std::move(texCoords);
 }
 
 Vector2f CConvexPolygon::getEdgeNormal(std::size_t i) const

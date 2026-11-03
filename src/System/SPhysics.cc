@@ -5,7 +5,7 @@
 #include <moot/Component/CRigidbody.hh>
 #include <moot/Component/CTransform.hh>
 #include <moot/Entity/Pointer/operators.hh>
-#include <moot/util/math/base.hh>
+#include <moot/util/math/scalar.hh>
 
 // Indices for this system's queries.
 enum Q
@@ -85,9 +85,9 @@ static Vector2i moveToFirstContactPoint(const Vector2f& ratios, float ratio, Flo
 	Vector2i collidedOn;
 
 	if (ratios.x >= ratios.y)
-		collidedOn.x = normalize(relativeMove.x);
+		collidedOn.x = sign(relativeMove.x);
 	if (ratios.y >= ratios.x)
-		collidedOn.y = normalize(relativeMove.y);
+		collidedOn.y = sign(relativeMove.y);
 
 	assert(collidedOn.x or collidedOn.y);
 

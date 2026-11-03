@@ -5,6 +5,8 @@
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 
+class Texture;
+
 class SRender final : public System
 {
 public:
@@ -23,6 +25,8 @@ private:
 	void drawLightMap();
 	void drawExtrusions();
 	void drawHud();
+
+	void drawBatch(const Texture*);
 
 	std::vector<sf::Vertex> m_passVertices;
 

@@ -30,15 +30,18 @@ namespace sf
 {
 	template<typename T, typename U> auto operator*(const sf::Vector2<T>& left, const sf::Vector2<U>& right)
 	{
-		return sf::Vector2(left.x * right.x, left.y * right.y);
+		return sf::Vector2<decltype(left.x * right.x)>(left.x * right.x, left.y * right.y);
 	}
-	template<typename T> sf::Vector2<T> operator/(const sf::Vector2<T>& left, const sf::Vector2<T>& right)
+	template<typename T, typename U> auto operator/(const sf::Vector2<T>& left, const sf::Vector2<U>& right)
 	{
-		return {left.x / right.x, left.y / right.y};
+		return sf::Vector2<decltype(left.x / right.x)>(left.x / right.x, left.y / right.y);
 	}
-	template<typename T, typename U>
-	auto operator*(T left, const sf::Vector2<U>& right) requires (std::is_arithmetic_v<T>)
+	template<typename T, typename U> auto operator*(T left, const sf::Vector2<U>& right) requires (std::is_arithmetic_v<T>)
 	{
-		return sf::Vector2(left * right.x, left * right.y);
+		return sf::Vector2<decltype(left * right.x)>(left * right.x, left * right.y);
+	}
+	template<typename T, typename U> auto operator*(const sf::Vector2<T>& left, U right) requires (std::is_arithmetic_v<U>)
+	{
+		return sf::Vector2<decltype(left.x * right)>(left.x * right, left.y * right);
 	}
 }

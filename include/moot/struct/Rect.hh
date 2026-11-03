@@ -1,7 +1,7 @@
 #pragma once
 
 #include <moot/struct/Vector2.hh>
-#include <moot/util/math/base.hh>
+#include <moot/util/math/scalar.hh>
 #include <SFML/Graphics/Rect.hpp>
 
 template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>

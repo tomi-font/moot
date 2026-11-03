@@ -5,8 +5,8 @@
 #include <moot/Component/CTransform.hh>
 #include <moot/Entity/Handle.hh>
 #include <moot/struct/Rect.hh>
+#include <moot/struct/Segment.hh>
 #include <moot/util/math/geometry.hh>
-#include <moot/util/math/Segment.hh>
 #include <algorithm>
 #include <array>
 #include <cmath>

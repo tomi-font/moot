@@ -14,6 +14,7 @@
 #include <moot/parsing/ComponentNames.hh>
 #include <moot/parsing/EntityFunctions.hh>
 #include <moot/parsing/types.hh>
+#include <moot/Texture/Texture.hh>
 #include <optional>
 #include <variant>
 
@@ -30,14 +31,14 @@ static Control asControl(const sol::object& obj)
 	if (obj.get_type() != sol::type::table)
 		return as<Control>(obj);
 
-	const auto& [map, mapSize] = asLuaMapSize(obj);
+	const auto& [map, entryCount] = asLuaMapCount(obj);
 	const auto& xObj = map["x"];
 	const auto& yObj = map["y"];
 
 	if (!xObj.valid() && !yObj.valid())
 		return {asButtonPair(obj)}; // Axis, Scroll
 
-	assert(mapSize == 2 && xObj.valid() && yObj.valid());
+	assert(entryCount == 2 && xObj.valid() && yObj.valid());
 	return {Control::ButtonQuad{asButtonPair(xObj), asButtonPair(yObj)}}; // Axes
 }
 
@@ -54,7 +55,6 @@ static std::vector<Control> asControls(const sol::table& table)
 
 template<> void registerAttributeValues<CInput>(sol::state* lua)
 {
-	// Registered before any value of theirs goes into a table, so that it gets the real metatable.
 	lua->new_usertype<Control>("mt.Control", sol::no_constructor);
 	lua->new_usertype<Binding>("mt.Binding", sol::no_constructor);
 
@@ -144,19 +144,19 @@ template<typename C> static void parser(const sol::object&, ComponentCollection*
 
 template<> void parser<CTransform>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& rotationObj = map["rotation"];
-	assert(mapSize == 1u + rotationObj.valid());
+	assert(entryCount == 1u + rotationObj.valid());
 
 	collection->add<CTransform>(asVector2f(map["position"]), asOptionalParsed<float>(rotationObj, 0));
 }
 
 template<> void parser<CLocalTransform>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& positionObj = map["position"];
 	const auto& rotationObj = map["rotation"];
-	assert(mapSize > 0 && mapSize == 0u + positionObj.valid() + rotationObj.valid());
+	assert(entryCount > 0 && entryCount == 0u + positionObj.valid() + rotationObj.valid());
 
 	std::optional<Vector2f> position;
 	std::optional<float> rotation;
@@ -171,10 +171,10 @@ template<> void parser<CLocalTransform>(const sol::object& data, ComponentCollec
 
 static CConvexPolygon::Outline asOutline(const sol::object& obj)
 {
-	const auto& [map, mapSize] = asLuaMapSize(obj);
+	const auto& [map, entryCount] = asLuaMapCount(obj);
 	const auto& thicknessObj = map["thickness"];
 	const auto& colorObj = map["color"];
-	assert(mapSize == 0u + thicknessObj.valid() + colorObj.valid());
+	assert(entryCount == 0u + thicknessObj.valid() + colorObj.valid());
 
 	return {.thickness = asOptionalParsed<float>(thicknessObj, 0),
 	        .color = asOptionalParsed<Color>(colorObj)};
@@ -182,11 +182,12 @@ static CConvexPolygon::Outline asOutline(const sol::object& obj)
 
 template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& heightObj = map["height"];
 	const auto& fillColorObj = map["fillColor"];
 	const auto& outlineObj = map["outline"];
-	assert(mapSize == 1u + heightObj.valid() + fillColorObj.valid() + outlineObj.valid());
+	const auto& textureObj = map["texture"];
+	assert(entryCount == 1u + heightObj.valid() + fillColorObj.valid() + outlineObj.valid() + textureObj.valid());
 
 	std::vector<Vector2f> vertices;
 	for (const auto& [_, value] : asLuaArray(map["vertices"]))
@@ -199,7 +200,8 @@ template<> void parser<CConvexPolygon>(const sol::object& data, ComponentCollect
 	collection->add<CConvexPolygon>(std::move(vertices),
 	                                asOptionalParsed<float>(heightObj, 0),
 	                                asOptionalParsed<Color>(fillColorObj),
-	                                outline);
+	                                outline,
+	                                asOptionalParsed<const Texture*>(textureObj));
 }
 
 template<> void parser<CMove>(const sol::object& data, ComponentCollection* collection)
@@ -236,9 +238,9 @@ template<> void parser<CInput>(const sol::object& data, ComponentCollection* col
 
 template<> void parser<CCollisionBox>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& rectObj = map["rect"];
-	assert(mapSize == rectObj.valid());
+	assert(entryCount == rectObj.valid());
 
 	collection->add<CCollisionBox>(asOptionalParsed<FloatRect>(rectObj));
 }
@@ -257,10 +259,10 @@ template<> void parser<CDrive>(const sol::object& data, ComponentCollection* col
 
 template<> void parser<CCamera>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& limitsObj = map["limits"];
 	const auto& elevationObj = map["elevation"];
-	assert(mapSize == 1u + limitsObj.valid() + elevationObj.valid());
+	assert(entryCount == 1u + limitsObj.valid() + elevationObj.valid());
 
 	FloatRect limits;
 	float elevation = CCamera::MaxElevation;
@@ -276,9 +278,9 @@ template<> void parser<CCamera>(const sol::object& data, ComponentCollection* co
 
 template<> void parser<CHudRender>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
+	const auto& [map, entryCount] = asLuaMapCount(data);
 	const auto& sizeObj = map["size"];
-	assert(mapSize == 2u + sizeObj.valid());
+	assert(entryCount == 2u + sizeObj.valid());
 
 	const auto size = sizeObj.valid() ? asVector2f(sizeObj) : sf::Vector2f();
 	collection->add<CHudRender>(asVector2f(map["pos"]), size, asColor(map["color"]));
@@ -302,8 +304,7 @@ template<> void parser<CPointable>(const sol::object& data, ComponentCollection*
 
 template<> void parser<CLight>(const sol::object& data, ComponentCollection* collection)
 {
-	const auto& [map, mapSize] = asLuaMapSize(data);
-	assert(mapSize == 2);
+	const auto& map = asLuaMap<2>(data);
 	collection->add<CLight>(asColor(map["emission"]), as<float>(map["radius"]));
 }
 

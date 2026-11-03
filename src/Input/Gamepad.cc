@@ -1,5 +1,5 @@
 #include <moot/Input/Gamepad.hh>
-#include <moot/util/math/base.hh>
+#include <moot/util/math/scalar.hh>
 #include <algorithm>
 
 constexpr float StickDeadZone = 0.2f;
@@ -57,8 +57,8 @@ Vector2f Gamepad::getStick(GamepadLayout::Stick stick) const
 Vector2f Gamepad::getDPad() const
 {
 	// The d-pad comes through the hat axes, already digital: SFML reports -100, 0 or 100, with y down the screen like a stick.
-	return {float(normalize(axes[unsigned(sf::Joystick::Axis::PovX)])),
-	        -float(normalize(axes[unsigned(sf::Joystick::Axis::PovY)]))};
+	return {float(sign(axes[unsigned(sf::Joystick::Axis::PovX)])),
+	        -float(sign(axes[unsigned(sf::Joystick::Axis::PovY)]))};
 }
 
 void Gamepad::resetInputs()

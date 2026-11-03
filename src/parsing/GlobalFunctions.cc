@@ -6,6 +6,8 @@
 #include <moot/parsing/PrototypeAttributes.hh>
 #include <moot/parsing/types.hh>
 #include <moot/Resource/Store.hh>
+#include <moot/Texture/Layer.hh>
+#include <moot/Texture/Texture.hh>
 #include <moot/util/variant/indexToCompileTime.hh>
 #include <moot/Window.hh>
 
@@ -33,7 +35,7 @@ static const EntityPrototype& findOrMakePrototype(sol::table& protoTable, Resour
 	return *proto;
 }
 
-void GlobalFunctions::registerAll(sol::state* lua, Game* game)
+static void registerFunctions(sol::state* lua, Game* game)
 {
 	ResourceStore* const resources = game;
 	EntityManager* const entityManager = game;
@@ -105,9 +107,78 @@ void GlobalFunctions::registerAll(sol::state* lua, Game* game)
 			})
 	);
 
+	auto resourcesTable = lua->create_named_table("resources");
+	resourcesTable["add"] = [resources](Texture* texture)
+		{
+			return resources->add<Texture>(std::move(*texture)).second;
+		};
+
 	lua->set_function("trigger",
 		[game](Event::Id eventId, const EntityHandle& entity)
 		{
 			game->eventManager()->trigger({eventId, entity});
 		});
+}
+
+static void registerConstructors(sol::state* lua)
+{
+	lua->new_usertype<Layer>("mt.Layer", sol::no_constructor);
+	lua->new_usertype<Texture>("mt.Texture", sol::no_constructor);
+
+	lua->set_function("Wash",
+		[](const sol::object& obj)
+		{
+			const auto& map = asLuaMap<3>(obj);
+			return Layer(Wash(
+				as<float>(map["maxPatchSize"]),
+				as<float>(map["minPatchSize"]),
+				as<float>(map["maxDarkness"])
+			));
+		});
+	lua->set_function("Strokes",
+		[](const sol::object& obj)
+		{
+			const auto& map = asLuaMap<4>(obj);
+			return Layer(Strokes(
+				as<float>(map["maxStrokeLength"]),
+				as<float>(map["strokeWidth"]),
+				as<float>(map["density"]),
+				as<float>(map["maxDarkness"])
+			));
+		});
+	lua->set_function("Dots",
+		[](const sol::object& obj)
+		{
+			const auto& map = asLuaMap<3>(obj);
+			return Layer(Dots(
+				as<float>(map["maxRadius"]),
+				as<float>(map["density"]),
+				as<float>(map["maxDarkness"])
+			));
+		});
+	lua->set_function("Texture",
+		[](const sol::object& obj)
+		{
+			const auto& [map, entryCount] = asLuaMapCount(obj);
+			const auto& seedObj = map["seed"];
+			const auto layerCount = sequenceLength(map);
+			assert(entryCount == 2u + seedObj.valid() + layerCount);
+
+			std::vector<Layer> layers;
+			for (unsigned i = 1; i <= layerCount; ++i)
+				layers.push_back(as<Layer>(map[i]));
+
+			return Texture(
+				as<float>(map["worldSize"]),
+				as<float>(map["texelsPerUnit"]),
+				asOptionalParsed<unsigned>(seedObj, 0),
+				layers
+			);
+		});
+}
+
+void GlobalFunctions::registerAll(sol::state* lua, Game* game)
+{
+	registerFunctions(lua, game);
+	registerConstructors(lua);
 }
